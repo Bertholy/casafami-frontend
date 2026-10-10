@@ -1,7 +1,9 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import axiosClient from '../api/axiosClient';
-import { Lock, Mail, Loader2, AlertCircle, Stethoscope } from 'lucide-react';
+import { APP_NAME } from '../constants/app';
+import { apiErrorMessage, homeForRole } from '../utils/auth';
+import { Lock, Mail, Loader2, AlertCircle, Stethoscope, ArrowLeft } from 'lucide-react';
 
 function Login() {
     const navigate = useNavigate();
@@ -16,17 +18,15 @@ function Login() {
         setLoading(true);
 
         try {
-            const res = await axiosClient.post('/auth/login', { email, motDePasse });
+            const res = await axiosClient.post('/auth/login', { email: email.trim(), motDePasse });
 
             // Sauvegarder le token et les infos
             localStorage.setItem('token', res.data.token);
             localStorage.setItem('email', res.data.email);
             localStorage.setItem('role', res.data.role);
-
-            // Rediriger vers le dashboard
-            navigate('/medecin/dashboard');
-        } catch {
-            setErreur('Email ou mot de passe incorrect');
+            navigate(homeForRole(res.data.role));
+        } catch (err) {
+            setErreur(err.response?.status === 401 ? 'Email ou mot de passe incorrect' : apiErrorMessage(err, 'Connexion impossible. Réessayez dans un instant.'));
         } finally {
             setLoading(false);
         }
@@ -42,7 +42,7 @@ function Login() {
                         <Stethoscope className="w-10 h-10 text-white" />
                     </div>
                     <h1 className="text-3xl font-bold text-gray-800 dark:text-white mb-2">
-                        Espace médecin
+                        Espace du personnel {APP_NAME}
                     </h1>
                     <p className="text-gray-600 dark:text-gray-400">
                         Connectez-vous pour gérer vos rendez-vous
@@ -114,9 +114,13 @@ function Login() {
                     </button>
                 </form>
 
+                <div className="mt-4 text-center">
+                    <Link to="/" className="inline-flex items-center gap-2 text-sm text-teal-700 hover:underline dark:text-teal-300"><ArrowLeft className="w-4 h-4" />Retour au site</Link>
+                </div>
+
                 {/* Note */}
                 <p className="text-center text-xs text-gray-400 dark:text-gray-500 mt-6">
-                    Accès réservé au personnel médical
+                    Accès réservé au personnel autorisé
                 </p>
             </div>
         </div>

@@ -1,6 +1,15 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import axiosClient from '../api/axiosClient';
+import { apiErrorMessage } from '../utils/auth';
+import Editable from '../components/site/Editable';
+import MotifAssistant from '../components/MotifAssistant';
+import { useAvailableSlots } from '../hooks/useAvailableSlots';
+import { explainNoSlots, libelleOuverture, usePlanning } from '../utils/horaires';
+import { formatPhoneInput, isPlausiblePhone } from '../utils/phone';
+import { todayISO } from '../constants/app';
+import { printReceipt } from '../utils/receipt';
+import { downloadRendezVousPdf } from '../api/rendezVousPdf';
 import {
     Calendar,
     User,
@@ -11,6 +20,7 @@ import {
     AlertCircle,
     ChevronRight,
     Home,
+    Bot,
 } from 'lucide-react';
 
 function PrendreRdv() {
@@ -18,52 +28,80 @@ function PrendreRdv() {
         nomClient: '',
         ageClient: '',
         telephoneClient: '',
+        motif: '',
         dateRdv: '',
         heureRdv: '',
+        serviceId: '',
     });
-    const [creneaux, setCreneaux] = useState([]);
+    const [services, setServices] = useState([]);
+    const planning = usePlanning();
+    const { slots: creneaux, loading: slotsLoading, error: slotsError, refresh: refreshSlots } = useAvailableSlots(form.dateRdv);
     const [loading, setLoading] = useState(false);
     const [erreur, setErreur] = useState(null);
     const [succes, setSucces] = useState(null);
+    const [assistantOuvert, setAssistantOuvert] = useState(false);
+    const [erreurPdf, setErreurPdf] = useState('');
+    const pdfAutomatique = useRef(null);
 
-    // Charger les créneaux quand la date change
+    const telechargerPdf = async () => {
+        try { await downloadRendezVousPdf(succes); setErreurPdf(''); }
+        catch (err) { console.error('Téléchargement du PDF impossible', err); setErreurPdf(err.message || 'Le téléchargement du PDF a échoué.'); }
+    };
+
     useEffect(() => {
-        if (!form.dateRdv) return;
+        if (!succes?.id || pdfAutomatique.current === succes.id) return;
+        pdfAutomatique.current = succes.id;
+        if (succes.clientAccessToken) localStorage.setItem(`rdv-access-${succes.id}`, succes.clientAccessToken);
+        telechargerPdf();
+    // Une seule tentative automatique après la création du rendez-vous.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [succes?.id]);
 
-        setLoading(true);
-        setErreur(null);
-        setForm(prev => ({ ...prev, heureRdv: '' }));
+    useEffect(() => {
+        axiosClient.get('/rdv/form-options').then(res => setServices(res.data.services || [])).catch(() => {
+            axiosClient.get('/services').then(res => setServices(res.data)).catch(() => {});
+        });
+    }, []);
 
-        axiosClient.get(`/rdv/creneaux/${form.dateRdv}`)
-            .then(res => {
-                setCreneaux(res.data);
-            })
-            .catch(() => {
-                setErreur('Impossible de charger les créneaux');
-            })
-            .finally(() => {
-                setLoading(false);
-            });
-    }, [form.dateRdv]);
+    // Le créneau choisi n'est conservé que s'il est encore libre : si quelqu'un d'autre le réserve entre-temps, il disparaît.
+    const heureChoisie = creneaux.includes(form.heureRdv) ? form.heureRdv : '';
+    const creneauPerdu = Boolean(form.heureRdv) && !heureChoisie && !slotsLoading && Boolean(form.dateRdv);
 
     const onChange = (e) => {
-        setForm({ ...form, [e.target.name]: e.target.value });
+        const { name } = e.target;
+        const value = name === 'telephoneClient' ? formatPhoneInput(e.target.value) : e.target.value;
+        setForm({ ...form, [name]: value, ...(name === 'dateRdv' ? { heureRdv: '' } : {}) });
+    };
+
+    const appliquerMotif = ({ motif, serviceId }) => {
+        setForm(current => ({ ...current, motif, serviceId: serviceId && !current.serviceId ? String(serviceId) : current.serviceId }));
+        setAssistantOuvert(false);
     };
 
     const onSubmit = async (e) => {
         e.preventDefault();
         setErreur(null);
+        if (!heureChoisie) { setErreur('Choisissez un créneau encore disponible.'); return; }
+        if (!isPlausiblePhone(form.telephoneClient)) { setErreur('Saisissez un numéro de téléphone valide, par exemple 034 12 345 67.'); return; }
         setLoading(true);
 
         try {
             const res = await axiosClient.post('/rdv', {
                 ...form,
                 ageClient: parseInt(form.ageClient),
-                heureRdv: form.heureRdv + ':00',
+                heureRdv: heureChoisie + ':00',
+                serviceId: form.serviceId ? Number(form.serviceId) : null,
             });
             setSucces(res.data);
         } catch (err) {
-            setErreur(err.response?.data?.message || 'Erreur lors de la réservation');
+            console.error('Création du rendez-vous impossible', err);
+            setErreur(apiErrorMessage(err, 'Impossible d’enregistrer ce rendez-vous. Vérifiez les informations et le créneau, puis réessayez.'));
+            if (err.response?.status === 409) {
+                // Le créneau vient d'être pris : on le retire et on réaffiche ce qui reste libre ce jour-là.
+                setForm(current => ({ ...current, heureRdv: '' }));
+                refreshSlots();
+                setErreur('Ce créneau vient d’être réservé par quelqu’un d’autre. Voici les créneaux encore disponibles pour cette date : choisissez-en un autre.');
+            }
         } finally {
             setLoading(false);
         }
@@ -79,10 +117,10 @@ function PrendreRdv() {
                             <CheckCircle className="w-12 h-12 text-green-600 dark:text-green-400" />
                         </div>
                         <h2 className="text-3xl font-bold text-gray-800 dark:text-white mb-3">
-                            RDV confirmé !
+                            Demande enregistrée !
                         </h2>
                         <p className="text-gray-600 dark:text-gray-400 mb-8">
-                            Vous recevrez une confirmation par SMS.
+                            Votre rendez-vous est en attente de confirmation par le cabinet. Vous serez prévenu par SMS.
                         </p>
 
                         <div className="bg-gradient-to-br from-teal-50 to-teal-100 dark:from-gray-700 dark:to-gray-700 rounded-2xl p-6 text-left space-y-3 mb-8">
@@ -100,7 +138,9 @@ function PrendreRdv() {
                             </div>
                         </div>
 
-                        <div className="flex gap-3">
+                        <div className="grid gap-3 md:grid-cols-3">
+                            <button onClick={telechargerPdf} className="flex-1 rounded-xl bg-teal-700 py-3 font-semibold text-white hover:bg-teal-800">Télécharger le PDF</button>
+                            <button onClick={() => printReceipt(succes)} className="flex-1 rounded-xl border border-teal-200 py-3 font-semibold text-teal-800 hover:bg-teal-50">Imprimer le reçu</button>
                             <Link
                                 to="/"
                                 className="flex-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 py-3 rounded-xl font-semibold hover:bg-gray-200 dark:hover:bg-gray-600 transition flex items-center justify-center gap-2"
@@ -111,13 +151,14 @@ function PrendreRdv() {
                             <button
                                 onClick={() => {
                                     setSucces(null);
-                                    setForm({ nomClient: '', ageClient: '', telephoneClient: '', dateRdv: '', heureRdv: '' });
+                                    setForm({ nomClient: '', ageClient: '', telephoneClient: '', motif: '', dateRdv: '', heureRdv: '', serviceId: '' });
                                 }}
                                 className="flex-1 bg-teal-600 text-white py-3 rounded-xl font-semibold hover:bg-teal-700 transition"
                             >
                                 Autre RDV
                             </button>
                         </div>
+                        {erreurPdf && <p role="alert" className="mt-4 rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700">{erreurPdf}</p>}
                     </div>
                 </div>
             </div>
@@ -145,12 +186,8 @@ function PrendreRdv() {
                             <Calendar className="w-4 h-4" />
                             Réservation en ligne
                         </span>
-                        <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
-                            Prenez votre rendez-vous
-                        </h1>
-                        <p className="text-lg text-teal-100 max-w-2xl mx-auto">
-                            Remplissez le formulaire en 2 minutes. Confirmation immédiate par SMS.
-                        </p>
+                        <Editable id="rdv.hero.titre" as="h1" className="text-4xl md:text-5xl font-bold text-white mb-4">Prenez votre rendez-vous</Editable>
+                        <Editable id="rdv.hero.texte" as="p" className="text-lg text-teal-100 max-w-2xl mx-auto">Remplissez le formulaire en 2 minutes. Confirmation par SMS.</Editable>
                     </div>
                 </div>
             </section>
@@ -242,7 +279,7 @@ function PrendreRdv() {
                                             value={form.ageClient}
                                             onChange={onChange}
                                             required
-                                            min="1"
+                                            min="0"
                                             max="120"
                                             placeholder="30"
                                             className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-800 dark:text-white focus:border-teal-500 focus:outline-none transition"
@@ -261,11 +298,35 @@ function PrendreRdv() {
                                                 value={form.telephoneClient}
                                                 onChange={onChange}
                                                 required
-                                                placeholder="+261 34 12 345 67"
+                                                placeholder="034 12 345 67"
+                                                inputMode="tel"
+                                                autoComplete="tel"
+                                                maxLength={20}
                                                 className="w-full pl-10 pr-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-800 dark:text-white focus:border-teal-500 focus:outline-none transition"
                                             />
                                         </div>
+                                        <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">Exemple : 034 12 345 67</p>
                                     </div>
+                                </div>
+
+                                {services.length > 0 && (
+                                    <div>
+                                        <label htmlFor="serviceId" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Service souhaité (facultatif)</label>
+                                        <select id="serviceId" name="serviceId" value={form.serviceId} onChange={onChange} className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-800 dark:text-white focus:border-teal-500 focus:outline-none transition">
+                                            <option value="">Je ne sais pas encore</option>
+                                            {services.map(service => <option key={service.id} value={service.id}>{service.nom}</option>)}
+                                        </select>
+                                    </div>
+                                )}
+
+                                <div>
+                                    <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+                                        <label htmlFor="motif" className="block text-sm font-semibold text-gray-700 dark:text-gray-300">Motif du rendez-vous</label>
+                                        <button type="button" onClick={() => setAssistantOuvert(true)} className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-teal-600 to-teal-700 px-4 py-2 text-sm font-bold text-white shadow-md transition hover:from-teal-700 hover:to-teal-800"><Bot className="h-4 w-4" />Aidez-moi à préciser mon motif</button>
+                                    </div>
+                                    <p className="mb-2 text-sm text-gray-500">Répondez à quelques questions : l’assistant prépare pour vous un motif précis, que vous pouvez modifier. Il ne pose pas de diagnostic ; en cas d’urgence, appelez le cabinet ou les urgences.</p>
+                                    <textarea id="motif" name="motif" value={form.motif} onChange={onChange} maxLength={2000} rows={4} placeholder="Expliquez brièvement la raison de votre rendez-vous : suivi de grossesse, consultation prénatale, échographie, douleurs ou autre demande." className="w-full resize-y rounded-xl border-2 border-gray-200 bg-white px-4 py-3 text-gray-800 focus:border-teal-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white" />
+                                    <p className="mt-1 text-right text-xs text-gray-500">{form.motif.length}/2000</p>
                                 </div>
                             </div>
                         </div>
@@ -281,7 +342,7 @@ function PrendreRdv() {
                                         Choisissez une date
                                     </h2>
                                     <p className="text-sm text-gray-500 dark:text-gray-400">
-                                        Ouvert du lundi au vendredi
+                                        {libelleOuverture(planning?.horaires)}
                                     </p>
                                 </div>
                             </div>
@@ -292,7 +353,7 @@ function PrendreRdv() {
                                 value={form.dateRdv}
                                 onChange={onChange}
                                 required
-                                min={new Date().toISOString().split('T')[0]}
+                                min={todayISO()}
                                 className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-800 dark:text-white focus:border-teal-500 focus:outline-none transition"
                             />
                         </div>
@@ -309,35 +370,39 @@ function PrendreRdv() {
                                             Choisissez un créneau
                                         </h2>
                                         <p className="text-sm text-gray-500 dark:text-gray-400">
-                                            Créneaux de 30 minutes
+                                            {creneaux.length > 0 ? `${creneaux.length} créneau${creneaux.length > 1 ? 'x' : ''} disponible${creneaux.length > 1 ? 's' : ''} ce jour-là` : `Créneaux de ${planning?.dureeCreneauMinutes || 30} minutes`}
                                         </p>
+                                        {creneauPerdu && <p role="alert" className="mt-1 text-sm font-medium text-orange-700 dark:text-orange-300">Le créneau que vous aviez choisi n’est plus disponible : choisissez-en un autre.</p>}
                                     </div>
                                 </div>
 
-                                {loading ? (
+                                {slotsLoading ? (
                                     <div className="text-center py-6">
                                         <Loader2 className="w-8 h-8 text-teal-600 animate-spin mx-auto mb-2" />
                                         <p className="text-gray-500 dark:text-gray-400 text-sm">
                                             Chargement des créneaux...
                                         </p>
                                     </div>
+                                ) : slotsError ? (
+                                    <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-4 text-center">
+                                        <p className="text-red-700 dark:text-red-300 text-sm">Impossible de charger les créneaux. <button type="button" onClick={refreshSlots} className="font-semibold underline">Réessayer</button></p>
+                                    </div>
                                 ) : creneaux.length === 0 ? (
                                     <div className="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-xl p-4 text-center">
                                         <p className="text-orange-700 dark:text-orange-300 text-sm">
-                                            Aucun créneau disponible. Choisissez une autre date.
+                                            {explainNoSlots(form.dateRdv, planning, todayISO())} Choisissez une autre date.
                                         </p>
                                     </div>
                                 ) : (
                                     <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
-                                        {creneaux.map(c => {
-                                            const h = c.substring(0, 5);
+                                        {creneaux.map(h => {
                                             return (
                                                 <button
-                                                    key={c}
+                                                    key={h}
                                                     type="button"
                                                     onClick={() => setForm({ ...form, heureRdv: h })}
                                                     className={`py-3 rounded-xl text-sm font-bold transition-all ${
-                                                        form.heureRdv === h
+                                                        heureChoisie === h
                                                             ? 'bg-teal-600 text-white shadow-lg scale-105'
                                                             : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-teal-100 dark:hover:bg-gray-600 hover:scale-105'
                                                     }`}
@@ -355,7 +420,7 @@ function PrendreRdv() {
                         <div className="p-6 md:p-8 bg-gray-50 dark:bg-gray-800/50">
                             <button
                                 type="submit"
-                                disabled={loading || !form.heureRdv}
+                                disabled={loading || !heureChoisie}
                                 className="w-full bg-gradient-to-r from-teal-600 to-teal-700 text-white py-4 rounded-xl font-bold text-lg hover:from-teal-700 hover:to-teal-800 transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                             >
                                 {loading ? (
@@ -377,6 +442,7 @@ function PrendreRdv() {
                     </form>
                 </div>
             </section>
+            {assistantOuvert && <MotifAssistant services={services} onApply={appliquerMotif} onClose={() => setAssistantOuvert(false)} />}
         </div>
     );
 }

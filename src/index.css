@@ -2,7 +2,7 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
-/* ========== THÈME CASFAMI ========== */
+/* ========== THÈME CASAFAMI ========== */
 :root {
     --primary: #0d9488;        /* Vert émeraude */
     --primary-dark: #0f766e;
@@ -63,10 +63,19 @@
 /* ========== STYLES GLOBAUX ========== */
 body {
     font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
-    background-color: #ffffff;
-    color: #1f2937;
+    background-color: var(--casafami-background, #ffffff);
+    color: var(--casafami-text, #1f2937);
     scroll-behavior: smooth;
 }
+
+.bg-teal-600, .bg-teal-700 { background-color: var(--casafami-button, #0f766e); }
+.text-teal-600, .text-teal-700, .hover\:text-teal-700:hover { color: var(--casafami-link, #0f766e); }
+.border-teal-600, .focus\:border-teal-600:focus { border-color: var(--casafami-primary, #0f766e); }
+:root:not(.dark) .bg-white { background-color: var(--casafami-background, #ffffff); }
+:root:not(.dark) .bg-gray-50, :root:not(.dark) .bg-slate-50 { background-color: var(--casafami-panel, #f8fafc); }
+:root:not(.dark) .bg-slate-950 { background-color: var(--casafami-sidebar, #0f172a); }
+:root:not(.dark) .text-gray-800, :root:not(.dark) .text-slate-800 { color: var(--casafami-text, #1f2937); }
+:root:not(.dark) .border-gray-100, :root:not(.dark) .border-slate-200 { border-color: var(--casafami-border, #e2e8f0); }
 
 /* ========== SCROLLBAR ========== */
 ::-webkit-scrollbar {

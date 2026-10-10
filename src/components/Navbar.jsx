@@ -2,6 +2,8 @@ import { Link, useLocation } from 'react-router-dom';
 import { useState } from 'react';
 import { useTheme } from '../context/ThemeContext';
 import { Moon, Sun, Menu, X, Calendar } from 'lucide-react';
+import Editable from './site/Editable';
+import Movable from './site/Movable';
 
 function Navbar() {
     const location = useLocation();
@@ -28,12 +30,8 @@ function Navbar() {
                             className="h-14 w-auto"
                         />
                         <div className="hidden sm:block">
-                            <p className="text-lg font-bold text-gray-800 dark:text-white leading-tight">
-                                Cabinet d'Accouchement
-                            </p>
-                            <p className="text-sm text-teal-600 dark:text-teal-400 font-semibold">
-                                casafami
-                            </p>
+                            <Editable id="nav.titre" as="p" className="text-lg font-bold text-gray-800 dark:text-white leading-tight">Cabinet d'Accouchement</Editable>
+                            <Editable id="nav.sous-titre" as="p" className="text-sm text-teal-600 dark:text-teal-400 font-semibold">casafami</Editable>
                         </div>
                     </Link>
 
@@ -66,13 +64,15 @@ function Navbar() {
                         </button>
 
                         {/* Bouton RDV */}
-                        <Link
+                        <Movable
+                            id="nav.btn-rdv"
+                            as={Link}
                             to="/prendre-rdv"
                             className="bg-teal-600 text-white px-6 py-3 rounded-lg text-sm font-bold hover:bg-teal-700 transition shadow-md hover:shadow-lg inline-flex items-center gap-2"
                         >
                             <Calendar className="w-4 h-4" />
-                            Prendre rendez-vous
-                        </Link>
+                            <Editable id="nav.btn-rdv.label">Prendre rendez-vous</Editable>
+                        </Movable>
                     </div>
 
                     {/* Menu burger (mobile) */}

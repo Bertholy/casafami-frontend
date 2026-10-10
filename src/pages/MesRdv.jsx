@@ -1,47 +1,77 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
 import axiosClient from '../api/axiosClient';
+import { apiErrorMessage, hasSession } from '../utils/auth';
+import { formatPhone } from '../utils/phone';
+import Editable from '../components/site/Editable';
+import { downloadReceiptPdf, printReceipt } from '../utils/receipt';
 import {
     Search,
     Calendar,
-    User,
     Loader2,
     XCircle,
-    Phone,
     ClipboardList,
     Clock,
     CheckCircle,
 } from 'lucide-react';
 
 function MesRdv() {
-    const [telephone, setTelephone] = useState('');
+    const [searchParams] = useSearchParams();
+    const [recherche, setRecherche] = useState('');
     const [rdvs, setRdvs] = useState(null);
     const [loading, setLoading] = useState(false);
     const [erreur, setErreur] = useState(null);
 
+    useEffect(() => {
+        const numero = searchParams.get('q') || searchParams.get('telephone');
+        if (!numero) return undefined;
+        let cancelled = false;
+        const timer = setTimeout(() => {
+            setRecherche(numero);
+            setLoading(true);
+            axiosClient.get('/rdv/recherche', { params: { q: numero } })
+                .then(({ data }) => { if (!cancelled) setRdvs(data); })
+                .catch(err => { if (!cancelled) setErreur(apiErrorMessage(err, 'Impossible d’afficher les rendez-vous de ce patient.')); })
+                .finally(() => { if (!cancelled) setLoading(false); });
+        }, 0);
+        return () => { cancelled = true; clearTimeout(timer); };
+    }, [searchParams]);
+
     const rechercher = async (e) => {
         e.preventDefault();
         setErreur(null);
+        const terme = recherche.trim();
+        if (terme.length < 3) {
+            setRdvs(null);
+            setErreur('Saisissez votre numéro de téléphone ou votre nom complet.');
+            return;
+        }
         setLoading(true);
         setRdvs(null);
 
         try {
-            const res = await axiosClient.get(`/rdv/telephone/${encodeURIComponent(telephone)}`);
+            const res = await axiosClient.get('/rdv/recherche', { params: { q: terme } });
             setRdvs(res.data);
-        } catch {
-            setErreur('Erreur lors de la recherche');
+        } catch (err) {
+            console.error('Recherche des rendez-vous impossible', err);
+            setErreur(apiErrorMessage(err, 'Impossible de rechercher les rendez-vous. Vérifiez votre connexion et réessayez.'));
         } finally {
             setLoading(false);
         }
     };
 
     const annuler = async (id) => {
-        if (!confirm('Annuler ce RDV ?')) return;
+        if (!window.confirm('Annuler ce RDV ?')) return;
+        setErreur(null);
         try {
-            const res = await axiosClient.put(`/rdv/${id}/annuler`);
-            setRdvs(rdvs.map(r => r.id === id ? res.data : r));
-        } catch {
-            setErreur("Impossible d'annuler");
+            // Le jeton remis à la création prouve que le rendez-vous est bien celui de ce visiteur (le personnel connecté en est dispensé).
+            const token = localStorage.getItem(`rdv-access-${id}`);
+            const res = await axiosClient.put(`/rdv/${id}/annuler`, null, { headers: token ? { 'X-RDV-Access-Token': token } : {} });
+            setRdvs(current => current.map(r => r.id === id ? { ...r, ...res.data, motif: r.motif } : r));
+        } catch (err) {
+            setErreur(err.response?.status === 403
+                ? 'Annulation impossible depuis cet appareil. Contactez le cabinet pour annuler ce rendez-vous.'
+                : apiErrorMessage(err, "Impossible d'annuler"));
         }
     };
 
@@ -104,7 +134,7 @@ function MesRdv() {
                         Mes rendez-vous
                     </h1>
                     <p className="text-teal-100">
-                        Entrez votre numéro pour retrouver vos RDV
+                        <Editable id="mesrdv.hero.texte">Entrez votre numéro de téléphone ou votre nom pour retrouver vos rendez-vous</Editable>
                     </p>
                 </div>
             </section>
@@ -118,13 +148,16 @@ function MesRdv() {
                 >
                     <div className="flex gap-3">
                         <div className="relative flex-1">
-                            <Phone className="w-5 h-5 text-teal-500 absolute left-4 top-1/2 -translate-y-1/2" />
+                            <Search className="w-5 h-5 text-teal-500 absolute left-4 top-1/2 -translate-y-1/2" />
                             <input
-                                type="tel"
-                                value={telephone}
-                                onChange={(e) => setTelephone(e.target.value)}
+                                type="search"
+                                value={recherche}
+                                onChange={(e) => setRecherche(e.target.value)}
                                 required
-                                placeholder="+261 34 12 345 67"
+                                minLength={3}
+                                maxLength={100}
+                                aria-label="Votre numéro de téléphone ou votre nom complet"
+                                placeholder="034 12 345 67 ou votre nom"
                                 className="w-full pl-12 pr-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-800 dark:text-white focus:border-teal-500 focus:outline-none transition"
                             />
                         </div>
@@ -136,11 +169,12 @@ function MesRdv() {
                             {loading ? (
                                 <Loader2 className="w-5 h-5 animate-spin" />
                             ) : (
-                                <Search className="w-5 h-5" />
+                                <ClipboardList className="w-5 h-5" />
                             )}
                             Chercher
                         </button>
                     </div>
+                    <p className="mt-3 text-xs text-gray-500 dark:text-gray-400">Par nom : vos rendez-vous à venir et ceux des 30 derniers jours. Avec votre numéro de téléphone : tout votre historique.</p>
                 </form>
 
                 {/* ========== ERREUR ========== */}
@@ -176,68 +210,12 @@ function MesRdv() {
                                     {rdvs.length} rendez-vous trouvé{rdvs.length > 1 ? 's' : ''}
                                 </p>
 
-                                <div className="space-y-4">
-                                    {rdvs.map((rdv) => {
-                                        const statut = statutInfo(rdv.statut);
-                                        const StatutIcon = statut.Icon;
-                                        const peutAnnuler = rdv.statut === 'EN_ATTENTE' || rdv.statut === 'CONFIRME';
-
-                                        return (
-                                            <div
-                                                key={rdv.id}
-                                                className={`bg-white dark:bg-gray-800 rounded-2xl shadow-md border-l-4 ${statut.border} border-t border-r border-b border-gray-100 dark:border-gray-700 p-6 hover:shadow-lg transition-shadow`}
-                                            >
-                                                <div className="flex justify-between items-start mb-4">
-                                                    <div className="flex items-center gap-3">
-                                                        <div className="w-11 h-11 bg-gradient-to-br from-teal-500 to-teal-700 rounded-xl flex items-center justify-center shadow-md">
-                                                            <User className="w-5 h-5 text-white" />
-                                                        </div>
-                                                        <div>
-                                                            <p className="font-bold text-gray-800 dark:text-white">
-                                                                {rdv.nomClient}
-                                                            </p>
-                                                            <p className="text-sm text-gray-500 dark:text-gray-400">
-                                                                {rdv.ageClient} ans
-                                                            </p>
-                                                        </div>
-                                                    </div>
-                                                    <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold ${statut.classes}`}>
-                                                        <StatutIcon className="w-3 h-3" />
-                                                        {statut.label}
-                                                    </span>
-                                                </div>
-
-                                                {/* Détails du RDV */}
-                                                <div className={`${statut.bg} rounded-xl p-3 mb-4 flex items-center gap-6 text-sm`}>
-                                                    <span className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
-                                                        <div className="w-6 h-6 bg-white dark:bg-gray-800 rounded-md flex items-center justify-center">
-                                                            <Calendar className="w-3.5 h-3.5 text-teal-600" />
-                                                        </div>
-                                                        <span className="font-semibold">{rdv.dateRdv}</span>
-                                                    </span>
-                                                    <span className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
-                                                        <div className="w-6 h-6 bg-white dark:bg-gray-800 rounded-md flex items-center justify-center">
-                                                            <Clock className="w-3.5 h-3.5 text-teal-600" />
-                                                        </div>
-                                                        <span className="font-semibold">{rdv.heureRdv}</span>
-                                                    </span>
-                                                </div>
-
-                                                {/* Bouton Annuler */}
-                                                {peutAnnuler && (
-                                                    <button
-                                                        onClick={() => annuler(rdv.id)}
-                                                        className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-red-500 to-red-600 text-white py-2.5 rounded-xl font-semibold hover:from-red-600 hover:to-red-700 transition shadow-md"
-                                                    >
-                                                        <XCircle className="w-4 h-4" />
-                                                        Annuler ce rendez-vous
-                                                    </button>
-                                                )}
-                                            </div>
-                                        );
-                                    })}
+                                <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800">
+                                    <table className="w-full min-w-[760px] text-left text-sm">
+                                        <thead className="bg-slate-50 text-xs uppercase text-slate-600 dark:bg-gray-700 dark:text-slate-200"><tr>{['Patient', 'Téléphone', 'Date', 'Heure', 'Avec', ...(hasSession() ? ['Motif'] : []), 'Statut', 'Actions'].map(h => <th key={h} className="px-4 py-3 font-semibold">{h}</th>)}</tr></thead>
+                                        <tbody>{rdvs.map(rdv => { const statut = statutInfo(rdv.statut); const StatusIcon = statut.Icon; const peutAnnuler = (rdv.statut === 'EN_ATTENTE' || rdv.statut === 'CONFIRME') && (hasSession() || Boolean(localStorage.getItem(`rdv-access-${rdv.id}`))); return <tr key={rdv.id} className="border-t border-slate-100 dark:border-gray-700"><td className="px-4 py-3 font-semibold">{rdv.nomClient}</td><td className="px-4 py-3 whitespace-nowrap">{formatPhone(rdv.telephoneClient)}</td><td className="px-4 py-3">{rdv.dateRdv}</td><td className="px-4 py-3">{rdv.heureRdv?.slice(0, 5)}</td><td className="px-4 py-3 whitespace-nowrap">{rdv.praticienNom || <span className="text-slate-400">À préciser</span>}</td>{hasSession() && <td className="max-w-48 truncate px-4 py-3" title={rdv.motif || ''}>{rdv.motif || '—'}</td>}<td className="px-4 py-3"><span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold ${statut.classes}`}><StatusIcon className="h-3 w-3" />{statut.label}</span></td><td className="px-4 py-3"><div className="flex flex-wrap gap-2"><button type="button" onClick={() => downloadReceiptPdf(rdv)} className="rounded-lg bg-teal-700 px-3 py-2 text-xs font-semibold text-white">Télécharger le reçu PDF</button><button type="button" onClick={() => printReceipt(rdv)} className="rounded-lg border border-teal-200 px-3 py-2 text-xs font-semibold text-teal-800">Imprimer</button>{peutAnnuler && <button onClick={() => annuler(rdv.id)} className="rounded-lg bg-rose-600 px-3 py-2 text-xs font-semibold text-white">Annuler</button>}</div></td></tr>; })}</tbody>
+                                    </table>
                                 </div>
-
                                 {/* CTA bas de page */}
                                 <div className="text-center mt-8">
                                     <Link
