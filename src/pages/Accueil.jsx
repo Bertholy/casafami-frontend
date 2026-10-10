@@ -13,7 +13,8 @@ import {
 } from 'lucide-react';
 import Editable from '../components/site/Editable';
 import Movable from '../components/site/Movable';
-import { summarizeHours, usePlanning } from '../utils/horaires';
+import { summarizeHours, traduireJours, usePlanning } from '../utils/horaires';
+import { useLang } from '../i18n/LangContext';
 
 // Chaque texte et chaque bouton porte un identifiant « accueil.* » : le super administrateur peut les modifier / déplacer
 // depuis le mode édition du site (voir components/site).
@@ -32,6 +33,7 @@ const SERVICES = [
 const POINTS_FORTS = ['Équipement médical moderne', "Salle d'accouchement sécurisée", 'Accueil chaleureux', 'Équipe expérimentée'];
 
 function Accueil() {
+    const { t } = useLang();
     const planning = usePlanning();
     const horaires = summarizeHours(planning?.horaires);
 
@@ -128,7 +130,7 @@ function Accueil() {
                                     key={i}
                                     className="bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-2xl overflow-hidden hover:shadow-2xl transition-all hover:-translate-y-2 group"
                                 >
-                                    <div className="relative h-40 overflow-hidden"><img src={service.image} alt={service.title} onError={event => { event.currentTarget.onerror = null; event.currentTarget.src = '/general.jpg'; }} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110" /></div>
+                                    <div className="relative h-40 overflow-hidden"><img loading="lazy" decoding="async" src={service.image} alt={service.title} onError={event => { event.currentTarget.onerror = null; event.currentTarget.src = '/general.jpg'; }} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110" /></div>
                                     <div className="p-5"><div className="mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-teal-50 text-teal-600 dark:bg-teal-900/40"><IconComponent className="h-5 w-5" /></div>
                                         <Editable id={`accueil.service${i + 1}.titre`} as="h3" className="text-lg font-bold text-gray-800 dark:text-white mb-2">{service.title}</Editable>
                                         <Editable id={`accueil.service${i + 1}.desc`} as="p" className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">{service.desc}</Editable>
@@ -156,9 +158,9 @@ function Accueil() {
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
                         <div className="relative">
-                            <img
+                            <img loading="lazy" decoding="async"
                                 src="/cabinet_2.jpg"
-                                alt="Cabinet casafami"
+                                alt={t("Cabinet casafami")}
                                 className="rounded-2xl shadow-2xl w-full"
                             />
                             <div className="absolute -bottom-6 -right-6 bg-teal-600 text-white px-6 py-4 rounded-2xl shadow-xl">
@@ -214,12 +216,12 @@ function Accueil() {
                             <Clock className="w-12 h-12 text-teal-600 dark:text-teal-400 mb-4" />
                             <Editable id="accueil.horaires.titre" as="h3" className="text-xl font-bold text-gray-800 dark:text-white mb-4">Horaires</Editable>
                             <div className="space-y-2 text-gray-700 dark:text-gray-300">
-                                {horaires.length === 0 && <p className="text-sm text-gray-500">Horaires disponibles bientôt.</p>}
+                                {horaires.length === 0 && <p className="text-sm text-gray-500">{t("Horaires disponibles bientôt.")}</p>}
                                 {horaires.map(h => (
                                     <div key={h.label} className="space-y-1">
-                                        <p><strong>{h.label} :</strong> {h.global}</p>
-                                        {h.matin && h.apresMidi && <p className="text-sm text-teal-700 dark:text-teal-400">Matin : {h.matin}</p>}
-                                        {h.matin && h.apresMidi && <p className="text-sm text-teal-700 dark:text-teal-400">Après-midi : {h.apresMidi}</p>}
+                                        <p><strong>{traduireJours(h.label, t)} :</strong> {h.global}</p>
+                                        {h.matin && h.apresMidi && <p className="text-sm text-teal-700 dark:text-teal-400">{t("Matin :")} {h.matin}</p>}
+                                        {h.matin && h.apresMidi && <p className="text-sm text-teal-700 dark:text-teal-400">{t("Après-midi :")} {h.apresMidi}</p>}
                                     </div>
                                 ))}
                                 <Editable id="accueil.horaires.urgences" as="p" className="text-sm text-gray-500 dark:text-gray-400 mt-3">Urgences 24h/24</Editable>

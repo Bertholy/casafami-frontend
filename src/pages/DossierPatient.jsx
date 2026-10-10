@@ -5,6 +5,7 @@ import axiosClient from '../api/axiosClient';
 import AdminLayout from '../components/AdminLayout';
 import Notice from '../components/Notice';
 import PatientSearch from '../components/PatientSearch';
+import MaterniteDossier from '../components/maternite/MaterniteDossier';
 import { STATUS, formatDateFr, hhmm } from '../constants/app';
 import { btnPrimary, btnSecondary, card, inputClass } from '../constants/ui';
 import { apiErrorMessage, getRole, hasSession, LOGIN_PATH, homeForRole } from '../utils/auth';
@@ -123,6 +124,7 @@ export default function DossierPatient() {
                     </div>
 
                     <div className="space-y-6">
+                        <MaterniteDossier telephone={dossier.telephone} peutSupprimer={peutSupprimer} />
                         <section className={`${card} p-5`}>
                             <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
                                 <h2 className="flex items-center gap-2 font-semibold"><Stethoscope size={18} className="text-teal-700" />Consultations <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs dark:bg-gray-800">{dossier.consultations.length}</span></h2>

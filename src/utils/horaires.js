@@ -35,6 +35,9 @@ export function summarizeHours(horaires = []) {
     }));
 }
 
+/** « Lun - Ven » ou « Samedi » dans la langue affichée. */
+export const traduireJours = (label, t) => String(label).split(' - ').map(jour => t(jour)).join(' - ');
+
 let cache = null;
 /** Planning public (horaires + jours fermés), chargé une seule fois par visite. */
 export function usePlanning() {
@@ -51,24 +54,24 @@ export function usePlanning() {
 export const resetPlanningCache = () => { cache = null; };
 
 /** Explique à l'utilisateur pourquoi une journée n'a aucun créneau à proposer. */
-export function explainNoSlots(dateIso, planning, today) {
+export function explainNoSlots(dateIso, planning, today, t = texte => texte) {
     if (!dateIso) return '';
     const ferme = planning?.joursFermes?.find(j => j.date === dateIso);
-    if (ferme) return `Le cabinet est fermé ce jour-là${ferme.motif ? ` (${ferme.motif})` : ''}.`;
+    if (ferme) return ferme.motif ? t('Le cabinet est fermé ce jour-là ({motif}).', { motif: ferme.motif }) : t('Le cabinet est fermé ce jour-là.');
     const jour = ((new Date(`${dateIso}T12:00:00`).getDay() + 6) % 7) + 1;
     const horaire = planning?.horaires?.find(h => h.jourSemaine === jour);
-    if (horaire && !horaire.ouvert) return `Le cabinet est fermé le ${FULL_DAYS[jour - 1].toLowerCase()}.`;
-    if (dateIso === today) return 'Il ne reste plus de créneau disponible aujourd’hui.';
-    return 'Tous les créneaux de ce jour sont déjà pris.';
+    if (horaire && !horaire.ouvert) return t('Le cabinet est fermé le {jour}.', { jour: t(FULL_DAYS[jour - 1].toLowerCase()) });
+    if (dateIso === today) return t('Il ne reste plus de créneau disponible aujourd’hui.');
+    return t('Tous les créneaux de ce jour sont déjà pris.');
 }
 
 /** « Ouvert tous les jours », « Ouvert du lundi au vendredi »… d'après le planning réel du cabinet. */
-export function libelleOuverture(horaires) {
-    if (!horaires?.length) return 'Choisissez la date de votre rendez-vous';
+export function libelleOuverture(horaires, t = texte => texte) {
+    if (!horaires?.length) return t('Choisissez la date de votre rendez-vous');
     const ouverts = horaires.filter(h => h.ouvert).sort((a, b) => a.jourSemaine - b.jourSemaine).map(h => h.jourSemaine);
-    if (ouverts.length === 7) return 'Ouvert tous les jours';
-    if (ouverts.length === 0) return 'Cabinet actuellement fermé';
+    if (ouverts.length === 7) return t('Ouvert tous les jours');
+    if (ouverts.length === 0) return t('Cabinet actuellement fermé');
     const consecutifs = ouverts.every((jour, i) => i === 0 || jour === ouverts[i - 1] + 1);
-    if (consecutifs && ouverts.length > 1) return `Ouvert du ${FULL_DAYS[ouverts[0] - 1].toLowerCase()} au ${FULL_DAYS[ouverts[ouverts.length - 1] - 1].toLowerCase()}`;
-    return `Ouvert : ${ouverts.map(jour => FULL_DAYS[jour - 1].toLowerCase()).join(', ')}`;
+    if (consecutifs && ouverts.length > 1) return t('Ouvert du {debut} au {fin}', { debut: t(FULL_DAYS[ouverts[0] - 1].toLowerCase()), fin: t(FULL_DAYS[ouverts[ouverts.length - 1] - 1].toLowerCase()) });
+    return t('Ouvert : {jours}', { jours: ouverts.map(jour => t(FULL_DAYS[jour - 1].toLowerCase())).join(', ') });
 }

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axiosClient from '../api/axiosClient';
 import { APP_NAME } from '../constants/app';
-import { apiErrorMessage, homeForRole } from '../utils/auth';
+import { apiErrorMessage, homeForRole, saveSession } from '../utils/auth';
 import { Lock, Mail, Loader2, AlertCircle, Stethoscope, ArrowLeft } from 'lucide-react';
 
 function Login() {
@@ -21,9 +21,7 @@ function Login() {
             const res = await axiosClient.post('/auth/login', { email: email.trim(), motDePasse });
 
             // Sauvegarder le token et les infos
-            localStorage.setItem('token', res.data.token);
-            localStorage.setItem('email', res.data.email);
-            localStorage.setItem('role', res.data.role);
+            saveSession(res.data);
             navigate(homeForRole(res.data.role));
         } catch (err) {
             setErreur(err.response?.status === 401 ? 'Email ou mot de passe incorrect' : apiErrorMessage(err, 'Connexion impossible. Réessayez dans un instant.'));
@@ -95,6 +93,10 @@ function Login() {
                                 className="w-full pl-11 pr-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-800 dark:text-white focus:border-teal-500 focus:outline-none transition"
                             />
                         </div>
+                    </div>
+
+                    <div className="-mt-3 mb-6 text-right">
+                        <Link to="/medecin/mot-de-passe-oublie" className="text-sm font-medium text-teal-700 hover:underline dark:text-teal-300">Mot de passe oublié ?</Link>
                     </div>
 
                     {/* Bouton */}

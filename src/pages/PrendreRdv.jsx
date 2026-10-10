@@ -22,8 +22,10 @@ import {
     Home,
     Bot,
 } from 'lucide-react';
+import { useLang } from '../i18n/LangContext';
 
 function PrendreRdv() {
+    const { t } = useLang();
     const [form, setForm] = useState({
         nomClient: '',
         ageClient: '',
@@ -45,7 +47,7 @@ function PrendreRdv() {
 
     const telechargerPdf = async () => {
         try { await downloadRendezVousPdf(succes); setErreurPdf(''); }
-        catch (err) { console.error('Téléchargement du PDF impossible', err); setErreurPdf(err.message || 'Le téléchargement du PDF a échoué.'); }
+        catch (err) { console.error('Téléchargement du PDF impossible', err); setErreurPdf(err.message || t("Le téléchargement du PDF a échoué.")); }
     };
 
     useEffect(() => {
@@ -81,8 +83,8 @@ function PrendreRdv() {
     const onSubmit = async (e) => {
         e.preventDefault();
         setErreur(null);
-        if (!heureChoisie) { setErreur('Choisissez un créneau encore disponible.'); return; }
-        if (!isPlausiblePhone(form.telephoneClient)) { setErreur('Saisissez un numéro de téléphone valide, par exemple 034 12 345 67.'); return; }
+        if (!heureChoisie) { setErreur(t("Choisissez un créneau encore disponible.")); return; }
+        if (!isPlausiblePhone(form.telephoneClient)) { setErreur(t("Saisissez un numéro de téléphone valide, par exemple 034 12 345 67.")); return; }
         setLoading(true);
 
         try {
@@ -95,12 +97,12 @@ function PrendreRdv() {
             setSucces(res.data);
         } catch (err) {
             console.error('Création du rendez-vous impossible', err);
-            setErreur(apiErrorMessage(err, 'Impossible d’enregistrer ce rendez-vous. Vérifiez les informations et le créneau, puis réessayez.'));
+            setErreur(apiErrorMessage(err, t("Impossible d’enregistrer ce rendez-vous. Vérifiez les informations et le créneau, puis réessayez.")));
             if (err.response?.status === 409) {
                 // Le créneau vient d'être pris : on le retire et on réaffiche ce qui reste libre ce jour-là.
                 setForm(current => ({ ...current, heureRdv: '' }));
                 refreshSlots();
-                setErreur('Ce créneau vient d’être réservé par quelqu’un d’autre. Voici les créneaux encore disponibles pour cette date : choisissez-en un autre.');
+                setErreur(t("Ce créneau vient d’être réservé par quelqu’un d’autre. Voici les créneaux encore disponibles pour cette date : choisissez-en un autre."));
             }
         } finally {
             setLoading(false);
@@ -117,36 +119,36 @@ function PrendreRdv() {
                             <CheckCircle className="w-12 h-12 text-green-600 dark:text-green-400" />
                         </div>
                         <h2 className="text-3xl font-bold text-gray-800 dark:text-white mb-3">
-                            Demande enregistrée !
+                            {t("Demande enregistrée !")}
                         </h2>
                         <p className="text-gray-600 dark:text-gray-400 mb-8">
-                            Votre rendez-vous est en attente de confirmation par le cabinet. Vous serez prévenu par SMS.
+                            {t("Votre rendez-vous est en attente de confirmation par le cabinet. Vous serez prévenu par SMS.")}
                         </p>
 
                         <div className="bg-gradient-to-br from-teal-50 to-teal-100 dark:from-gray-700 dark:to-gray-700 rounded-2xl p-6 text-left space-y-3 mb-8">
                             <div className="flex justify-between items-center">
-                                <span className="text-gray-500 dark:text-gray-400 text-sm">Nom</span>
+                                <span className="text-gray-500 dark:text-gray-400 text-sm">{t("Nom")}</span>
                                 <span className="font-bold text-gray-800 dark:text-white">{succes.nomClient}</span>
                             </div>
                             <div className="flex justify-between items-center">
-                                <span className="text-gray-500 dark:text-gray-400 text-sm">Date</span>
+                                <span className="text-gray-500 dark:text-gray-400 text-sm">{t("Date")}</span>
                                 <span className="font-bold text-gray-800 dark:text-white">{succes.dateRdv}</span>
                             </div>
                             <div className="flex justify-between items-center">
-                                <span className="text-gray-500 dark:text-gray-400 text-sm">Heure</span>
+                                <span className="text-gray-500 dark:text-gray-400 text-sm">{t("Heure")}</span>
                                 <span className="font-bold text-teal-600 dark:text-teal-400 text-lg">{succes.heureRdv}</span>
                             </div>
                         </div>
 
                         <div className="grid gap-3 md:grid-cols-3">
-                            <button onClick={telechargerPdf} className="flex-1 rounded-xl bg-teal-700 py-3 font-semibold text-white hover:bg-teal-800">Télécharger le PDF</button>
-                            <button onClick={() => printReceipt(succes)} className="flex-1 rounded-xl border border-teal-200 py-3 font-semibold text-teal-800 hover:bg-teal-50">Imprimer le reçu</button>
+                            <button onClick={telechargerPdf} className="flex-1 rounded-xl bg-teal-700 py-3 font-semibold text-white hover:bg-teal-800">{t("Télécharger le PDF")}</button>
+                            <button onClick={() => printReceipt(succes)} className="flex-1 rounded-xl border border-teal-200 py-3 font-semibold text-teal-800 hover:bg-teal-50">{t("Imprimer le reçu")}</button>
                             <Link
                                 to="/"
                                 className="flex-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 py-3 rounded-xl font-semibold hover:bg-gray-200 dark:hover:bg-gray-600 transition flex items-center justify-center gap-2"
                             >
                                 <Home className="w-4 h-4" />
-                                Accueil
+                                {t("Accueil")}
                             </Link>
                             <button
                                 onClick={() => {
@@ -155,10 +157,10 @@ function PrendreRdv() {
                                 }}
                                 className="flex-1 bg-teal-600 text-white py-3 rounded-xl font-semibold hover:bg-teal-700 transition"
                             >
-                                Autre RDV
+                                {t("Autre RDV")}
                             </button>
                         </div>
-                        {erreurPdf && <p role="alert" className="mt-4 rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700">{erreurPdf}</p>}
+                        {erreurPdf && <p role="alert" className="mt-4 rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700">{t(erreurPdf)}</p>}
                     </div>
                 </div>
             </div>
@@ -176,15 +178,15 @@ function PrendreRdv() {
 
                 <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex items-center gap-2 text-sm text-teal-100 mb-6">
-                        <Link to="/" className="hover:text-white transition">Accueil</Link>
+                        <Link to="/" className="hover:text-white transition">{t("Accueil")}</Link>
                         <ChevronRight className="w-4 h-4" />
-                        <span className="text-white font-medium">Prendre RDV</span>
+                        <span className="text-white font-medium">{t("Prendre RDV")}</span>
                     </div>
 
                     <div className="text-center">
                         <span className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm text-white border border-white/30 px-4 py-2 rounded-full text-sm font-semibold mb-4">
                             <Calendar className="w-4 h-4" />
-                            Réservation en ligne
+                            {t("Réservation en ligne")}
                         </span>
                         <Editable id="rdv.hero.titre" as="h1" className="text-4xl md:text-5xl font-bold text-white mb-4">Prenez votre rendez-vous</Editable>
                         <Editable id="rdv.hero.texte" as="p" className="text-lg text-teal-100 max-w-2xl mx-auto">Remplissez le formulaire en 2 minutes. Confirmation par SMS.</Editable>
@@ -197,9 +199,9 @@ function PrendreRdv() {
                 <div className="max-w-4xl mx-auto px-4">
                     <div className="grid grid-cols-3 gap-4 text-center">
                         {[
-                            { num: '1', label: 'Vos infos', active: true },
-                            { num: '2', label: 'Date', active: !!form.nomClient },
-                            { num: '3', label: 'Heure', active: !!form.dateRdv },
+                            { num: '1', label: t("Vos infos"), active: true },
+                            { num: '2', label: t("Date"), active: !!form.nomClient },
+                            { num: '3', label: t("Heure"), active: !!form.dateRdv },
                         ].map((etape, i) => (
                             <div key={i} className="flex flex-col items-center">
                                 <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold mb-2 transition ${
@@ -228,8 +230,8 @@ function PrendreRdv() {
                         <div className="bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 rounded-xl p-4 mb-6 flex items-start gap-3">
                             <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
                             <div>
-                                <p className="font-semibold text-red-700 dark:text-red-400">Erreur</p>
-                                <p className="text-sm text-red-600 dark:text-red-300">{erreur}</p>
+                                <p className="font-semibold text-red-700 dark:text-red-400">{t("Erreur")}</p>
+                                <p className="text-sm text-red-600 dark:text-red-300">{t(erreur)}</p>
                             </div>
                         </div>
                     )}
@@ -244,10 +246,10 @@ function PrendreRdv() {
                                 </div>
                                 <div>
                                     <h2 className="text-xl font-bold text-gray-800 dark:text-white">
-                                        Vos informations
+                                        {t("Vos informations")}
                                     </h2>
                                     <p className="text-sm text-gray-500 dark:text-gray-400">
-                                        Ces données restent confidentielles
+                                        {t("Ces données restent confidentielles")}
                                     </p>
                                 </div>
                             </div>
@@ -255,7 +257,7 @@ function PrendreRdv() {
                             <div className="space-y-4">
                                 <div>
                                     <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                                        Nom complet *
+                                        {t("Nom complet *")}
                                     </label>
                                     <input
                                         type="text"
@@ -263,7 +265,7 @@ function PrendreRdv() {
                                         value={form.nomClient}
                                         onChange={onChange}
                                         required
-                                        placeholder="Ex: Ahmed Benali"
+                                        placeholder={t("Ex: Ahmed Benali")}
                                         className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-800 dark:text-white focus:border-teal-500 focus:outline-none transition"
                                     />
                                 </div>
@@ -271,7 +273,7 @@ function PrendreRdv() {
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div>
                                         <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                                            Âge *
+                                            {t("Âge *")}
                                         </label>
                                         <input
                                             type="number"
@@ -288,7 +290,7 @@ function PrendreRdv() {
 
                                     <div>
                                         <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                                            Téléphone *
+                                            {t("Téléphone *")}
                                         </label>
                                         <div className="relative">
                                             <Phone className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
@@ -305,27 +307,27 @@ function PrendreRdv() {
                                                 className="w-full pl-10 pr-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-800 dark:text-white focus:border-teal-500 focus:outline-none transition"
                                             />
                                         </div>
-                                        <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">Exemple : 034 12 345 67</p>
+                                        <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">{t("Exemple : 034 12 345 67")}</p>
                                     </div>
                                 </div>
 
                                 {services.length > 0 && (
                                     <div>
-                                        <label htmlFor="serviceId" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Service souhaité (facultatif)</label>
+                                        <label htmlFor="serviceId" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">{t("Service souhaité (facultatif)")}</label>
                                         <select id="serviceId" name="serviceId" value={form.serviceId} onChange={onChange} className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-800 dark:text-white focus:border-teal-500 focus:outline-none transition">
-                                            <option value="">Je ne sais pas encore</option>
-                                            {services.map(service => <option key={service.id} value={service.id}>{service.nom}</option>)}
+                                            <option value="">{t("Je ne sais pas encore")}</option>
+                                            {services.map(service => <option key={service.id} value={service.id}>{t(service.nom)}</option>)}
                                         </select>
                                     </div>
                                 )}
 
                                 <div>
                                     <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-                                        <label htmlFor="motif" className="block text-sm font-semibold text-gray-700 dark:text-gray-300">Motif du rendez-vous</label>
-                                        <button type="button" onClick={() => setAssistantOuvert(true)} className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-teal-600 to-teal-700 px-4 py-2 text-sm font-bold text-white shadow-md transition hover:from-teal-700 hover:to-teal-800"><Bot className="h-4 w-4" />Aidez-moi à préciser mon motif</button>
+                                        <label htmlFor="motif" className="block text-sm font-semibold text-gray-700 dark:text-gray-300">{t("Motif du rendez-vous")}</label>
+                                        <button type="button" onClick={() => setAssistantOuvert(true)} className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-teal-600 to-teal-700 px-4 py-2 text-sm font-bold text-white shadow-md transition hover:from-teal-700 hover:to-teal-800"><Bot className="h-4 w-4" />{t("Aidez-moi à préciser mon motif")}</button>
                                     </div>
-                                    <p className="mb-2 text-sm text-gray-500">Répondez à quelques questions : l’assistant prépare pour vous un motif précis, que vous pouvez modifier. Il ne pose pas de diagnostic ; en cas d’urgence, appelez le cabinet ou les urgences.</p>
-                                    <textarea id="motif" name="motif" value={form.motif} onChange={onChange} maxLength={2000} rows={4} placeholder="Expliquez brièvement la raison de votre rendez-vous : suivi de grossesse, consultation prénatale, échographie, douleurs ou autre demande." className="w-full resize-y rounded-xl border-2 border-gray-200 bg-white px-4 py-3 text-gray-800 focus:border-teal-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white" />
+                                    <p className="mb-2 text-sm text-gray-500">{t("Répondez à quelques questions : l’assistant prépare pour vous un motif précis, que vous pouvez modifier. Il ne pose pas de diagnostic ; en cas d’urgence, appelez le cabinet ou les urgences.")}</p>
+                                    <textarea id="motif" name="motif" value={form.motif} onChange={onChange} maxLength={2000} rows={4} placeholder={t("Expliquez brièvement la raison de votre rendez-vous : suivi de grossesse, consultation prénatale, échographie, douleurs ou autre demande.")} className="w-full resize-y rounded-xl border-2 border-gray-200 bg-white px-4 py-3 text-gray-800 focus:border-teal-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white" />
                                     <p className="mt-1 text-right text-xs text-gray-500">{form.motif.length}/2000</p>
                                 </div>
                             </div>
@@ -339,10 +341,10 @@ function PrendreRdv() {
                                 </div>
                                 <div>
                                     <h2 className="text-xl font-bold text-gray-800 dark:text-white">
-                                        Choisissez une date
+                                        {t("Choisissez une date")}
                                     </h2>
                                     <p className="text-sm text-gray-500 dark:text-gray-400">
-                                        {libelleOuverture(planning?.horaires)}
+                                        {libelleOuverture(planning?.horaires, t)}
                                     </p>
                                 </div>
                             </div>
@@ -367,12 +369,12 @@ function PrendreRdv() {
                                     </div>
                                     <div>
                                         <h2 className="text-xl font-bold text-gray-800 dark:text-white">
-                                            Choisissez un créneau
+                                            {t("Choisissez un créneau")}
                                         </h2>
                                         <p className="text-sm text-gray-500 dark:text-gray-400">
-                                            {creneaux.length > 0 ? `${creneaux.length} créneau${creneaux.length > 1 ? 'x' : ''} disponible${creneaux.length > 1 ? 's' : ''} ce jour-là` : `Créneaux de ${planning?.dureeCreneauMinutes || 30} minutes`}
+                                            {creneaux.length > 0 ? t(creneaux.length > 1 ? '{n} créneaux disponibles ce jour-là' : '{n} créneau disponible ce jour-là', { n: creneaux.length }) : t('Créneaux de {minutes} minutes', { minutes: planning?.dureeCreneauMinutes || 30 })}
                                         </p>
-                                        {creneauPerdu && <p role="alert" className="mt-1 text-sm font-medium text-orange-700 dark:text-orange-300">Le créneau que vous aviez choisi n’est plus disponible : choisissez-en un autre.</p>}
+                                        {creneauPerdu && <p role="alert" className="mt-1 text-sm font-medium text-orange-700 dark:text-orange-300">{t("Le créneau que vous aviez choisi n’est plus disponible : choisissez-en un autre.")}</p>}
                                     </div>
                                 </div>
 
@@ -380,17 +382,17 @@ function PrendreRdv() {
                                     <div className="text-center py-6">
                                         <Loader2 className="w-8 h-8 text-teal-600 animate-spin mx-auto mb-2" />
                                         <p className="text-gray-500 dark:text-gray-400 text-sm">
-                                            Chargement des créneaux...
+                                            {t("Chargement des créneaux...")}
                                         </p>
                                     </div>
                                 ) : slotsError ? (
                                     <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-4 text-center">
-                                        <p className="text-red-700 dark:text-red-300 text-sm">Impossible de charger les créneaux. <button type="button" onClick={refreshSlots} className="font-semibold underline">Réessayer</button></p>
+                                        <p className="text-red-700 dark:text-red-300 text-sm">{t("Impossible de charger les créneaux.")} <button type="button" onClick={refreshSlots} className="font-semibold underline">{t("Réessayer")}</button></p>
                                     </div>
                                 ) : creneaux.length === 0 ? (
                                     <div className="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-xl p-4 text-center">
                                         <p className="text-orange-700 dark:text-orange-300 text-sm">
-                                            {explainNoSlots(form.dateRdv, planning, todayISO())} Choisissez une autre date.
+                                            {explainNoSlots(form.dateRdv, planning, todayISO(), t)} {t("Choisissez une autre date.")}
                                         </p>
                                     </div>
                                 ) : (
@@ -426,17 +428,17 @@ function PrendreRdv() {
                                 {loading ? (
                                     <>
                                         <Loader2 className="w-5 h-5 animate-spin" />
-                                        Envoi en cours...
+                                        {t("Envoi en cours...")}
                                     </>
                                 ) : (
                                     <>
                                         <Calendar className="w-5 h-5" />
-                                        Confirmer le rendez-vous
+                                        {t("Confirmer le rendez-vous")}
                                     </>
                                 )}
                             </button>
                             <p className="text-center text-xs text-gray-400 dark:text-gray-500 mt-4">
-                                Sans inscription · Confirmation par SMS · Annulation gratuite
+                                {t("Sans inscription · Confirmation par SMS · Annulation gratuite")}
                             </p>
                         </div>
                     </form>

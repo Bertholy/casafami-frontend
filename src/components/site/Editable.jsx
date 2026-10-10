@@ -1,5 +1,6 @@
 import { createElement } from 'react';
 import { useSiteContent } from '../../context/SiteContentContext';
+import { useLang } from '../../i18n/LangContext';
 
 const NBSP = String.fromCharCode(160);
 
@@ -8,11 +9,15 @@ const NBSP = String.fromCharCode(160);
  * Hors mode édition : affiche le texte personnalisé, sinon le texte d'origine (children, une simple chaîne).
  * En mode édition : cliquer sur le texte permet de le modifier ; la modification est enregistrée en quittant le champ.
  * Entrée valide, Échap annule. Un champ vidé revient au texte d'origine.
+ * En malgache : texte malgache personnalisé (identifiant « .mg »), sinon texte personnalisé en français, sinon traduction d'origine.
  */
 export default function Editable({ id, as = 'span', children, className, ...rest }) {
     const { content, editMode, save } = useSiteContent();
-    const original = typeof children === 'string' ? children : '';
-    const text = content[id]?.texte ?? original;
+    const { lang, t } = useLang();
+    const francais = typeof children === 'string' ? children : '';
+    const original = lang === 'mg' && francais ? t(francais) : francais;   // texte d'origine dans la langue affichée
+    const cle = lang === 'mg' ? `${id}.mg` : id;
+    const text = lang === 'mg' ? (content[cle]?.texte ?? content[id]?.texte ?? original) : (content[id]?.texte ?? original);
 
     if (!editMode) return createElement(as, { className, ...rest }, text);
 
@@ -21,7 +26,7 @@ export default function Editable({ id, as = 'span', children, className, ...rest
         const value = element.innerText.split(NBSP).join(' ').trim();
         if (value === text) return;
         // Un texte identique à l'original ou vide supprime la personnalisation.
-        save(id, { texte: value === original ? '' : value });
+        save(cle, { texte: value === original ? '' : value });
         if (!value) element.innerText = original;
     };
 

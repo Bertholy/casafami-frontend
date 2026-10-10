@@ -1,12 +1,13 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
 import {
-    Activity, BarChart3, CalendarDays, CalendarPlus, Camera, CalendarClock, ExternalLink, FileSignature, KeyRound, LayoutDashboard, Loader2, LogOut, Menu, Moon, Palette,
+    Activity, BarChart3, Baby, ClipboardCheck, DatabaseBackup, CalendarDays, CalendarPlus, Camera, CalendarClock, ExternalLink, FileSignature, KeyRound, LayoutDashboard, Loader2, LogOut, Menu, Moon, Palette,
     Pencil, ScrollText, UsersRound, Stethoscope, Sun, Trash2, UserCog, UserRound, Users, X, HeartPulse,
 } from 'lucide-react';
 import axiosClient, { assetUrl } from '../api/axiosClient';
 import PatientSearch from './PatientSearch';
 import NotificationBell from './NotificationBell';
+import MessagerieBouton from './MessagerieBouton';
 import { useTheme } from '../context/ThemeContext';
 import { APP_NAME, getRoleLabel } from '../constants/app';
 import { apiErrorMessage, clearSession, getEmail, getRole, homeForRole } from '../utils/auth';
@@ -57,6 +58,7 @@ export default function AdminLayout({ title, subtitle, actions, children }) {
             heading: 'Activité',
             items: [
                 { to: home, label: 'Tableau de bord', icon: LayoutDashboard, end: true },
+                ...(['MEDECIN', 'SAGE_FEMME', 'INFIRMIERE'].includes(role) ? [{ to: '/espace/mes-patients', label: 'Mes patients', icon: ClipboardCheck }] : []),
                 { to: home, state: { create: true }, label: 'Nouveau rendez-vous', icon: CalendarPlus, key: 'new' },
                 { to: '/calendrier', label: 'Calendrier', icon: CalendarDays },
                 ...(isAdmin || role === 'SECRETAIRE' ? [{ to: '/corbeille', label: 'Corbeille', icon: Trash2 }] : []),
@@ -66,6 +68,7 @@ export default function AdminLayout({ title, subtitle, actions, children }) {
             heading: 'Patients',
             items: [
                 { to: '/patients/dossier', label: 'Dossiers patients', icon: Users },
+                ...(role !== 'SECRETAIRE' ? [{ to: '/patients/maternite', label: 'Suivi maternité', icon: Baby }] : []),
                 ...(role !== 'INFIRMIERE' ? [{ to: '/assistant/ordonnance', label: 'Assistant d’ordonnance', icon: FileSignature }] : []),
             ],
         }] : []),
@@ -84,6 +87,7 @@ export default function AdminLayout({ title, subtitle, actions, children }) {
                 { to: '/admin/occupation', label: 'Occupation du personnel', icon: UsersRound },
                 { to: '/admin/planning', label: 'Horaires et congés', icon: CalendarClock },
                 { to: '/admin/journal', label: 'Journal d’audit', icon: ScrollText },
+                { to: '/admin/sauvegardes', label: 'Sauvegardes', icon: DatabaseBackup },
                 { to: '/admin/personnalisation', label: 'Couleurs du site', icon: Palette },
                 { to: '/?edition=1', label: 'Modifier le site', icon: Pencil, key: 'edit-site' },
             ],
@@ -158,7 +162,8 @@ export default function AdminLayout({ title, subtitle, actions, children }) {
                     </div>
                     <div className="ml-auto flex items-center gap-2">
                         <PatientSearch className="relative hidden w-56 md:block xl:w-72" />
-                        <NotificationBell onOpenRdv={() => navigate(home)} />
+                        <MessagerieBouton />
+                        <NotificationBell onOpenRdv={notification => navigate(notification?.lien || (notification?.rendezVousId ? (role === 'SUPER_ADMIN' ? `${home}?rdv=${notification.rendezVousId}` : `/espace/mes-patients?rdv=${notification.rendezVousId}`) : home))} />
                         <button onClick={toggleTheme} aria-label="Changer de thème" title="Changer de thème"
                             className="rounded-xl border border-slate-200 p-2.5 text-slate-600 transition hover:bg-slate-100 dark:border-gray-700 dark:text-yellow-300 dark:hover:bg-gray-800">
                             {theme === 'dark' ? <Sun size={17} /> : <Moon size={17} />}

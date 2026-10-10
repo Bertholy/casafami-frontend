@@ -14,8 +14,10 @@ import {
     Clock,
     CheckCircle,
 } from 'lucide-react';
+import { useLang } from '../i18n/LangContext';
 
 function MesRdv() {
+    const { t } = useLang();
     const [searchParams] = useSearchParams();
     const [recherche, setRecherche] = useState('');
     const [rdvs, setRdvs] = useState(null);
@@ -43,7 +45,7 @@ function MesRdv() {
         const terme = recherche.trim();
         if (terme.length < 3) {
             setRdvs(null);
-            setErreur('Saisissez votre numéro de téléphone ou votre nom complet.');
+            setErreur(t("Saisissez votre numéro de téléphone ou votre nom complet."));
             return;
         }
         setLoading(true);
@@ -54,14 +56,14 @@ function MesRdv() {
             setRdvs(res.data);
         } catch (err) {
             console.error('Recherche des rendez-vous impossible', err);
-            setErreur(apiErrorMessage(err, 'Impossible de rechercher les rendez-vous. Vérifiez votre connexion et réessayez.'));
+            setErreur(apiErrorMessage(err, t("Impossible de rechercher les rendez-vous. Vérifiez votre connexion et réessayez.")));
         } finally {
             setLoading(false);
         }
     };
 
     const annuler = async (id) => {
-        if (!window.confirm('Annuler ce RDV ?')) return;
+        if (!window.confirm(t("Annuler ce RDV ?"))) return;
         setErreur(null);
         try {
             // Le jeton remis à la création prouve que le rendez-vous est bien celui de ce visiteur (le personnel connecté en est dispensé).
@@ -70,8 +72,8 @@ function MesRdv() {
             setRdvs(current => current.map(r => r.id === id ? { ...r, ...res.data, motif: r.motif } : r));
         } catch (err) {
             setErreur(err.response?.status === 403
-                ? 'Annulation impossible depuis cet appareil. Contactez le cabinet pour annuler ce rendez-vous.'
-                : apiErrorMessage(err, "Impossible d'annuler"));
+                ? t("Annulation impossible depuis cet appareil. Contactez le cabinet pour annuler ce rendez-vous.")
+                : apiErrorMessage(err, t("Impossible d'annuler")));
         }
     };
 
@@ -80,7 +82,7 @@ function MesRdv() {
         switch (statut) {
             case 'EN_ATTENTE':
                 return {
-                    label: 'En attente',
+                    label: t("En attente"),
                     classes: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400',
                     border: 'border-l-yellow-500',
                     bg: 'bg-yellow-50 dark:bg-yellow-900/10',
@@ -88,7 +90,7 @@ function MesRdv() {
                 };
             case 'CONFIRME':
                 return {
-                    label: 'Confirmé',
+                    label: t("Confirmé"),
                     classes: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
                     border: 'border-l-green-500',
                     bg: 'bg-green-50 dark:bg-green-900/10',
@@ -96,7 +98,7 @@ function MesRdv() {
                 };
             case 'ANNULE':
                 return {
-                    label: 'Annulé',
+                    label: t("Annulé"),
                     classes: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
                     border: 'border-l-red-500',
                     bg: 'bg-red-50 dark:bg-red-900/10',
@@ -104,7 +106,7 @@ function MesRdv() {
                 };
             case 'TERMINE':
                 return {
-                    label: 'Terminé',
+                    label: t("Terminé"),
                     classes: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300',
                     border: 'border-l-gray-500',
                     bg: 'bg-gray-50 dark:bg-gray-900/10',
@@ -131,7 +133,7 @@ function MesRdv() {
                         <Calendar className="w-8 h-8 text-white" />
                     </div>
                     <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">
-                        Mes rendez-vous
+                        {t("Mes rendez-vous")}
                     </h1>
                     <p className="text-teal-100">
                         <Editable id="mesrdv.hero.texte">Entrez votre numéro de téléphone ou votre nom pour retrouver vos rendez-vous</Editable>
@@ -156,8 +158,8 @@ function MesRdv() {
                                 required
                                 minLength={3}
                                 maxLength={100}
-                                aria-label="Votre numéro de téléphone ou votre nom complet"
-                                placeholder="034 12 345 67 ou votre nom"
+                                aria-label={t("Votre numéro de téléphone ou votre nom complet")}
+                                placeholder={t("034 12 345 67 ou votre nom")}
                                 className="w-full pl-12 pr-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-800 dark:text-white focus:border-teal-500 focus:outline-none transition"
                             />
                         </div>
@@ -171,16 +173,16 @@ function MesRdv() {
                             ) : (
                                 <ClipboardList className="w-5 h-5" />
                             )}
-                            Chercher
+                            {t("Chercher")}
                         </button>
                     </div>
-                    <p className="mt-3 text-xs text-gray-500 dark:text-gray-400">Par nom : vos rendez-vous à venir et ceux des 30 derniers jours. Avec votre numéro de téléphone : tout votre historique.</p>
+                    <p className="mt-3 text-xs text-gray-500 dark:text-gray-400">{t("Par nom : vos rendez-vous à venir et ceux des 30 derniers jours. Avec votre numéro de téléphone : tout votre historique.")}</p>
                 </form>
 
                 {/* ========== ERREUR ========== */}
                 {erreur && (
                     <div className="bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 rounded-xl p-4 mb-6 text-red-700 dark:text-red-400 text-sm shadow-sm">
-                        {erreur}
+                        {t(erreur)}
                     </div>
                 )}
 
@@ -193,27 +195,27 @@ function MesRdv() {
                                     <ClipboardList className="w-8 h-8 text-gray-400" />
                                 </div>
                                 <p className="text-gray-600 dark:text-gray-400 mb-4 font-semibold">
-                                    Aucun RDV trouvé
+                                    {t("Aucun RDV trouvé")}
                                 </p>
                                 <Link
                                     to="/prendre-rdv"
                                     className="inline-flex items-center gap-2 bg-gradient-to-r from-teal-600 to-teal-700 text-white px-5 py-2 rounded-xl font-semibold hover:from-teal-700 hover:to-teal-800 transition shadow-md"
                                 >
                                     <Calendar className="w-4 h-4" />
-                                    Prendre un rendez-vous
+                                    {t("Prendre un rendez-vous")}
                                 </Link>
                             </div>
                         ) : (
                             <div>
                                 {/* Compteur */}
                                 <p className="text-sm font-semibold text-gray-600 dark:text-gray-400 mb-3">
-                                    {rdvs.length} rendez-vous trouvé{rdvs.length > 1 ? 's' : ''}
+                                    {rdvs.length} {rdvs.length > 1 ? t("rendez-vous trouvés") : t("rendez-vous trouvé")}
                                 </p>
 
                                 <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800">
                                     <table className="w-full min-w-[760px] text-left text-sm">
                                         <thead className="bg-slate-50 text-xs uppercase text-slate-600 dark:bg-gray-700 dark:text-slate-200"><tr>{['Patient', 'Téléphone', 'Date', 'Heure', 'Avec', ...(hasSession() ? ['Motif'] : []), 'Statut', 'Actions'].map(h => <th key={h} className="px-4 py-3 font-semibold">{h}</th>)}</tr></thead>
-                                        <tbody>{rdvs.map(rdv => { const statut = statutInfo(rdv.statut); const StatusIcon = statut.Icon; const peutAnnuler = (rdv.statut === 'EN_ATTENTE' || rdv.statut === 'CONFIRME') && (hasSession() || Boolean(localStorage.getItem(`rdv-access-${rdv.id}`))); return <tr key={rdv.id} className="border-t border-slate-100 dark:border-gray-700"><td className="px-4 py-3 font-semibold">{rdv.nomClient}</td><td className="px-4 py-3 whitespace-nowrap">{formatPhone(rdv.telephoneClient)}</td><td className="px-4 py-3">{rdv.dateRdv}</td><td className="px-4 py-3">{rdv.heureRdv?.slice(0, 5)}</td><td className="px-4 py-3 whitespace-nowrap">{rdv.praticienNom || <span className="text-slate-400">À préciser</span>}</td>{hasSession() && <td className="max-w-48 truncate px-4 py-3" title={rdv.motif || ''}>{rdv.motif || '—'}</td>}<td className="px-4 py-3"><span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold ${statut.classes}`}><StatusIcon className="h-3 w-3" />{statut.label}</span></td><td className="px-4 py-3"><div className="flex flex-wrap gap-2"><button type="button" onClick={() => downloadReceiptPdf(rdv)} className="rounded-lg bg-teal-700 px-3 py-2 text-xs font-semibold text-white">Télécharger le reçu PDF</button><button type="button" onClick={() => printReceipt(rdv)} className="rounded-lg border border-teal-200 px-3 py-2 text-xs font-semibold text-teal-800">Imprimer</button>{peutAnnuler && <button onClick={() => annuler(rdv.id)} className="rounded-lg bg-rose-600 px-3 py-2 text-xs font-semibold text-white">Annuler</button>}</div></td></tr>; })}</tbody>
+                                        <tbody>{rdvs.map(rdv => { const statut = statutInfo(rdv.statut); const StatusIcon = statut.Icon; const peutAnnuler = (rdv.statut === 'EN_ATTENTE' || rdv.statut === 'CONFIRME') && (hasSession() || Boolean(localStorage.getItem(`rdv-access-${rdv.id}`))); return <tr key={rdv.id} className="border-t border-slate-100 dark:border-gray-700"><td className="px-4 py-3 font-semibold">{rdv.nomClient}</td><td className="px-4 py-3 whitespace-nowrap">{formatPhone(rdv.telephoneClient)}</td><td className="px-4 py-3">{rdv.dateRdv}</td><td className="px-4 py-3">{rdv.heureRdv?.slice(0, 5)}</td><td className="px-4 py-3 whitespace-nowrap">{rdv.praticienNom || <span className="text-slate-400">{t("À préciser")}</span>}</td>{hasSession() && <td className="max-w-48 truncate px-4 py-3" title={rdv.motif || ''}>{rdv.motif || '—'}</td>}<td className="px-4 py-3"><span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold ${statut.classes}`}><StatusIcon className="h-3 w-3" />{statut.label}</span></td><td className="px-4 py-3"><div className="flex flex-wrap gap-2"><button type="button" onClick={() => downloadReceiptPdf(rdv)} className="rounded-lg bg-teal-700 px-3 py-2 text-xs font-semibold text-white">{t("Télécharger le reçu PDF")}</button><button type="button" onClick={() => printReceipt(rdv)} className="rounded-lg border border-teal-200 px-3 py-2 text-xs font-semibold text-teal-800">{t("Imprimer")}</button>{peutAnnuler && <button onClick={() => annuler(rdv.id)} className="rounded-lg bg-rose-600 px-3 py-2 text-xs font-semibold text-white">{t("Annuler")}</button>}</div></td></tr>; })}</tbody>
                                     </table>
                                 </div>
                                 {/* CTA bas de page */}
@@ -223,7 +225,7 @@ function MesRdv() {
                                         className="inline-flex items-center gap-2 bg-gradient-to-r from-teal-600 to-teal-700 text-white px-6 py-3 rounded-xl font-bold hover:from-teal-700 hover:to-teal-800 transition shadow-lg"
                                     >
                                         <Calendar className="w-5 h-5" />
-                                        Prendre un nouveau rendez-vous
+                                        {t("Prendre un nouveau rendez-vous")}
                                     </Link>
                                 </div>
                             </div>

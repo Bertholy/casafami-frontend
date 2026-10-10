@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import {
-    Ban, UserCheck, CalendarCheck, CalendarClock, CalendarDays, Check, CheckCheck, ChevronLeft, ChevronRight, Clock3,
+    BadgeCheck, Ban, UserCheck, CalendarCheck, CalendarClock, CalendarDays, Check, CheckCheck, ChevronLeft, ChevronRight, Clock3,
     Download, Eye, FileDown, FolderOpen, Loader2, Pencil, Plus, Printer, RefreshCw, Search, Trash2, X,
 } from 'lucide-react';
 import axiosClient from '../api/axiosClient';
@@ -12,6 +12,7 @@ import WeekChart from '../components/dashboard/WeekChart';
 import AgendaToday from '../components/dashboard/AgendaToday';
 import RdvFormModal from '../components/dashboard/RdvFormModal';
 import AttributionDialog from '../components/dashboard/AttributionDialog';
+import CarteDemande from '../components/dashboard/CarteDemande';
 import { STATUS, formatDateFr, hhmm, todayISO } from '../constants/app';
 import { apiErrorMessage, getRole, hasSession, homeForRole, LOGIN_PATH } from '../utils/auth';
 import { formatPhone } from '../utils/phone';
@@ -58,6 +59,8 @@ function periodDates(period) {
 function Dashboard() {
     const navigate = useNavigate();
     const location = useLocation();
+    const [params, setParams] = useSearchParams();
+    const rdvCible = Number(params.get('rdv')) || null; // rendez-vous à traiter, ouvert depuis une notification
     const role = getRole();
     const home = homeForRole(role);
     const isSuperAdmin = role === 'SUPER_ADMIN';
@@ -80,10 +83,11 @@ function Dashboard() {
     const [modal, setModal] = useState(null);
     const [toast, setToast] = useState(null);
     const [confirmDialog, setConfirmDialog] = useState(null);
-    const [attribution, setAttribution] = useState(null); // { rdv, mode: 'confirm' | 'assign' }
+    const [attribution, setAttribution] = useState(null); // { rdv }
+    const [cible, setCible] = useState({ id: null, rdv: null, absent: false });
 
-    const load = useCallback(async () => {
-        setLoading(true); setError('');
+    const load = useCallback(async (silencieux = false) => {
+        if (!silencieux) { setLoading(true); setError(''); }
         try {
             const [selected, week] = await Promise.all([
                 axiosClient.get('/rendez-vous/dashboard', { params: { periode: period } }),
@@ -92,19 +96,31 @@ function Dashboard() {
             setRdvs(selected.data.rendezVous || []);
             setStats({ ...EMPTY_STATS, ...selected.data.stats });
             setWeekRdvs(week.data.rendezVous || []);
+            if (rdvCible) {
+                try { const { data } = await axiosClient.get(`/rdv/${rdvCible}`); setCible({ id: rdvCible, rdv: data, absent: false }); }
+                catch { setCible({ id: rdvCible, rdv: null, absent: true }); }
+            }
         } catch (err) {
             console.error('Chargement du tableau de bord impossible', err);
             setError(apiErrorMessage(err, 'Impossible de charger le tableau de bord. Réessayez dans un instant.'));
         } finally { setLoading(false); }
-    }, [period]);
+    }, [period, rdvCible]);
 
     // Redirige vers l'espace du rôle (ex. une secrétaire arrivée sur /medecin/dashboard), puis charge les données.
     useEffect(() => {
         if (!hasSession()) { navigate(LOGIN_PATH, { replace: true }); return undefined; }
         if (location.pathname !== home) { navigate(home, { replace: true }); return undefined; }
-        const timer = window.setTimeout(load, 0);
+        const timer = window.setTimeout(() => load(), 0);
         return () => window.clearTimeout(timer);
     }, [load, navigate, home, location.pathname]);
+
+    // Actualisation discrète toutes les 20 secondes et au retour sur l'onglet.
+    useEffect(() => {
+        const rafraichir = () => { if (document.visibilityState === 'visible') load(true); };
+        const timer = window.setInterval(rafraichir, 20000);
+        window.addEventListener('focus', rafraichir);
+        return () => { window.clearInterval(timer); window.removeEventListener('focus', rafraichir); };
+    }, [load]);
 
     useEffect(() => {
         axiosClient.get('/rdv/form-options').then(({ data }) => setOptions(data)).catch(() => {});
@@ -149,9 +165,19 @@ function Dashboard() {
         catch (err) { console.error(fallback, err); setError(apiErrorMessage(err, fallback)); }
     };
 
-    const confirmRdv = rdv => {
-        if (isSuperAdmin) { setAttribution({ rdv, mode: 'confirm' }); return Promise.resolve(); }
-        return run(async () => { await axiosClient.put(`/rdv/${rdv.id}/confirmer`); setNotice(`Rendez-vous de ${rdv.nomClient} confirmé.`); }, 'La confirmation a échoué. Réessayez.');
+    // Deux confirmations : 1) la personne attribuée accepte ; 2) le super administrateur confirme (le patient reçoit alors son SMS).
+    const aucunPraticien = (options.praticiens || []).length === 0;
+    const estMien = (rdv, profile) => estPraticien && rdv.praticienId === profile?.id;
+    const peutAccepter = (rdv, profile) => estMien(rdv, profile) && !rdv.personnelConfirme && (rdv.statut === 'EN_ATTENTE' || rdv.statut === 'CONFIRME');
+    const peutConfirmer = rdv => isSuperAdmin && rdv.statut === 'EN_ATTENTE' && (rdv.praticienId ? rdv.personnelConfirme : aucunPraticien);
+    const peutTerminer = (rdv, profile) => rdv.statut === 'CONFIRME' && (isSuperAdmin || estMien(rdv, profile));
+    const accepterRdv = rdv => run(async () => { await axiosClient.put(`/rdv/${rdv.id}/accepter`); setNotice(`Vous avez accepté le rendez-vous de ${rdv.nomClient}. Le super administrateur en est informé et va le confirmer.`); }, 'L’acceptation a échoué. Réessayez.');
+    const confirmRdv = rdv => run(async () => { await axiosClient.put(`/rdv/${rdv.id}/confirmer`); setNotice(`Rendez-vous de ${rdv.nomClient} confirmé : le patient va recevoir son SMS.`); }, 'La confirmation a échoué. Réessayez.');
+    const badgeAcceptation = rdv => {
+        if (!rdv.praticienId || (rdv.statut !== 'EN_ATTENTE' && rdv.statut !== 'CONFIRME')) return null;
+        return rdv.personnelConfirme
+            ? <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-semibold text-emerald-800 dark:bg-emerald-500/15 dark:text-emerald-300"><Check size={11} />Accepté</span>
+            : <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-semibold text-amber-800 dark:bg-amber-500/15 dark:text-amber-300"><Clock3 size={11} />Réponse attendue</span>;
     };
     const attributionTerminee = async message => { setAttribution(null); setNotice(message); await load(); };
     const finishRdv = rdv => run(async () => { await axiosClient.put(`/rdv/${rdv.id}/terminer`); setNotice(`Consultation de ${rdv.nomClient} terminée.`); }, 'Le changement de statut a échoué. Réessayez.');
@@ -218,6 +244,14 @@ function Dashboard() {
     return (
         <AdminLayout title="Tableau de bord" subtitle={formatDateFr(today, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })} actions={newButton}>
             {profile => <>
+                {/* ---------- Demande à traiter (ouverte depuis une notification) ---------- */}
+                {rdvCible && cible.id === rdvCible && (
+                    <CarteDemande rdv={cible.rdv} absent={cible.absent} estSuperAdmin={isSuperAdmin}
+                        peutAccepter={Boolean(cible.rdv) && peutAccepter(cible.rdv, profile)} peutConfirmer={Boolean(cible.rdv) && peutConfirmer(cible.rdv)}
+                        onAccepter={() => accepterRdv(cible.rdv)} onConfirmer={() => confirmRdv(cible.rdv)} onAttribuer={() => setAttribution({ rdv: cible.rdv })}
+                        onFermer={() => setParams({}, { replace: true })} />
+                )}
+
                 {/* ---------- Bandeau d'accueil ---------- */}
                 <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-teal-700 via-teal-600 to-emerald-600 p-6 text-white shadow-lg sm:p-8">
                     <div className="pointer-events-none absolute -right-10 -top-16 h-56 w-56 rounded-full bg-white/10 blur-2xl" />
@@ -245,7 +279,7 @@ function Dashboard() {
                                     <button onClick={() => exportList('pdf')} className="block w-full rounded-lg px-3 py-2 text-left hover:bg-slate-100 dark:hover:bg-gray-800">PDF — {periodLabel.toLowerCase()}</button>
                                 </div>
                             </details>
-                            <button onClick={load} className="inline-flex items-center gap-2 rounded-xl border border-white/30 bg-white/10 px-4 py-2.5 text-sm font-medium backdrop-blur transition hover:bg-white/20"><RefreshCw size={16} className={loading ? 'animate-spin' : ''} />Actualiser</button>
+                            <button onClick={() => load()} className="inline-flex items-center gap-2 rounded-xl border border-white/30 bg-white/10 px-4 py-2.5 text-sm font-medium backdrop-blur transition hover:bg-white/20"><RefreshCw size={16} className={loading ? 'animate-spin' : ''} />Actualiser</button>
                         </div>
                     </div>
                 </section>
@@ -292,7 +326,7 @@ function Dashboard() {
                             <div><h2 className="font-semibold">Agenda du jour</h2><p className="text-xs text-slate-500 dark:text-gray-400">{formatDateFr(today, { weekday: 'long', day: 'numeric', month: 'long' })}</p></div>
                             <CalendarClock className="text-teal-600" size={20} />
                         </div>
-                        <AgendaToday items={todayItems} peutConfirmer={rdv => rdv.statut === 'EN_ATTENTE' && (isSuperAdmin || (estPraticien && rdv.praticienId === profile?.id))} onConfirm={confirmRdv} onOpen={rdv => setModal({ type: 'view', rdv })} />
+                        <AgendaToday items={todayItems} peutConfirmer={rdv => peutAccepter(rdv, profile) || peutConfirmer(rdv)} libelle={rdv => (peutAccepter(rdv, profile) ? 'Accepter' : 'Confirmer')} onConfirm={rdv => (peutAccepter(rdv, profile) ? accepterRdv(rdv) : confirmRdv(rdv))} onOpen={rdv => setModal({ type: 'view', rdv })} />
                     </div>
                 </section>
 
@@ -341,16 +375,17 @@ function Dashboard() {
                                             </td>
                                             <td className="px-4 py-3 whitespace-nowrap"><div className="font-medium">{formatDateFr(rdv.dateRdv)}</div><div className="text-xs text-slate-500 dark:text-gray-400">{hhmm(rdv.heureRdv)}</div></td>
                                             <td className="px-4 py-3 text-slate-600 dark:text-gray-300">{rdv.serviceNom || '—'}</td>
-                                            <td className="px-4 py-3 text-slate-600 dark:text-gray-300">{rdv.praticienNom ? <span className="inline-flex items-center gap-1.5 font-medium"><UserCheck size={14} className="text-teal-600" />{rdv.praticienNom}</span> : (isSuperAdmin && rdv.statut !== 'ANNULE' && rdv.statut !== 'TERMINE' ? <button onClick={() => setAttribution({ rdv, mode: rdv.statut === 'EN_ATTENTE' ? 'confirm' : 'assign' })} className="rounded-full bg-amber-100 px-2.5 py-1 text-xs font-semibold text-amber-800 transition hover:bg-amber-200 dark:bg-amber-500/15 dark:text-amber-300">À attribuer</button> : <span className="text-slate-400">Non attribué</span>)}</td>
+                                            <td className="px-4 py-3 text-slate-600 dark:text-gray-300">{rdv.praticienNom ? <div className="flex flex-col items-start gap-1"><span className="inline-flex items-center gap-1.5 font-medium"><UserCheck size={14} className="text-teal-600" />{rdv.praticienNom}</span>{badgeAcceptation(rdv)}</div> : (isSuperAdmin && rdv.statut !== 'ANNULE' && rdv.statut !== 'TERMINE' ? <button onClick={() => setAttribution({ rdv })} className="rounded-full bg-amber-100 px-2.5 py-1 text-xs font-semibold text-amber-800 transition hover:bg-amber-200 dark:bg-amber-500/15 dark:text-amber-300">À attribuer</button> : <span className="text-slate-400">Non attribué</span>)}</td>
                                             <td className="px-4 py-3"><span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ${st.badge}`}><span className={`h-1.5 w-1.5 rounded-full ${st.dot}`} />{st.label}</span></td>
                                             <td className="px-4 py-3">
                                                 <div className="flex items-center gap-0.5">
                                                     {canOpenDossier && <Link to={`/patients/dossier?telephone=${encodeURIComponent(rdv.telephoneClient)}`} title="Dossier du patient" aria-label={`Dossier de ${rdv.nomClient}`} className="rounded-lg p-2 text-slate-500 transition hover:bg-slate-100 hover:text-teal-700 dark:text-gray-400 dark:hover:bg-gray-800"><FolderOpen size={16} /></Link>}
                                                     <IconButton label="Voir le détail" onClick={() => setModal({ type: 'view', rdv })}><Eye size={16} /></IconButton>
                                                     <IconButton label="Modifier" onClick={() => setModal({ type: 'edit', rdv })}><Pencil size={16} /></IconButton>
-                                                    {rdv.statut === 'EN_ATTENTE' && (isSuperAdmin || (estPraticien && rdv.praticienId === profile?.id)) && <IconButton label={isSuperAdmin ? 'Confirmer et choisir qui prend le rendez-vous' : 'Confirmer'} tone="text-emerald-700 hover:bg-emerald-50 dark:text-emerald-300 dark:hover:bg-emerald-500/10" onClick={() => confirmRdv(rdv)}><Check size={16} /></IconButton>}
-                                                    {isSuperAdmin && (rdv.statut === 'EN_ATTENTE' || rdv.statut === 'CONFIRME') && <IconButton label="Attribuer à une personne du personnel" tone="text-violet-700 hover:bg-violet-50 dark:text-violet-300 dark:hover:bg-violet-500/10" onClick={() => setAttribution({ rdv, mode: 'assign' })}><UserCheck size={16} /></IconButton>}
-                                                    {rdv.statut === 'CONFIRME' && (isSuperAdmin || (estPraticien && rdv.praticienId === profile?.id)) && <IconButton label="Marquer comme terminé" tone="text-sky-700 hover:bg-sky-50 dark:text-sky-300 dark:hover:bg-sky-500/10" onClick={() => finishRdv(rdv)}><CheckCheck size={16} /></IconButton>}
+                                                    {peutAccepter(rdv, profile) && <IconButton label="Accepter ce rendez-vous (je le prends)" tone="text-emerald-700 hover:bg-emerald-50 dark:text-emerald-300 dark:hover:bg-emerald-500/10" onClick={() => accepterRdv(rdv)}><Check size={16} /></IconButton>}
+                                                    {peutConfirmer(rdv) && <IconButton label="Confirmer le rendez-vous (le patient reçoit son SMS)" tone="text-emerald-700 hover:bg-emerald-50 dark:text-emerald-300 dark:hover:bg-emerald-500/10" onClick={() => confirmRdv(rdv)}><BadgeCheck size={16} /></IconButton>}
+                                                    {isSuperAdmin && (rdv.statut === 'EN_ATTENTE' || rdv.statut === 'CONFIRME') && <IconButton label="Attribuer à une personne du personnel" tone="text-violet-700 hover:bg-violet-50 dark:text-violet-300 dark:hover:bg-violet-500/10" onClick={() => setAttribution({ rdv })}><UserCheck size={16} /></IconButton>}
+                                                    {peutTerminer(rdv, profile) && <IconButton label="Marquer comme terminé" tone="text-sky-700 hover:bg-sky-50 dark:text-sky-300 dark:hover:bg-sky-500/10" onClick={() => finishRdv(rdv)}><CheckCheck size={16} /></IconButton>}
                                                     <IconButton label="Télécharger le reçu PDF" onClick={() => downloadPdf(rdv)}><FileDown size={16} /></IconButton>
                                                     <IconButton label="Imprimer le reçu" onClick={() => printReceipt(rdv)}><Printer size={16} /></IconButton>
                                                     {open && <IconButton label="Annuler le rendez-vous" tone="text-amber-700 hover:bg-amber-50 dark:text-amber-300 dark:hover:bg-amber-500/10" onClick={() => cancelRdv(rdv)}><Ban size={16} /></IconButton>}
@@ -404,7 +439,7 @@ function Dashboard() {
                         </section>
                     </div>
                 )}
-                {attribution && <AttributionDialog key={`${attribution.mode}-${attribution.rdv.id}`} rdv={attribution.rdv} mode={attribution.mode} onClose={() => setAttribution(null)} onDone={attributionTerminee} />}
+                {attribution && <AttributionDialog key={attribution.rdv.id} rdv={attribution.rdv} onClose={() => setAttribution(null)} onDone={attributionTerminee} />}
                 {modal && <RdvFormModal key={`${modal.type}-${modal.rdv?.id ?? 'new'}`} modal={modal} options={options} canAssign={isSuperAdmin} onClose={() => setModal(null)} onSaved={onSaved} />}
             </>}
         </AdminLayout>

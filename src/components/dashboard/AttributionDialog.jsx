@@ -6,11 +6,11 @@ import { apiErrorMessage } from '../../utils/auth';
 import OccupationGrid from './OccupationGrid';
 
 /**
- * Le super administrateur décide qui prend le rendez-vous.
- * mode « confirm » : choisit la personne puis confirme ; mode « assign » : change (ou retire) la personne d'un rendez-vous.
+ * Le super administrateur décide qui prend le rendez-vous : il attribue (ou change, ou retire) la personne.
+ * Celle-ci est prévenue par notification, doit accepter le rendez-vous ; le super administrateur le confirme ensuite.
  * Chaque personne est affichée libre ou occupée à ce créneau, avec le détail de la journée entière.
  */
-export default function AttributionDialog({ rdv, mode, onClose, onDone }) {
+export default function AttributionDialog({ rdv, onClose, onDone }) {
     const heure = hhmm(rdv.heureRdv);
     const [occupation, setOccupation] = useState(null);
     const [choix, setChoix] = useState(rdv.praticienId ? String(rdv.praticienId) : '');
@@ -47,11 +47,8 @@ export default function AttributionDialog({ rdv, mode, onClose, onDone }) {
     const valider = async retirer => {
         setSaving(true); setError('');
         try {
-            if (mode === 'confirm') await axiosClient.put(`/rdv/${rdv.id}/confirmer`, { praticienId: Number(choixEffectif) });
-            else await axiosClient.put(`/rdv/${rdv.id}/praticien`, { praticienId: retirer ? null : Number(choixEffectif) });
-            await onDone(mode === 'confirm'
-                ? `Rendez-vous de ${rdv.nomClient} confirmé et confié à ${selection?.nom || 'la personne choisie'}. Elle a été prévenue.`
-                : retirer ? 'Attribution retirée.' : `Rendez-vous attribué à ${selection?.nom}. La personne a été prévenue.`);
+            await axiosClient.put(`/rdv/${rdv.id}/praticien`, { praticienId: retirer ? null : Number(choixEffectif) });
+            await onDone(retirer ? 'Attribution retirée.' : `Rendez-vous attribué à ${selection?.nom}. La personne a été prévenue : vous serez notifié(e) quand elle l’aura accepté, puis vous pourrez le confirmer.`);
         } catch (err) {
             setError(apiErrorMessage(err, 'Action impossible. Réessayez.'));
             axiosClient.get('/admin/occupation', { params: { date: rdv.dateRdv } }).then(({ data }) => setOccupation(data)).catch(() => {});
@@ -61,10 +58,10 @@ export default function AttributionDialog({ rdv, mode, onClose, onDone }) {
     const peuDePersonnes = occupation && occupation.capaciteParCreneau < personnel.length;
     return (
         <div className="fixed inset-0 z-[65] flex items-center justify-center bg-slate-950/50 p-4 backdrop-blur-sm" onMouseDown={e => { if (e.target === e.currentTarget) onClose(); }}>
-            <section role="dialog" aria-modal="true" aria-label={mode === 'confirm' ? 'Confirmer le rendez-vous' : 'Attribuer le rendez-vous'} className="max-h-[92vh] w-full max-w-3xl overflow-y-auto rounded-2xl bg-white shadow-2xl dark:bg-gray-900">
+            <section role="dialog" aria-modal="true" aria-label="Attribuer le rendez-vous" className="max-h-[92vh] w-full max-w-3xl overflow-y-auto rounded-2xl bg-white shadow-2xl dark:bg-gray-900">
                 <div className="flex items-start justify-between gap-3 border-b border-slate-200 px-5 py-4 dark:border-gray-800">
                     <div>
-                        <h2 className="font-semibold">{mode === 'confirm' ? 'Confirmer et choisir qui prend le rendez-vous' : 'Attribuer le rendez-vous'}</h2>
+                        <h2 className="font-semibold">Attribuer le rendez-vous</h2>
                         <p className="mt-1 text-sm text-slate-500 dark:text-gray-400"><strong className="text-slate-700 dark:text-gray-200">{rdv.nomClient}</strong> · <span className="capitalize">{formatDateFr(rdv.dateRdv, { weekday: 'long', day: 'numeric', month: 'long' })}</span> à <strong>{heure}</strong>{rdv.serviceNom ? ` · ${rdv.serviceNom}` : ''}</p>
                     </div>
                     <button onClick={onClose} aria-label="Fermer" className="rounded-lg p-1 hover:bg-slate-100 dark:hover:bg-gray-800"><X size={20} /></button>
@@ -107,12 +104,12 @@ export default function AttributionDialog({ rdv, mode, onClose, onDone }) {
 
                     {error && <p role="alert" className="rounded-xl bg-rose-50 px-3 py-2 text-sm text-rose-700 dark:bg-rose-500/10 dark:text-rose-300">{error}</p>}
                     <div className="flex flex-wrap items-center justify-end gap-2">
-                        {mode === 'assign' && rdv.praticienId && <button onClick={() => valider(true)} disabled={saving} className="mr-auto rounded-xl border border-slate-200 px-4 py-2 text-sm hover:bg-slate-50 disabled:opacity-50 dark:border-gray-700 dark:hover:bg-gray-800">Ne plus attribuer</button>}
+                        {rdv.praticienId && <button onClick={() => valider(true)} disabled={saving} className="mr-auto rounded-xl border border-slate-200 px-4 py-2 text-sm hover:bg-slate-50 disabled:opacity-50 dark:border-gray-700 dark:hover:bg-gray-800">Ne plus attribuer</button>}
                         <button onClick={onClose} className="rounded-xl border border-slate-200 px-4 py-2 text-sm hover:bg-slate-50 dark:border-gray-700 dark:hover:bg-gray-800">Annuler</button>
                         <button onClick={() => valider(false)} disabled={saving || !selection || selection.occupe}
                             className="inline-flex items-center gap-2 rounded-xl bg-teal-700 px-5 py-2 text-sm font-semibold text-white transition hover:bg-teal-800 disabled:opacity-50">
                             {saving ? <Loader2 size={16} className="animate-spin" /> : <UserCheck size={16} />}
-                            {mode === 'confirm' ? `Confirmer${selection ? ` avec ${selection.nom}` : ''}` : 'Enregistrer l’attribution'}
+                            {selection ? `Attribuer à ${selection.nom}` : 'Attribuer'}
                         </button>
                     </div>
                 </div>

@@ -28,8 +28,9 @@ export default function AdminUsers() {
     const [dialogError, setDialogError] = useState('');
     const [dialogSaving, setDialogSaving] = useState(false);
 
-    const load = useCallback(async () => {
-        setLoading(true);
+    // silencieux = actualisation en arrière-plan : la liste reste affichée au lieu de repasser par « Chargement… »
+    const load = useCallback(async (silencieux = false) => {
+        if (!silencieux) setLoading(true);
         try { const response = await axiosClient.get('/admin/users'); setUsers(response.data); }
         catch (err) { setError(apiErrorMessage(err, 'Impossible de charger les comptes.')); }
         finally { setLoading(false); }
@@ -39,15 +40,19 @@ export default function AdminUsers() {
         const role = getRole();
         if (!hasSession()) { navigate(LOGIN_PATH); return undefined; }
         if (role !== 'SUPER_ADMIN') { navigate(homeForRole(role)); return undefined; }
-        const timer = window.setTimeout(load, 0);
+        const timer = window.setTimeout(() => load(), 0);
         return () => window.clearTimeout(timer);
     }, [load, navigate]);
 
     const createUser = async event => {
         event.preventDefault(); setSaving(true); setError(''); setNotice('');
         try {
-            await axiosClient.post('/admin/users', form);
-            setForm(EMPTY); setNotice('Compte créé. La personne pourra se connecter avec son e-mail et son mot de passe.'); await load();
+            const { data: cree } = await axiosClient.post('/admin/users', form);
+            // le nouveau compte apparaît immédiatement (sans attendre le rechargement de la liste)
+            setUsers(current => [...current.filter(u => u.id !== cree.id), cree]);
+            setForm(EMPTY);
+            setNotice(`Compte créé pour ${cree.nom} (${cree.email}). La personne peut se connecter avec son e-mail et son mot de passe.`);
+            load(true);
         } catch (err) { setError(apiErrorMessage(err, 'La création du compte a échoué. Vérifiez les informations.')); }
         finally { setSaving(false); }
     };
@@ -112,11 +117,11 @@ export default function AdminUsers() {
             <section className={`${card} overflow-hidden`}>
                 <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4 dark:border-gray-800">
                     <div className="flex items-center gap-2"><UserCog size={19} className="text-teal-700" /><h2 className="font-semibold">Comptes existants</h2><span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs dark:bg-gray-800">{users.length}</span></div>
-                    <button onClick={load} className="text-sm text-teal-700 hover:underline dark:text-teal-300">Actualiser</button>
+                    <button onClick={() => load()} className="text-sm text-teal-700 hover:underline dark:text-teal-300">Actualiser</button>
                 </div>
                 {loading ? <div className="flex items-center justify-center gap-2 p-10 text-sm text-slate-500"><Loader2 size={18} className="animate-spin" />Chargement…</div> : (
                     <div className="overflow-x-auto">
-                        <table className="w-full min-w-[700px] text-left text-sm">
+                        <table className="w-full min-w-175 text-left text-sm">
                             <thead className="bg-slate-50 text-xs uppercase text-slate-500 dark:bg-gray-800/60"><tr>{['Nom', 'E-mail', 'Téléphone', 'Rôle et accès', 'Action'].map(h => <th key={h} className="px-5 py-3 font-semibold">{h}</th>)}</tr></thead>
                             <tbody className="divide-y divide-slate-100 dark:divide-gray-800">
                                 {users.map(user => (

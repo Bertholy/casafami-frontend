@@ -1,30 +1,46 @@
+import { Suspense, lazy } from 'react';
 import { BrowserRouter, Routes, Route, Link, useLocation } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import ScrollToTop from './components/ScrollToTop';
 import SiteEditorBar from './components/site/SiteEditorBar';
 import { SiteContentProvider } from './context/SiteContentContext';
-import Accueil from './pages/Accueil';
-import Services from './pages/Services';
-import PrendreRdv from './pages/PrendreRdv';
-import MesRdv from './pages/MesRdv';
-import Login from './pages/Login';
-import Dashboard from './pages/Dashboard';
-import Calendrier from './pages/Calendrier';
-import Statistiques from './pages/Statistiques';
-import DossierPatient from './pages/DossierPatient';
-import AssistantOrdonnance from './pages/AssistantOrdonnance';
-import MaladiesMedecin from './pages/MaladiesMedecin';
-import AdminUsers from './pages/AdminUsers';
-import AdminServices from './pages/AdminServices';
-import AdminTheme from './pages/AdminTheme';
-import AdminPlanning from './pages/AdminPlanning';
-import AdminJournal from './pages/AdminJournal';
-import AdminOccupation from './pages/AdminOccupation';
-import Corbeille from './pages/Corbeille';
+import { LangProvider } from './i18n/LangContext';
+import { STAFF_PREFIXES } from './constants/routes';
 
-// Pages qui ont leur propre barre latérale (AdminLayout) : ni barre de navigation publique ni pied de page.
-const STAFF_PREFIXES = ['/medecin/dashboard', '/medecin/maladies', '/espace/', '/admin', '/corbeille', '/calendrier', '/statistiques', '/patients', '/assistant'];
+// Chaque page est chargée seulement quand on la visite : le premier affichage du site est beaucoup plus léger.
+const Accueil = lazy(() => import('./pages/Accueil'));
+const Services = lazy(() => import('./pages/Services'));
+const PrendreRdv = lazy(() => import('./pages/PrendreRdv'));
+const MesRdv = lazy(() => import('./pages/MesRdv'));
+const Login = lazy(() => import('./pages/Login'));
+const Dashboard = lazy(() => import('./pages/Dashboard'));
+const Calendrier = lazy(() => import('./pages/Calendrier'));
+const Statistiques = lazy(() => import('./pages/Statistiques'));
+const DossierPatient = lazy(() => import('./pages/DossierPatient'));
+const AssistantOrdonnance = lazy(() => import('./pages/AssistantOrdonnance'));
+const MaladiesMedecin = lazy(() => import('./pages/MaladiesMedecin'));
+const AdminUsers = lazy(() => import('./pages/AdminUsers'));
+const AdminServices = lazy(() => import('./pages/AdminServices'));
+const AdminTheme = lazy(() => import('./pages/AdminTheme'));
+const AdminPlanning = lazy(() => import('./pages/AdminPlanning'));
+const AdminJournal = lazy(() => import('./pages/AdminJournal'));
+const AdminOccupation = lazy(() => import('./pages/AdminOccupation'));
+const AdminSauvegardes = lazy(() => import('./pages/AdminSauvegardes'));
+const MesPatients = lazy(() => import('./pages/MesPatients'));
+const SuiviMaternite = lazy(() => import('./pages/SuiviMaternite'));
+const Messagerie = lazy(() => import('./pages/Messagerie'));
+const MotDePasseOublie = lazy(() => import('./pages/MotDePasseOublie'));
+const ReinitialiserMotDePasse = lazy(() => import('./pages/ReinitialiserMotDePasse'));
+const Corbeille = lazy(() => import('./pages/Corbeille'));
+
+function Chargement() {
+    return (
+        <div className="flex min-h-[50vh] items-center justify-center" role="status" aria-label="Chargement">
+            <span className="h-8 w-8 animate-spin rounded-full border-4 border-teal-200 border-t-teal-600" />
+        </div>
+    );
+}
 
 function NotFound() {
     return (
@@ -39,7 +55,7 @@ function NotFound() {
 function AppContent() {
     const location = useLocation();
     const isStaffPage = STAFF_PREFIXES.some(prefix => location.pathname.startsWith(prefix));
-    const isLogin = location.pathname === '/medecin/login';
+    const isLogin = ['/medecin/login', '/medecin/mot-de-passe-oublie', '/medecin/reinitialiser'].includes(location.pathname);
     const isPublicPage = !isStaffPage && !isLogin;
     return (
         <>
@@ -47,12 +63,15 @@ function AppContent() {
             <div className="min-h-screen flex flex-col bg-white dark:bg-gray-900 transition-colors">
                 {isPublicPage && <Navbar />}
                 <main className="grow">
+                    <Suspense fallback={<Chargement />}>
                     <Routes>
                         <Route path="/" element={<Accueil />} />
                         <Route path="/services" element={<Services />} />
                         <Route path="/prendre-rdv" element={<PrendreRdv />} />
                         <Route path="/mes-rdv" element={<MesRdv />} />
                         <Route path="/medecin/login" element={<Login />} />
+                        <Route path="/medecin/mot-de-passe-oublie" element={<MotDePasseOublie />} />
+                        <Route path="/medecin/reinitialiser" element={<ReinitialiserMotDePasse />} />
                         <Route path="/medecin/dashboard" element={<Dashboard />} />
                         <Route path="/espace/sage-femme" element={<Dashboard />} />
                         <Route path="/espace/secretariat" element={<Dashboard />} />
@@ -60,17 +79,22 @@ function AppContent() {
                         <Route path="/calendrier" element={<Calendrier />} />
                         <Route path="/statistiques" element={<Statistiques />} />
                         <Route path="/patients/dossier" element={<DossierPatient />} />
+                        <Route path="/patients/maternite" element={<SuiviMaternite />} />
+                        <Route path="/espace/mes-patients" element={<MesPatients />} />
                         <Route path="/assistant/ordonnance" element={<AssistantOrdonnance />} />
                         <Route path="/corbeille" element={<Corbeille />} />
+                        <Route path="/messagerie" element={<Messagerie />} />
                         <Route path="/admin/utilisateurs" element={<AdminUsers />} />
                         <Route path="/admin/services" element={<AdminServices />} />
                         <Route path="/admin/planning" element={<AdminPlanning />} />
                         <Route path="/admin/journal" element={<AdminJournal />} />
                         <Route path="/admin/occupation" element={<AdminOccupation />} />
+                        <Route path="/admin/sauvegardes" element={<AdminSauvegardes />} />
                         <Route path="/admin/personnalisation" element={<AdminTheme />} />
                         <Route path="/medecin/maladies" element={<MaladiesMedecin />} />
                         <Route path="*" element={<NotFound />} />
                     </Routes>
+                    </Suspense>
                 </main>
                 {isPublicPage && <Footer />}
             </div>
@@ -82,9 +106,11 @@ function AppContent() {
 function App() {
     return (
         <BrowserRouter>
-            <SiteContentProvider>
-                <AppContent />
-            </SiteContentProvider>
+            <LangProvider>
+                <SiteContentProvider>
+                    <AppContent />
+                </SiteContentProvider>
+            </LangProvider>
         </BrowserRouter>
     );
 }

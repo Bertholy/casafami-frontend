@@ -159,6 +159,28 @@ export const CATEGORIES = [
         ],
     },
     {
+        id: 'soins', label: 'Soins infirmiers (pansement, injection…)', emoji: '🩹', service: ['soin'],
+        questions: [
+            { id: 'soin', type: 'multi', resume: 'Soins souhaités', text: 'Quel(s) soin(s) souhaitez-vous ?',
+                options: [{ label: 'Pansement ou soin d’une plaie' }, { label: 'Injection prescrite par un médecin' }, { label: 'Perfusion' }, { label: 'Prise de tension ou de glycémie' }, { label: 'Retrait de fils ou de points de suture' }, { label: 'Autre soin' }] },
+            { id: 'ordonnance', type: 'yesno', resume: 'Ordonnance', text: 'Avez-vous une ordonnance pour ce soin ?' },
+            { id: 'plaie', type: 'choice', resume: 'Plaie depuis', text: 'Depuis quand avez-vous cette plaie ?', options: choix(DUREES), showIf: r => (r.soin || []).includes('Pansement ou soin d’une plaie') },
+            { id: 'signes', type: 'multi', resume: 'Signes sur la plaie', text: 'La plaie présente-t-elle un de ces signes ?', showIf: r => (r.soin || []).includes('Pansement ou soin d’une plaie'),
+                options: [{ label: 'Rougeur, chaleur ou gonflement qui s’étend' }, { label: 'Pus ou mauvaise odeur' }, { label: 'Fièvre' }, aucun('Aucun de ces signes')] },
+            COMMENTAIRE,
+        ],
+    },
+    {
+        id: 'analyses', label: 'Analyses de sang et tests', emoji: '🧪', service: ['analyse'],
+        questions: [
+            { id: 'examens', type: 'multi', resume: 'Examens souhaités', text: 'Quel(s) examen(s) souhaitez-vous ?',
+                options: [{ label: 'Prise de sang (bilan complet)' }, { label: 'Test de paludisme' }, { label: 'Glycémie (sucre dans le sang)' }, { label: 'Groupe sanguin' }, { label: 'Test de grossesse' }, { label: 'Je ne sais pas, c’est sur ordonnance' }, { label: 'Autre examen' }] },
+            { id: 'ordonnance', type: 'yesno', resume: 'Ordonnance', text: 'Avez-vous une ordonnance ou une demande d’un professionnel de santé ?' },
+            { id: 'jeun', type: 'yesno', resume: 'Peut venir à jeun', text: 'Pourrez-vous venir à jeun (sans manger depuis le soir) si c’est nécessaire ?' },
+            COMMENTAIRE,
+        ],
+    },
+    {
         id: 'autre', label: 'Autre demande', emoji: '💬', service: [],
         questions: [
             { id: 'demande', type: 'text', multiline: true, resume: 'Demande', text: 'Décrivez en quelques mots votre demande.', placeholder: 'Ex. : certificat, avis sur un résultat d’analyse…' },
@@ -198,9 +220,11 @@ const formatValue = (question, value) => {
 };
 
 /** Texte du motif construit à partir des réponses (modifiable ensuite par le patient). */
-export function buildMotif(category, answers) {
-    const flags = findRedFlags(category, answers);
+export function buildMotif(category, answers, description = '', urgencesDecrites = []) {
+    const flags = [...findRedFlags(category, answers), ...urgencesDecrites];
     const lines = [`Motif : ${category.label}`];
+    // Les mots du patient, tels qu'il les a écrits : utiles à l'équipe pour confirmer le service.
+    if (description && description.trim()) lines.push(`Description du patient : « ${description.trim().replace(/\s+/g, ' ')} »`);
     for (const question of category.questions) {
         const value = answers[question.id];
         if (value == null || value === '' || (Array.isArray(value) && value.length === 0)) continue;

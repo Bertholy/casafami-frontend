@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { LOGIN_PATH, clearSession } from '../utils/auth';
+import { LOGIN_PATH, clearSession, getToken } from '../utils/auth';
 
 // L'adresse de l'API peut être changée sans toucher au code : VITE_API_URL=https://mon-serveur/api
 export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
@@ -19,7 +19,7 @@ const axiosClient = axios.create({
 // Intercepteur pour ajouter le token JWT automatiquement
 axiosClient.interceptors.request.use(
     (config) => {
-        const token = localStorage.getItem('token');
+        const token = getToken();
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
         }
@@ -33,7 +33,7 @@ axiosClient.interceptors.response.use(
     response => response,
     error => {
         const isLogin = error.config?.url?.includes('/auth/login');
-        if (error.response?.status === 401 && !isLogin && localStorage.getItem('token')) {
+        if (error.response?.status === 401 && !isLogin && getToken()) {
             clearSession();
             if (window.location.pathname !== LOGIN_PATH) window.location.assign(LOGIN_PATH);
         }

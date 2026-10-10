@@ -3,22 +3,32 @@ import { useState } from 'react';
 import { useTheme } from '../context/ThemeContext';
 import { Moon, Sun, Menu, X, Calendar } from 'lucide-react';
 import Editable from './site/Editable';
+import LangSwitch from './LangSwitch';
 import Movable from './site/Movable';
+import { useLang } from '../i18n/LangContext';
 
 function Navbar() {
+    const { t, lang } = useLang();
     const location = useLocation();
     const [menuOpen, setMenuOpen] = useState(false);
     const { theme, toggleTheme } = useTheme();
 
     const liens = [
-        { path: '/', label: 'Accueil' },
-        { path: '/services', label: 'Nos services' },
-        { path: '/prendre-rdv', label: 'Prendre RDV' },
-        { path: '/mes-rdv', label: 'Mes RDV' },
+        { path: '/', label: t("Accueil") },
+        { path: '/services', label: t("Nos services") },
+        { path: '/prendre-rdv', label: t("Prendre RDV") },
+        { path: '/mes-rdv', label: t("Mes RDV") },
     ];
 
     return (
         <nav className="bg-white dark:bg-gray-900 shadow-sm sticky top-0 z-50 border-b border-gray-100 dark:border-gray-800 transition-colors">
+            {/* Barre du haut : choix de la langue (toujours visible, sur ordinateur comme sur téléphone) */}
+            <div className="bg-teal-800 text-white dark:bg-teal-950">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-1.5 flex items-center justify-between gap-3">
+                    <span className="text-xs text-teal-100 truncate">{t("Langue du site")}{lang === 'fr' ? ' · Fiteny' : ''}</span>
+                    <LangSwitch />
+                </div>
+            </div>
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex justify-between items-center h-20">
 
@@ -26,7 +36,7 @@ function Navbar() {
                     <Link to="/" className="flex items-center gap-3">
                         <img
                             src="/logo_casafami.png"
-                            alt="casafami"
+                            alt={t("casafami")}
                             className="h-14 w-auto"
                         />
                         <div className="hidden sm:block">
@@ -58,7 +68,7 @@ function Navbar() {
                         <button
                             onClick={toggleTheme}
                             className="p-2 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-yellow-400 hover:bg-gray-200 dark:hover:bg-gray-700 transition"
-                            aria-label="Changer de thème"
+                            aria-label={t("Changer de thème")}
                         >
                             {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
                         </button>
@@ -115,7 +125,7 @@ function Navbar() {
                             className="mt-2 bg-teal-600 text-white px-4 py-3 rounded-lg font-bold flex items-center justify-center gap-2"
                         >
                             <Calendar className="w-4 h-4" />
-                            Prendre rendez-vous
+                            {t("Prendre rendez-vous")}
                         </Link>
                     </div>
                 )}

@@ -1,6 +1,7 @@
 import { useLocation } from 'react-router-dom';
 import { CheckCircle2, Pencil, RotateCcw, TriangleAlert, X } from 'lucide-react';
 import { useSiteContent } from '../../context/SiteContentContext';
+import { useLang } from '../../i18n/LangContext';
 
 // Préfixe des clés d'éléments de chaque page (voir les composants Editable / Movable).
 const PAGE_PREFIX = { '/': 'accueil.', '/services': 'services.', '/prendre-rdv': 'rdv.', '/mes-rdv': 'mesrdv.' };
@@ -9,6 +10,7 @@ const PAGE_PREFIX = { '/': 'accueil.', '/services': 'services.', '/prendre-rdv':
 export default function SiteEditorBar() {
     const { canEdit, editMode, toggleEditMode, reset, status } = useSiteContent();
     const { pathname } = useLocation();
+    const { lang } = useLang();
     if (!canEdit) return null;
     const prefix = PAGE_PREFIX[pathname];
 
@@ -19,6 +21,7 @@ export default function SiteEditorBar() {
                     className={`inline-flex items-center gap-2 rounded-xl px-3 py-2 font-semibold transition ${editMode ? 'bg-amber-400 text-slate-900' : 'bg-white/10 hover:bg-white/20'}`}>
                     {editMode ? <X size={16} /> : <Pencil size={16} />}{editMode ? 'Terminer l’édition' : 'Modifier le site'}
                 </button>
+                {editMode && <span className={`rounded-lg px-2 py-1 text-xs font-bold ${lang === 'mg' ? 'bg-emerald-400 text-slate-900' : 'bg-sky-400 text-slate-900'}`} title="Changez de langue avec le sélecteur FR / MG du menu">{lang === 'mg' ? 'Version malgache (MG)' : 'Version française (FR)'}</span>}
                 {editMode ? (
                     <>
                         <p className="min-w-0 flex-1 text-xs text-slate-300">

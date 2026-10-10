@@ -1,10 +1,17 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Bell, BellRing, CalendarCheck, CalendarClock, CalendarX, CheckCheck, UserMinus } from 'lucide-react';
+import { BadgeCheck, Bell, BellRing, CalendarCheck, CalendarClock, CalendarPlus, CalendarX, CheckCheck, KeyRound, ShieldAlert, Trash2, UserCheck, UserMinus } from 'lucide-react';
 import axiosClient from '../api/axiosClient';
 
 const REFRESH_MS = 30000;
 const ICONES = {
     RDV_ATTRIBUE: { Icone: CalendarCheck, classe: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300' },
+    RDV_NOUVEAU: { Icone: CalendarPlus, classe: 'bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300' },
+    RDV_MODIFIE: { Icone: CalendarClock, classe: 'bg-sky-100 text-sky-700 dark:bg-sky-500/15 dark:text-sky-300' },
+    RDV_CORBEILLE: { Icone: Trash2, classe: 'bg-rose-100 text-rose-700 dark:bg-rose-500/15 dark:text-rose-300' },
+    RDV_ACCEPTE: { Icone: UserCheck, classe: 'bg-teal-100 text-teal-700 dark:bg-teal-500/15 dark:text-teal-300' },
+    RDV_CONFIRME: { Icone: BadgeCheck, classe: 'bg-sky-100 text-sky-700 dark:bg-sky-500/15 dark:text-sky-300' },
+    MOT_DE_PASSE: { Icone: KeyRound, classe: 'bg-sky-100 text-sky-700 dark:bg-sky-500/15 dark:text-sky-300' },
+    SAUVEGARDE_ECHEC: { Icone: ShieldAlert, classe: 'bg-rose-100 text-rose-700 dark:bg-rose-500/15 dark:text-rose-300' },
     RDV_RETIRE: { Icone: UserMinus, classe: 'bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300' },
     RDV_ANNULE: { Icone: CalendarX, classe: 'bg-rose-100 text-rose-700 dark:bg-rose-500/15 dark:text-rose-300' },
     RDV_DEPLACE: { Icone: CalendarClock, classe: 'bg-sky-100 text-sky-700 dark:bg-sky-500/15 dark:text-sky-300' },
@@ -21,7 +28,7 @@ function ilYa(iso) {
 
 /**
  * Cloche de notifications en haut de l'écran : les rendez-vous que le super administrateur confie, retire ou
- * déplace, et les annulations. Se met à jour toutes les 30 secondes et au retour sur l'onglet.
+ * déplace, les annulations, et — pour le super administrateur — les rendez-vous acceptés par le personnel. Se met à jour toutes les 30 secondes et au retour sur l'onglet.
  */
 export default function NotificationBell({ onOpenRdv }) {
     const [data, setData] = useState({ nonLues: 0, notifications: [] });

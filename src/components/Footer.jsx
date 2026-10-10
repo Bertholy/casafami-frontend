@@ -1,9 +1,11 @@
 import { Link } from 'react-router-dom';
 import { MapPin, Phone, Mail, Clock, Heart } from 'lucide-react';
 import Editable from './site/Editable';
-import { summarizeHours, usePlanning } from '../utils/horaires';
+import { summarizeHours, traduireJours, usePlanning } from '../utils/horaires';
+import { useLang } from '../i18n/LangContext';
 
 function Footer() {
+    const { t } = useLang();
     const planning = usePlanning();
     const horaires = summarizeHours(planning?.horaires);
 
@@ -16,7 +18,7 @@ function Footer() {
                     <div>
                         <img
                             src="/logo_casafami.png"
-                            alt="casafami"
+                            alt={t("casafami")}
                             className="h-20 w-auto mb-4 bg-white rounded-lg p-2"
                         />
                         <Editable id="footer.description" as="p" className="text-sm leading-relaxed mb-4 text-gray-400">
@@ -28,10 +30,10 @@ function Footer() {
                     <div>
                         <Editable id="footer.liens.titre" as="h3" className="text-white font-bold text-lg mb-4">Liens rapides</Editable>
                         <ul className="space-y-2 text-sm">
-                            <li><Link to="/" className="hover:text-teal-400 transition">Accueil</Link></li>
-                            <li><Link to="/services" className="hover:text-teal-400 transition">Nos services</Link></li>
-                            <li><Link to="/prendre-rdv" className="hover:text-teal-400 transition">Prendre RDV</Link></li>
-                            <li><Link to="/mes-rdv" className="hover:text-teal-400 transition">Mes RDV</Link></li>
+                            <li><Link to="/" className="hover:text-teal-400 transition">{t("Accueil")}</Link></li>
+                            <li><Link to="/services" className="hover:text-teal-400 transition">{t("Nos services")}</Link></li>
+                            <li><Link to="/prendre-rdv" className="hover:text-teal-400 transition">{t("Prendre RDV")}</Link></li>
+                            <li><Link to="/mes-rdv" className="hover:text-teal-400 transition">{t("Mes RDV")}</Link></li>
                         </ul>
                     </div>
 
@@ -43,7 +45,7 @@ function Footer() {
                                 <li key={h.label} className="flex items-start gap-2">
                                     <Clock className="w-4 h-4 text-teal-400 shrink-0 mt-1" />
                                     <div>
-                                        <p className="font-semibold text-white">{h.label}</p>
+                                        <p className="font-semibold text-white">{traduireJours(h.label, t)}</p>
                                         <p className="text-gray-400">{h.matin && h.apresMidi ? `${h.matin} · ${h.apresMidi}` : h.global}</p>
                                     </div>
                                 </li>
@@ -89,15 +91,15 @@ function Footer() {
                 <div className="border-t border-gray-800 mt-10 pt-6">
                     <div className="flex flex-col md:flex-row justify-between items-center gap-4">
                         <p className="text-sm text-gray-400">
-                            © {new Date().getFullYear()} <strong className="text-white">casafami</strong> - Cabinet d'Accouchement Sainte Famille. Tous droits réservés.
+                            © {new Date().getFullYear()} <strong className="text-white">casafami</strong> - {t("Cabinet d'Accouchement Sainte Famille. Tous droits réservés.")}
                             <br />
-                            Site conçu et réalisé par VONJIARIMANANA Alpha Bertholy
+                            {t("Site conçu et réalisé par VONJIARIMANANA Alpha Bertholy")}
                         </p>
                         <Link
                             to="/medecin/login"
                             className="text-xs text-gray-500 hover:text-teal-400 transition whitespace-nowrap"
                         >
-                            🔐 Espace du personnel
+                            {t("🔐 Espace du personnel")}
                         </Link>
                     </div>
                 </div>

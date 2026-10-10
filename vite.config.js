@@ -4,4 +4,18 @@ import tailwindcss from '@tailwindcss/vite'
 
 export default defineConfig({
   plugins: [react(), tailwindcss()],
+  build: {
+    rolldownOptions: {
+      output: {
+        // Les bibliothèques changent rarement : elles restent en cache dans le navigateur d'une visite à l'autre.
+        codeSplitting: {
+          groups: [
+            { name: 'react', test: /node_modules[/\\](react|react-dom|react-router|react-router-dom|scheduler)[/\\]/, priority: 30 },
+            { name: 'icones', test: /node_modules[/\\]lucide-react[/\\]/, priority: 20 },
+            { name: 'reseau', test: /node_modules[/\\]axios[/\\]/, priority: 10 },
+          ],
+        },
+      },
+    },
+  },
 })

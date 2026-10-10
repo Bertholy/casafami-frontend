@@ -55,7 +55,7 @@ export default function AdminOccupation() {
                     <li><span className="mr-1 inline-block rounded bg-amber-100 px-1.5 text-amber-800 dark:bg-amber-500/15 dark:text-amber-300">patient</span>en attente</li>
                     <li><span className="mr-1 inline-block rounded bg-emerald-100 px-1.5 text-emerald-800 dark:bg-emerald-500/15 dark:text-emerald-300">patient</span>confirmé</li>
                     <li><span className="mr-1 inline-block rounded bg-sky-100 px-1.5 text-sky-800 dark:bg-sky-500/15 dark:text-sky-300">patient</span>terminé</li>
-                    <li>Ligne « À répartir » : rendez-vous à confier à quelqu’un — confirmez-les depuis le tableau de bord.</li>
+                    <li>Ligne « À répartir » : rendez-vous à confier à quelqu’un — attribuez-les depuis le tableau de bord.</li>
                 </ul>
             </section>
         </AdminLayout>

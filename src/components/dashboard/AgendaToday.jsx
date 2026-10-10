@@ -5,7 +5,7 @@ const CABINET_TIMEZONE = 'Indian/Antananarivo';
 const nowHHMM = () => new Date().toLocaleTimeString('fr-FR', { timeZone: CABINET_TIMEZONE, hour: '2-digit', minute: '2-digit' });
 
 /** Frise chronologique des rendez-vous du jour ; le prochain rendez-vous à venir est mis en avant. */
-export default function AgendaToday({ items, peutConfirmer, onConfirm, onOpen }) {
+export default function AgendaToday({ items, peutConfirmer, libelle, onConfirm, onOpen }) {
     const now = nowHHMM();
     const nextId = items.find(rdv => hhmm(rdv.heureRdv) >= now && (rdv.statut === 'EN_ATTENTE' || rdv.statut === 'CONFIRME'))?.id;
 
@@ -34,7 +34,7 @@ export default function AgendaToday({ items, peutConfirmer, onConfirm, onOpen })
                             </span>
                         </button>
                         {peutConfirmer(rdv) && (
-                            <button type="button" onClick={() => onConfirm(rdv)} title="Confirmer" aria-label={`Confirmer le rendez-vous de ${rdv.nomClient}`}
+                            <button type="button" onClick={() => onConfirm(rdv)} title={libelle(rdv)} aria-label={`${libelle(rdv)} : rendez-vous de ${rdv.nomClient}`}
                                 className="rounded-lg p-2 text-emerald-700 transition hover:bg-emerald-100 dark:text-emerald-300 dark:hover:bg-emerald-500/15"><Check size={16} /></button>
                         )}
                     </li>
