@@ -1,5 +1,11 @@
 # Mises à jour — CASAFAMI (site)
 
+## Nouveau design du site public (branche `design-montagne`)
+
+- Le site public (accueil, services, prendre RDV, mes RDV, connexion, menu, pied de page) reprend le design du modèle « Mountain hotel » : bandeau bleu marine, titres Montserrat en majuscules avec un mot en italique, sections image / texte pleine largeur, boutons carrés, bandeaux ardoise, galerie, mode sombre conservé.
+- Toutes les fonctions sont conservées (réservation, assistant, FR / MG, mode édition du site, notifications, espace personnel et super admin inchangés). La couleur principale suit « Couleurs du site » ; sans personnalisation elle est bleu marine.
+- **Revenir à l'ancien design** : `git checkout main` (l'ancien design y est intact et poussé), ou, pour garder la branche, retirer la classe `theme-montagne` dans `src/App.jsx`.
+
 ## Mise à jour suivante (11 octobre 2026, soir)
 
 - **Rôles et permissions** (menu Administration) : cases par rôle, exceptions par personne, retour aux droits d'origine. Les menus, boutons et pages du personnel s'adaptent aux droits de chacun.

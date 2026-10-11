@@ -7,8 +7,9 @@ import LangSwitch from './LangSwitch';
 import Movable from './site/Movable';
 import { useLang } from '../i18n/LangContext';
 
+/** Barre de navigation du site public : bandeau bleu marine, liens en majuscules, choix de la langue toujours visible. */
 function Navbar() {
-    const { t, lang } = useLang();
+    const { t } = useLang();
     const location = useLocation();
     const [menuOpen, setMenuOpen] = useState(false);
     const { theme, toggleTheme } = useTheme();
@@ -19,117 +20,58 @@ function Navbar() {
         { path: '/prendre-rdv', label: t("Prendre RDV") },
         { path: '/mes-rdv', label: t("Mes RDV") },
     ];
+    const bouton = 'rounded-sm p-2 text-white/90 transition hover:bg-white/10';
 
     return (
-        <nav className="bg-white dark:bg-gray-900 shadow-sm sticky top-0 z-50 border-b border-gray-100 dark:border-gray-800 transition-colors">
-            {/* Barre du haut : choix de la langue (toujours visible, sur ordinateur comme sur téléphone) */}
-            <div className="bg-teal-800 text-white dark:bg-teal-950">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-1.5 flex items-center justify-between gap-3">
-                    <span className="text-xs text-teal-100 truncate">{t("Langue du site")}{lang === 'fr' ? ' · Fiteny' : ''}</span>
-                    <LangSwitch />
+        <nav className="mt-marine sticky top-0 z-50 shadow-md" aria-label={t("Accueil")}>
+            <div className="mx-auto flex h-[78px] max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
+
+                {/* Logo */}
+                <Link to="/" className="flex shrink-0 items-center gap-3">
+                    <img src="/logo_casafami.png" alt={t("casafami")} className="h-12 w-12 bg-white object-contain p-1" />
+                    <div className="hidden sm:block">
+                        <Editable id="nav.titre" as="p" className="font-titre text-[11px] font-bold uppercase leading-tight tracking-[0.28em] text-white/85">Cabinet d'Accouchement</Editable>
+                        <Editable id="nav.sous-titre" as="p" className="font-titre text-xl font-extrabold uppercase leading-tight tracking-[0.3em] text-white">casafami</Editable>
+                    </div>
+                </Link>
+
+                {/* Liens (ordinateur) */}
+                <div className="hidden items-center gap-8 md:flex">
+                    {liens.map(lien => (
+                        <Link key={lien.path} to={lien.path} className="mt-lien-nav" aria-current={location.pathname === lien.path ? 'page' : undefined}>{lien.label}</Link>
+                    ))}
+                </div>
+
+                {/* Actions */}
+                <div className="flex items-center gap-2 sm:gap-3">
+                    <LangSwitch className="[&_svg]:hidden sm:[&_svg]:block" />
+                    <button onClick={toggleTheme} className={bouton} aria-label={t("Changer de thème")}>
+                        {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+                    </button>
+                    <Movable id="nav.btn-rdv" as={Link} to="/prendre-rdv" className="mt-btn-blanc hidden lg:inline-flex">
+                        <Calendar className="h-4 w-4" />
+                        <Editable id="nav.btn-rdv.label">Prendre rendez-vous</Editable>
+                    </Movable>
+                    <button onClick={() => setMenuOpen(!menuOpen)} className={`${bouton} md:hidden`} aria-label={menuOpen ? t("Fermer") : t("Menu")} aria-expanded={menuOpen}>
+                        {menuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+                    </button>
                 </div>
             </div>
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="flex justify-between items-center h-20">
 
-                    {/* Logo */}
-                    <Link to="/" className="flex items-center gap-3">
-                        <img
-                            src="/logo_casafami.png"
-                            alt={t("casafami")}
-                            className="h-14 w-auto"
-                        />
-                        <div className="hidden sm:block">
-                            <Editable id="nav.titre" as="p" className="text-lg font-bold text-gray-800 dark:text-white leading-tight">Cabinet d'Accouchement</Editable>
-                            <Editable id="nav.sous-titre" as="p" className="text-sm text-teal-600 dark:text-teal-400 font-semibold">casafami</Editable>
-                        </div>
-                    </Link>
-
-                    {/* Liens navigation (desktop) */}
-                    <div className="hidden md:flex items-center space-x-1">
-                        {liens.map((lien) => (
-                            <Link
-                                key={lien.path}
-                                to={lien.path}
-                                className={`px-4 py-2 rounded-md text-sm font-medium transition ${
-                                    location.pathname === lien.path
-                                        ? 'text-teal-600 dark:text-teal-400 bg-teal-50 dark:bg-teal-900/30'
-                                        : 'text-gray-700 dark:text-gray-300 hover:text-teal-600 dark:hover:text-teal-400 hover:bg-gray-50 dark:hover:bg-gray-800'
-                                }`}
-                            >
-                                {lien.label}
-                            </Link>
-                        ))}
-                    </div>
-
-                    {/* Actions (droite) */}
-                    <div className="hidden md:flex items-center gap-3">
-                        {/* Bouton thème */}
-                        <button
-                            onClick={toggleTheme}
-                            className="p-2 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-yellow-400 hover:bg-gray-200 dark:hover:bg-gray-700 transition"
-                            aria-label={t("Changer de thème")}
-                        >
-                            {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-                        </button>
-
-                        {/* Bouton RDV */}
-                        <Movable
-                            id="nav.btn-rdv"
-                            as={Link}
-                            to="/prendre-rdv"
-                            className="bg-teal-600 text-white px-6 py-3 rounded-lg text-sm font-bold hover:bg-teal-700 transition shadow-md hover:shadow-lg inline-flex items-center gap-2"
-                        >
-                            <Calendar className="w-4 h-4" />
-                            <Editable id="nav.btn-rdv.label">Prendre rendez-vous</Editable>
-                        </Movable>
-                    </div>
-
-                    {/* Menu burger (mobile) */}
-                    <div className="md:hidden flex items-center gap-2">
-                        <button
-                            onClick={toggleTheme}
-                            className="p-2 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-yellow-400"
-                        >
-                            {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-                        </button>
-                        <button
-                            onClick={() => setMenuOpen(!menuOpen)}
-                            className="text-gray-700 dark:text-white focus:outline-none"
-                        >
-                            {menuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-                        </button>
-                    </div>
-                </div>
-
-                {/* Menu mobile */}
-                {menuOpen && (
-                    <div className="md:hidden py-4 border-t border-gray-100 dark:border-gray-800">
-                        {liens.map((lien) => (
-                            <Link
-                                key={lien.path}
-                                to={lien.path}
-                                onClick={() => setMenuOpen(false)}
-                                className={`block px-4 py-3 rounded-md text-base font-medium ${
-                                    location.pathname === lien.path
-                                        ? 'text-teal-600 dark:text-teal-400 bg-teal-50 dark:bg-teal-900/30'
-                                        : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'
-                                }`}
-                            >
-                                {lien.label}
-                            </Link>
-                        ))}
-                        <Link
-                            to="/prendre-rdv"
-                            onClick={() => setMenuOpen(false)}
-                            className="mt-2 bg-teal-600 text-white px-4 py-3 rounded-lg font-bold flex items-center justify-center gap-2"
-                        >
-                            <Calendar className="w-4 h-4" />
-                            {t("Prendre rendez-vous")}
+            {/* Menu (téléphone) */}
+            {menuOpen && (
+                <div className="border-t border-white/15 bg-black/20 px-4 py-3 md:hidden">
+                    {liens.map(lien => (
+                        <Link key={lien.path} to={lien.path} onClick={() => setMenuOpen(false)} aria-current={location.pathname === lien.path ? 'page' : undefined}
+                            className={`block border-l-4 px-4 py-3 text-sm font-extrabold uppercase tracking-wide text-white ${location.pathname === lien.path ? 'border-white bg-white/10' : 'border-transparent hover:bg-white/5'}`}>
+                            {lien.label}
                         </Link>
-                    </div>
-                )}
-            </div>
+                    ))}
+                    <Link to="/prendre-rdv" onClick={() => setMenuOpen(false)} className="mt-btn-blanc-plein mt-3 w-full">
+                        <Calendar className="h-4 w-4" />{t("Prendre rendez-vous")}
+                    </Link>
+                </div>
+            )}
         </nav>
     );
 }

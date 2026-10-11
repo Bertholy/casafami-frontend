@@ -28,6 +28,13 @@ export function ThemeProvider({ children }) {
         root.classList.toggle('dark', theme === 'dark');
         localStorage.setItem('theme', theme);
         Object.entries(CSS_KEYS).forEach(([key, property]) => root.style.setProperty(property, siteTheme[key] || DEFAULT_THEME[key]));
+        // Site public : la couleur d'origine du cabinet (vert) laisse la place au bleu marine du design « montagne » ;
+        // une couleur choisie par le super administrateur dans « Couleurs du site » est en revanche respectée.
+        [['primaryColor', '--site-primary'], ['buttonColor', '--site-button'], ['linkColor', '--site-link']].forEach(([key, property]) => {
+            const valeur = siteTheme[key];
+            if (valeur && valeur.toLowerCase() !== DEFAULT_THEME[key].toLowerCase()) root.style.setProperty(property, valeur);
+            else root.style.removeProperty(property);
+        });
         localStorage.setItem('siteTheme', JSON.stringify(siteTheme));
     }, [theme, siteTheme]);
 

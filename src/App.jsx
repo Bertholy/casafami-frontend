@@ -62,7 +62,7 @@ function AppContent() {
     return (
         <>
             <ScrollToTop />
-            <div className="min-h-screen flex flex-col bg-white dark:bg-gray-900 transition-colors">
+            <div className={`min-h-screen flex flex-col bg-white dark:bg-gray-900 transition-colors ${isPublicPage || isLogin ? "theme-montagne" : ""}`}>
                 {isPublicPage && <Navbar />}
                 <main className="grow">
                     {isPublicPage && PAGES_EDITABLES[location.pathname] && <TextesAjoutes page={PAGES_EDITABLES[location.pathname]} zone="haut" />}

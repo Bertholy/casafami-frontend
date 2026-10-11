@@ -4,104 +4,105 @@ import Editable from './site/Editable';
 import { summarizeHours, traduireJours, usePlanning } from '../utils/horaires';
 import { useLang } from '../i18n/LangContext';
 
+const titreColonne = 'mb-5 text-xs font-extrabold uppercase tracking-[0.2em] text-white';
+
+/** Pied de page du site public : bandeau ardoise, liens soulignés, coordonnées et horaires du cabinet. */
 function Footer() {
     const { t } = useLang();
     const planning = usePlanning();
     const horaires = summarizeHours(planning?.horaires);
 
     return (
-        <footer className="bg-gray-900 dark:bg-gray-950 text-gray-300 transition-colors">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+        <footer className="mt-ardoise transition-colors">
+            <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
 
-                    {/* ========== COLONNE 1 : LOGO + DESCRIPTION ========== */}
-                    <div>
-                        <img
-                            src="/logo_casafami.png"
-                            alt={t("casafami")}
-                            className="h-20 w-auto mb-4 bg-white rounded-lg p-2"
-                        />
-                        <Editable id="footer.description" as="p" className="text-sm leading-relaxed mb-4 text-gray-400">
+                {/* ========== LOGO + LIENS ========== */}
+                <div className="flex flex-col items-start justify-between gap-8 border-b border-white/20 pb-10 lg:flex-row lg:items-center">
+                    <div className="flex items-center gap-4">
+                        <img src="/logo_casafami.png" alt={t("casafami")} className="h-16 w-16 bg-white object-contain p-1.5" />
+                        <Editable id="footer.description" as="p" className="max-w-xs text-sm leading-relaxed text-white/75">
                             Cabinet d'Accouchement Sainte Famille. Votre santé et celle de votre famille, notre priorité.
                         </Editable>
                     </div>
-
-                    {/* ========== COLONNE 2 : LIENS RAPIDES ========== */}
                     <div>
-                        <Editable id="footer.liens.titre" as="h3" className="text-white font-bold text-lg mb-4">Liens rapides</Editable>
-                        <ul className="space-y-2 text-sm">
-                            <li><Link to="/" className="hover:text-teal-400 transition">{t("Accueil")}</Link></li>
-                            <li><Link to="/services" className="hover:text-teal-400 transition">{t("Nos services")}</Link></li>
-                            <li><Link to="/prendre-rdv" className="hover:text-teal-400 transition">{t("Prendre RDV")}</Link></li>
-                            <li><Link to="/mes-rdv" className="hover:text-teal-400 transition">{t("Mes RDV")}</Link></li>
-                        </ul>
-                    </div>
-
-                    {/* ========== COLONNE 3 : HORAIRES (issus du planning) ========== */}
-                    <div>
-                        <Editable id="footer.horaires.titre" as="h3" className="text-white font-bold text-lg mb-4">Horaires</Editable>
-                        <ul className="space-y-3 text-sm">
-                            {horaires.map(h => (
-                                <li key={h.label} className="flex items-start gap-2">
-                                    <Clock className="w-4 h-4 text-teal-400 shrink-0 mt-1" />
-                                    <div>
-                                        <p className="font-semibold text-white">{traduireJours(h.label, t)}</p>
-                                        <p className="text-gray-400">{h.matin && h.apresMidi ? `${h.matin} · ${h.apresMidi}` : h.global}</p>
-                                    </div>
-                                </li>
-                            ))}
-                            <li className="flex items-start gap-2">
-                                <Heart className="w-4 h-4 text-red-400 shrink-0 mt-1" />
-                                <div>
-                                    <Editable id="footer.urgences.titre" as="p" className="font-semibold text-white">Urgences</Editable>
-                                    <Editable id="footer.urgences.texte" as="p" className="text-gray-400">24h/24 - 7j/7</Editable>
-                                </div>
-                            </li>
-                        </ul>
-                    </div>
-
-                    {/* ========== COLONNE 4 : CONTACT ========== */}
-                    <div>
-                        <Editable id="footer.contact.titre" as="h3" className="text-white font-bold text-lg mb-4">Contact</Editable>
-                        <ul className="space-y-3 text-sm">
-                            <li className="flex items-start gap-2">
-                                <MapPin className="w-4 h-4 text-teal-400 shrink-0 mt-1" />
-                                <div>
-                                    <Editable id="footer.adresse.ligne1" as="p" className="text-white">Chez Rasazy VERO</Editable>
-                                    <Editable id="footer.adresse.ligne2" as="p" className="text-gray-400">Andongona - Antsohihy</Editable>
-                                    <Editable id="footer.adresse.pays" as="p" className="text-gray-400">Madagascar</Editable>
-                                </div>
-                            </li>
-                            <li className="flex items-start gap-2">
-                                <Phone className="w-4 h-4 text-teal-400 shrink-0 mt-1" />
-                                <div>
-                                    <Editable id="footer.tel1" as="p" className="text-white">034 06 759 28</Editable>
-                                    <Editable id="footer.tel2" as="p" className="text-white">032 43 035 07</Editable>
-                                </div>
-                            </li>
-                            <li className="flex items-start gap-2">
-                                <Mail className="w-4 h-4 text-teal-400 shrink-0 mt-1" />
-                                <Editable id="footer.email" as="p" className="text-white">contact@casafami.mg</Editable>
-                            </li>
+                        <Editable id="footer.liens.titre" as="h3" className="sr-only">Liens rapides</Editable>
+                        <ul className="flex flex-wrap gap-x-8 gap-y-3 text-sm font-bold text-white">
+                            <li><Link to="/" className="underline underline-offset-4 hover:text-[#b9c4ff]">{t("Accueil")}</Link></li>
+                            <li><Link to="/services" className="underline underline-offset-4 hover:text-[#b9c4ff]">{t("Nos services")}</Link></li>
+                            <li><Link to="/prendre-rdv" className="underline underline-offset-4 hover:text-[#b9c4ff]">{t("Prendre RDV")}</Link></li>
+                            <li><Link to="/mes-rdv" className="underline underline-offset-4 hover:text-[#b9c4ff]">{t("Mes RDV")}</Link></li>
                         </ul>
                     </div>
                 </div>
 
-                {/* ========== LIGNE DE SÉPARATION + COPYRIGHT ========== */}
-                <div className="border-t border-gray-800 mt-10 pt-6">
-                    <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-                        <p className="text-sm text-gray-400">
-                            © {new Date().getFullYear()} <strong className="text-white">casafami</strong> - {t("Cabinet d'Accouchement Sainte Famille. Tous droits réservés.")}
-                            <br />
-                            {t("Site conçu et réalisé par VONJIARIMANANA Alpha Bertholy")}
-                        </p>
-                        <Link
-                            to="/medecin/login"
-                            className="text-xs text-gray-500 hover:text-teal-400 transition whitespace-nowrap"
-                        >
-                            {t("🔐 Espace du personnel")}
-                        </Link>
+                <div className="grid grid-cols-1 gap-10 pt-10 md:grid-cols-3">
+
+                    {/* ========== HORAIRES (issus du planning) ========== */}
+                    <div>
+                        <Editable id="footer.horaires.titre" as="h3" className={titreColonne}>Horaires</Editable>
+                        <ul className="space-y-3 text-sm">
+                            {horaires.map(h => (
+                                <li key={h.label} className="flex items-start gap-2.5">
+                                    <Clock className="mt-1 h-4 w-4 shrink-0 text-[#b9c4ff]" />
+                                    <div>
+                                        <p className="font-bold text-white">{traduireJours(h.label, t)}</p>
+                                        <p className="text-white/70">{h.matin && h.apresMidi ? `${h.matin} · ${h.apresMidi}` : h.global}</p>
+                                    </div>
+                                </li>
+                            ))}
+                            <li className="flex items-start gap-2.5">
+                                <Heart className="mt-1 h-4 w-4 shrink-0 text-red-300" />
+                                <div>
+                                    <Editable id="footer.urgences.titre" as="p" className="font-bold text-white">Urgences</Editable>
+                                    <Editable id="footer.urgences.texte" as="p" className="text-white/70">24h/24 - 7j/7</Editable>
+                                </div>
+                            </li>
+                        </ul>
                     </div>
+
+                    {/* ========== CONTACT ========== */}
+                    <div>
+                        <Editable id="footer.contact.titre" as="h3" className={titreColonne}>Contact</Editable>
+                        <ul className="space-y-4 text-sm">
+                            <li className="flex items-start gap-2.5">
+                                <MapPin className="mt-1 h-4 w-4 shrink-0 text-[#b9c4ff]" />
+                                <div>
+                                    <Editable id="footer.adresse.ligne1" as="p" className="font-bold text-white">Chez Rasazy VERO</Editable>
+                                    <Editable id="footer.adresse.ligne2" as="p" className="text-white/70">Andongona - Antsohihy</Editable>
+                                    <Editable id="footer.adresse.pays" as="p" className="text-white/70">Madagascar</Editable>
+                                </div>
+                            </li>
+                            <li className="flex items-start gap-2.5">
+                                <Mail className="mt-1 h-4 w-4 shrink-0 text-[#b9c4ff]" />
+                                <Editable id="footer.email" as="p" className="font-bold text-white">contact@casafami.mg</Editable>
+                            </li>
+                        </ul>
+                    </div>
+
+                    {/* ========== TÉLÉPHONE ========== */}
+                    <div>
+                        <h3 className={titreColonne}>{t("Prendre rendez-vous")}</h3>
+                        <div className="flex items-start gap-2.5">
+                            <Phone className="mt-2 h-4 w-4 shrink-0 text-[#b9c4ff]" />
+                            <div className="font-titre text-xl font-bold leading-snug text-white">
+                                <Editable id="footer.tel1" as="p" className="underline underline-offset-4">034 06 759 28</Editable>
+                                <Editable id="footer.tel2" as="p" className="underline underline-offset-4">032 43 035 07</Editable>
+                            </div>
+                        </div>
+                        <Link to="/prendre-rdv" className="mt-btn-blanc mt-6">{t("Prendre rendez-vous")}</Link>
+                    </div>
+                </div>
+
+                {/* ========== COPYRIGHT ========== */}
+                <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-white/20 pt-6 md:flex-row">
+                    <p className="text-xs font-bold uppercase tracking-wide text-white/55">
+                        © {new Date().getFullYear()} casafami - {t("Cabinet d'Accouchement Sainte Famille. Tous droits réservés.")}
+                        <br />
+                        <span className="normal-case tracking-normal font-normal">{t("Site conçu et réalisé par VONJIARIMANANA Alpha Bertholy")}</span>
+                    </p>
+                    <Link to="/medecin/login" className="whitespace-nowrap text-xs text-white/60 transition hover:text-white">
+                        {t("🔐 Espace du personnel")}
+                    </Link>
                 </div>
             </div>
         </footer>
