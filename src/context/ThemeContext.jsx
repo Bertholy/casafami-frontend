@@ -28,7 +28,7 @@ export function ThemeProvider({ children }) {
         root.classList.toggle('dark', theme === 'dark');
         localStorage.setItem('theme', theme);
         Object.entries(CSS_KEYS).forEach(([key, property]) => root.style.setProperty(property, siteTheme[key] || DEFAULT_THEME[key]));
-        // Site public : la couleur d'origine du cabinet (vert) laisse la place au bleu marine du design « montagne » ;
+        // Site public : la couleur d'origine du cabinet (vert) laisse la place au bleu du bâtiment (design « montagne ») ;
         // une couleur choisie par le super administrateur dans « Couleurs du site » est en revanche respectée.
         [['primaryColor', '--site-primary'], ['buttonColor', '--site-button'], ['linkColor', '--site-link']].forEach(([key, property]) => {
             const valeur = siteTheme[key];

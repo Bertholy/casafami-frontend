@@ -1,30 +1,30 @@
 /*
  * Design « montagne » du site public (inspiré du modèle Weblium « Mountain hotel ») :
- * bleu marine, titres Montserrat en majuscules avec un mot en italique, sections image / texte pleine largeur,
+ * bleu du bâtiment, titres Montserrat en majuscules avec un mot en italique, sections image / texte pleine largeur,
  * boutons carrés, bandeaux ardoise. Tout est limité à .theme-montagne : l'espace du personnel n'est pas touché.
  * Pour revenir à l'ancien design : retirer la classe « theme-montagne » dans App.jsx (ou revenir à la branche main).
  */
 .theme-montagne {
-    --mt-navy: var(--site-primary, #172983);
+    --mt-main: var(--site-primary, #0a8fc7);
     --mt-ardoise: #3b3d4d;
     --mt-gris: #f3f3f3;
     --mt-texte: #3d3234;
 
     /* tout ce qui était « teal » devient la couleur principale du site (modifiable dans « Couleurs du site ») */
-    --casafami-primary: var(--mt-navy);
-    --casafami-button: var(--site-button, var(--mt-navy));
-    --casafami-link: var(--site-link, var(--mt-navy));
-    --color-teal-50: color-mix(in srgb, var(--mt-navy) 7%, white);
-    --color-teal-100: color-mix(in srgb, var(--mt-navy) 14%, white);
-    --color-teal-200: color-mix(in srgb, var(--mt-navy) 28%, white);
-    --color-teal-300: color-mix(in srgb, var(--mt-navy) 48%, white);
-    --color-teal-400: color-mix(in srgb, var(--mt-navy) 68%, white);
-    --color-teal-500: color-mix(in srgb, var(--mt-navy) 86%, white);
-    --color-teal-600: var(--mt-navy);
-    --color-teal-700: color-mix(in srgb, var(--mt-navy) 86%, black);
-    --color-teal-800: color-mix(in srgb, var(--mt-navy) 72%, black);
-    --color-teal-900: color-mix(in srgb, var(--mt-navy) 55%, black);
-    --color-teal-950: color-mix(in srgb, var(--mt-navy) 38%, black);
+    --casafami-primary: var(--mt-main);
+    --casafami-button: var(--site-button, var(--mt-main));
+    --casafami-link: var(--site-link, var(--mt-main));
+    --color-teal-50: color-mix(in srgb, var(--mt-main) 7%, white);
+    --color-teal-100: color-mix(in srgb, var(--mt-main) 14%, white);
+    --color-teal-200: color-mix(in srgb, var(--mt-main) 28%, white);
+    --color-teal-300: color-mix(in srgb, var(--mt-main) 48%, white);
+    --color-teal-400: color-mix(in srgb, var(--mt-main) 68%, white);
+    --color-teal-500: color-mix(in srgb, var(--mt-main) 86%, white);
+    --color-teal-600: var(--mt-main);
+    --color-teal-700: color-mix(in srgb, var(--mt-main) 86%, black);
+    --color-teal-800: color-mix(in srgb, var(--mt-main) 72%, black);
+    --color-teal-900: color-mix(in srgb, var(--mt-main) 55%, black);
+    --color-teal-950: color-mix(in srgb, var(--mt-main) 38%, black);
 
     /* angles droits partout (les pastilles rounded-full restent rondes) */
     --radius-sm: 0; --radius-md: 0; --radius-lg: 0; --radius-xl: 0; --radius-2xl: 0; --radius-3xl: 0;
@@ -32,7 +32,7 @@
     font-family: 'Lato', 'Segoe UI', system-ui, sans-serif;
     color: var(--mt-texte);
 }
-.dark .theme-montagne { color: #e5e7eb; --casafami-link: #a9b6ff; --color-teal-300: #a9b6ff; --color-teal-400: #8d9dff; }
+.dark .theme-montagne { color: #e5e7eb; --casafami-link: #8fd8fb; --color-teal-300: #8fd8fb; --color-teal-400: #6cc6f2; }
 
 .theme-montagne h1, .theme-montagne h2, .theme-montagne h3, .theme-montagne .font-titre {
     font-family: 'Montserrat', 'Segoe UI', system-ui, sans-serif;
@@ -45,12 +45,12 @@
     font-family: 'Montserrat', 'Segoe UI', system-ui, sans-serif;
     font-weight: 700; text-transform: uppercase; line-height: 1.15; color: var(--mt-texte);
 }
-.theme-montagne .mt-titre em { color: var(--mt-navy); font-style: italic; }
+.theme-montagne .mt-titre em { color: var(--mt-main); font-style: italic; }
 .dark .theme-montagne .mt-titre { color: #f3f4f6; }
-.dark .theme-montagne .mt-titre em { color: #a9b6ff; }
+.dark .theme-montagne .mt-titre em { color: #8fd8fb; }
 .theme-montagne .mt-regle::before {
     content: ''; display: block; width: 5.5rem; height: 3px; margin-bottom: 1.5rem;
-    background: color-mix(in srgb, var(--mt-navy) 38%, white);
+    background: color-mix(in srgb, var(--mt-main) 38%, white);
 }
 .theme-montagne .mt-clair .mt-titre, .theme-montagne .mt-clair .mt-titre em { color: #fff; }
 .theme-montagne .mt-clair .mt-regle::before { background: rgba(255, 255, 255, .45); }
@@ -59,16 +59,16 @@
 .theme-montagne .mt-btn, .theme-montagne .mt-btn-ligne, .theme-montagne .mt-btn-blanc, .theme-montagne .mt-btn-blanc-plein {
     display: inline-flex; align-items: center; justify-content: center; gap: .6rem; padding: 1.05rem 1.9rem;
     font-family: 'Lato', sans-serif; font-size: .8rem; font-weight: 800; letter-spacing: .09em; text-transform: uppercase; line-height: 1;
-    border: 2px solid var(--mt-navy); transition: background-color .2s, color .2s, border-color .2s; cursor: pointer;
+    border: 2px solid var(--mt-main); transition: background-color .2s, color .2s, border-color .2s; cursor: pointer;
 }
 .theme-montagne .mt-btn { background: var(--casafami-button); border-color: var(--casafami-button); color: #fff; }
 .theme-montagne .mt-btn:hover { background: color-mix(in srgb, var(--casafami-button) 80%, black); border-color: color-mix(in srgb, var(--casafami-button) 80%, black); }
-.theme-montagne .mt-btn-ligne { background: transparent; color: var(--mt-navy); }
-.theme-montagne .mt-btn-ligne:hover { background: var(--mt-navy); color: #fff; }
-.dark .theme-montagne .mt-btn-ligne { color: #c7d0ff; border-color: #c7d0ff; }
+.theme-montagne .mt-btn-ligne { background: transparent; color: var(--mt-main); }
+.theme-montagne .mt-btn-ligne:hover { background: var(--mt-main); color: #fff; }
+.dark .theme-montagne .mt-btn-ligne { color: #9fdcfa; border-color: #9fdcfa; }
 .theme-montagne .mt-btn-blanc { background: transparent; border-color: #fff; color: #fff; }
 .theme-montagne .mt-btn-blanc:hover { background: #fff; color: var(--mt-ardoise); }
-.theme-montagne .mt-btn-blanc-plein { background: #fff; border-color: #fff; color: var(--mt-navy); }
+.theme-montagne .mt-btn-blanc-plein { background: #fff; border-color: #fff; color: var(--mt-main); }
 .theme-montagne .mt-btn-blanc-plein:hover { background: transparent; color: #fff; }
 
 /* ---- surfaces ---- */
@@ -76,7 +76,7 @@
 .dark .theme-montagne .mt-gris { background: #1f2937; }
 .theme-montagne .mt-ardoise { background: var(--mt-ardoise); color: #fff; }
 .dark .theme-montagne .mt-ardoise { background: #23242e; }
-.theme-montagne .mt-marine { background: var(--mt-navy); color: #fff; }
+.theme-montagne .mt-marine { background: var(--mt-main); color: #fff; }
 .theme-montagne .mt-relief { background-color: #fff; background-image: url('/relief.svg'); background-size: 720px auto; }
 .dark .theme-montagne .mt-relief { background-color: #111827; background-image: none; }
 .theme-montagne .mt-cadre { background: #f2f2f2; padding: 12px; }

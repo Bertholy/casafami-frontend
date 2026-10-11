@@ -27,10 +27,10 @@ function Footer() {
                     <div>
                         <Editable id="footer.liens.titre" as="h3" className="sr-only">Liens rapides</Editable>
                         <ul className="flex flex-wrap gap-x-8 gap-y-3 text-sm font-bold text-white">
-                            <li><Link to="/" className="underline underline-offset-4 hover:text-[#b9c4ff]">{t("Accueil")}</Link></li>
-                            <li><Link to="/services" className="underline underline-offset-4 hover:text-[#b9c4ff]">{t("Nos services")}</Link></li>
-                            <li><Link to="/prendre-rdv" className="underline underline-offset-4 hover:text-[#b9c4ff]">{t("Prendre RDV")}</Link></li>
-                            <li><Link to="/mes-rdv" className="underline underline-offset-4 hover:text-[#b9c4ff]">{t("Mes RDV")}</Link></li>
+                            <li><Link to="/" className="underline underline-offset-4 hover:text-[#bfeaff]">{t("Accueil")}</Link></li>
+                            <li><Link to="/services" className="underline underline-offset-4 hover:text-[#bfeaff]">{t("Nos services")}</Link></li>
+                            <li><Link to="/prendre-rdv" className="underline underline-offset-4 hover:text-[#bfeaff]">{t("Prendre RDV")}</Link></li>
+                            <li><Link to="/mes-rdv" className="underline underline-offset-4 hover:text-[#bfeaff]">{t("Mes RDV")}</Link></li>
                         </ul>
                     </div>
                 </div>
@@ -43,7 +43,7 @@ function Footer() {
                         <ul className="space-y-3 text-sm">
                             {horaires.map(h => (
                                 <li key={h.label} className="flex items-start gap-2.5">
-                                    <Clock className="mt-1 h-4 w-4 shrink-0 text-[#b9c4ff]" />
+                                    <Clock className="mt-1 h-4 w-4 shrink-0 text-[#bfeaff]" />
                                     <div>
                                         <p className="font-bold text-white">{traduireJours(h.label, t)}</p>
                                         <p className="text-white/70">{h.matin && h.apresMidi ? `${h.matin} · ${h.apresMidi}` : h.global}</p>
@@ -65,7 +65,7 @@ function Footer() {
                         <Editable id="footer.contact.titre" as="h3" className={titreColonne}>Contact</Editable>
                         <ul className="space-y-4 text-sm">
                             <li className="flex items-start gap-2.5">
-                                <MapPin className="mt-1 h-4 w-4 shrink-0 text-[#b9c4ff]" />
+                                <MapPin className="mt-1 h-4 w-4 shrink-0 text-[#bfeaff]" />
                                 <div>
                                     <Editable id="footer.adresse.ligne1" as="p" className="font-bold text-white">Chez Rasazy VERO</Editable>
                                     <Editable id="footer.adresse.ligne2" as="p" className="text-white/70">Andongona - Antsohihy</Editable>
@@ -73,7 +73,7 @@ function Footer() {
                                 </div>
                             </li>
                             <li className="flex items-start gap-2.5">
-                                <Mail className="mt-1 h-4 w-4 shrink-0 text-[#b9c4ff]" />
+                                <Mail className="mt-1 h-4 w-4 shrink-0 text-[#bfeaff]" />
                                 <Editable id="footer.email" as="p" className="font-bold text-white">contact@casafami.mg</Editable>
                             </li>
                         </ul>
@@ -83,7 +83,7 @@ function Footer() {
                     <div>
                         <h3 className={titreColonne}>{t("Prendre rendez-vous")}</h3>
                         <div className="flex items-start gap-2.5">
-                            <Phone className="mt-2 h-4 w-4 shrink-0 text-[#b9c4ff]" />
+                            <Phone className="mt-2 h-4 w-4 shrink-0 text-[#bfeaff]" />
                             <div className="font-titre text-xl font-bold leading-snug text-white">
                                 <Editable id="footer.tel1" as="p" className="underline underline-offset-4">034 06 759 28</Editable>
                                 <Editable id="footer.tel2" as="p" className="underline underline-offset-4">032 43 035 07</Editable>

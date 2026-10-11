@@ -83,10 +83,10 @@ function Services() {
             {/* ========== EN-TÊTE ========== */}
             <section className="relative overflow-hidden py-24 text-center text-white">
                 <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: "url('/cabinet_1.jpg')" }} />
-                <div className="absolute inset-0" style={{ background: 'linear-gradient(180deg, rgba(10,18,70,.78), rgba(10,18,70,.62))' }} />
+                <div className="absolute inset-0" style={{ background: 'linear-gradient(180deg, rgba(3,44,74,.8), rgba(3,44,74,.62))' }} />
                 <div className="relative mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
                     <Editable id="services.hero.badge" as="span" className="mb-6 inline-block border border-white/50 px-4 py-2 text-xs font-extrabold uppercase tracking-[0.22em]">Nos prestations</Editable>
-                    <Editable id="services.hero.titre" as="h1" accent={-1} className="mb-4 text-4xl font-bold uppercase leading-tight md:text-6xl [&_em]:text-[#b9c4ff]">Nos services médicaux</Editable>
+                    <Editable id="services.hero.titre" as="h1" accent={-1} className="mb-4 text-4xl font-bold uppercase leading-tight md:text-6xl [&_em]:text-[#bfeaff]">Nos services médicaux</Editable>
                     <Editable id="services.hero.texte" as="p" className="mx-auto max-w-2xl text-lg text-white/90 md:text-xl">Des soins de qualité adaptés à vos besoins, assurés par une équipe expérimentée</Editable>
                 </div>
             </section>

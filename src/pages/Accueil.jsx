@@ -50,7 +50,7 @@ function Accueil() {
             {/* ========== SECTION HERO ========== */}
             <section className="relative flex min-h-[600px] items-center justify-center text-center md:min-h-[calc(100vh-78px)]">
                 <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: "url('/cabinet_1.jpg')" }} />
-                <div className="absolute inset-0" style={{ background: 'linear-gradient(180deg, rgba(10,18,70,.62) 0%, rgba(10,18,70,.38) 55%, rgba(10,18,70,.7) 100%)' }} />
+                <div className="absolute inset-0" style={{ background: 'linear-gradient(180deg, rgba(3,44,74,.62) 0%, rgba(3,44,74,.34) 55%, rgba(3,44,74,.72) 100%)' }} />
 
                 <div className="relative mx-auto w-full max-w-5xl animate-fade-in-up px-4 py-24 sm:px-6">
                     <Editable id="accueil.hero.badge" as="span" className="mb-6 inline-block border border-white/50 px-4 py-2 text-xs font-extrabold uppercase tracking-[0.22em] text-white">
@@ -58,7 +58,7 @@ function Accueil() {
                     </Editable>
                     <h1 className="mb-6 text-4xl font-bold uppercase leading-[1.1] text-white drop-shadow-lg sm:text-5xl md:text-7xl">
                         <Editable id="accueil.hero.titre1">Votre santé,</Editable>
-                        <Editable id="accueil.hero.titre2" as="span" className="block italic text-[#b9c4ff]">notre priorité</Editable>
+                        <Editable id="accueil.hero.titre2" as="span" className="block italic text-[#bfeaff]">notre priorité</Editable>
                     </h1>
                     <Editable id="accueil.hero.texte" as="p" className="mx-auto mb-10 max-w-2xl text-lg leading-relaxed text-white/95 drop-shadow md:text-xl">
                         Le cabinet casafami vous accueille dans un cadre serein et moderne pour vous offrir des soins de qualité, avec une équipe professionnelle et à l'écoute.
