@@ -78,77 +78,58 @@ function Services() {
     }
 
     return (
-        <div className="bg-white dark:bg-gray-900 transition-colors">
+        <div className="bg-white transition-colors dark:bg-gray-900">
 
-            {/* ========== HERO ========== */}
-            <section className="bg-gradient-to-br from-teal-600 to-teal-800 dark:from-teal-700 dark:to-teal-900 text-white py-20">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-                    <Editable id="services.hero.badge" as="span" className="inline-block bg-white/20 backdrop-blur-sm text-white border border-white/30 px-4 py-2 rounded-full text-sm font-semibold mb-6">Nos prestations</Editable>
-                    <Editable id="services.hero.titre" as="h1" className="text-4xl md:text-5xl font-bold mb-4">Nos services médicaux</Editable>
-                    <Editable id="services.hero.texte" as="p" className="text-xl text-teal-100 max-w-2xl mx-auto">Des soins de qualité adaptés à vos besoins, assurés par une équipe expérimentée</Editable>
+            {/* ========== EN-TÊTE ========== */}
+            <section className="relative overflow-hidden py-24 text-center text-white">
+                <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: "url('/cabinet_1.jpg')" }} />
+                <div className="absolute inset-0" style={{ background: 'linear-gradient(180deg, rgba(3,44,74,.8), rgba(3,44,74,.62))' }} />
+                <div className="relative mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
+                    <Editable id="services.hero.badge" as="span" className="mb-6 inline-block border border-white/50 px-4 py-2 text-xs font-extrabold uppercase tracking-[0.22em]">Nos prestations</Editable>
+                    <Editable id="services.hero.titre" as="h1" accent={-1} className="mb-4 text-4xl font-bold uppercase leading-tight md:text-6xl [&_em]:text-[#bfeaff]">Nos services médicaux</Editable>
+                    <Editable id="services.hero.texte" as="p" className="mx-auto max-w-2xl text-lg text-white/90 md:text-xl">Des soins de qualité adaptés à vos besoins, assurés par une équipe expérimentée</Editable>
                 </div>
             </section>
 
             {/* ========== LISTE DES SERVICES ========== */}
-            <section className="py-20">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <section className="mt-relief py-20">
+                <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
 
                     {services.length === 0 ? (
-                        <div className="text-center py-12">
-                            <p className="text-gray-500 dark:text-gray-400 text-lg">
-                                {t("Aucun service disponible pour le moment.")}
-                            </p>
+                        <div className="py-12 text-center">
+                            <p className="text-lg text-gray-500 dark:text-gray-400">{t("Aucun service disponible pour le moment.")}</p>
                         </div>
                     ) : (
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                            {services.map((service) => {
+                        <div className="grid grid-cols-1 gap-x-8 gap-y-12 sm:grid-cols-2 lg:grid-cols-4">
+                            {services.map(service => {
                                 const imageSrc = service.imageUrl ? assetUrl(service.imageUrl) : getImageForService(service.nom);
-
                                 return (
-                                    <div
-                                        key={service.id}
-                                        className="group bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-2xl overflow-hidden hover:shadow-2xl transition-all hover:-translate-y-2"
-                                    >
-                                        {/* Image */}
-                                        <div className="relative h-40 overflow-hidden">
-                                            <img loading="lazy" decoding="async"
-                                                src={imageSrc}
-                                                alt={service.nom}
-                                                onError={event => { event.currentTarget.onerror = null; event.currentTarget.src = '/general.jpg'; }}
-                                                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                                            />
-                                        </div>
-
-                                        {/* Contenu */}
-                                        <div className="p-5">
-                                            <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-2">
-                                                {t(service.nom)}
-                                            </h3>
-
-                                            <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed mb-3">
-                                            {service.description ? t(service.description) : t("Description à venir.")}
-                                            </p>
-
-                                            <div className="flex items-center gap-2 text-xs text-teal-600 dark:text-teal-400 font-semibold">
-                                                <Clock className="w-3 h-3" />
-                                                <span>{service.duree ? t("Durée : {duree}", { duree: service.duree }) : t("Sur rendez-vous")}</span>
+                                    <article key={service.id} className="group text-center">
+                                        <div className="mt-cadre">
+                                            <div className="aspect-[4/3] overflow-hidden">
+                                                <img loading="lazy" decoding="async" src={imageSrc} alt={service.nom}
+                                                    onError={event => { event.currentTarget.onerror = null; event.currentTarget.src = '/general.jpg'; }}
+                                                    className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
                                             </div>
                                         </div>
-                                    </div>
+                                        <h3 className="mt-6 text-lg font-bold uppercase tracking-wide text-gray-800 dark:text-white">{t(service.nom)}</h3>
+                                        <p className="mt-2 flex items-center justify-center gap-2 font-titre text-sm font-bold text-teal-600 dark:text-teal-300">
+                                            <Clock className="h-3.5 w-3.5" />
+                                            <span>{service.duree ? t("Durée : {duree}", { duree: service.duree }) : t("Sur rendez-vous")}</span>
+                                        </p>
+                                        <p className="mt-3 text-sm italic leading-relaxed text-gray-500 dark:text-gray-400">
+                                            {service.description ? t(service.description) : t("Description à venir.")}
+                                        </p>
+                                    </article>
                                 );
                             })}
                         </div>
                     )}
 
                     {/* CTA */}
-                    <div className="text-center mt-16">
-                        <Movable
-                            id="services.btn-rdv"
-                            as={Link}
-                            to="/prendre-rdv"
-                            className="inline-flex items-center gap-2 bg-teal-600 text-white px-8 py-4 rounded-xl font-bold hover:bg-teal-700 transition-all shadow-lg hover:shadow-xl hover:-translate-y-1"
-                        >
-                            <Calendar className="w-5 h-5" />
+                    <div className="mt-16 text-center">
+                        <Movable id="services.btn-rdv" as={Link} to="/prendre-rdv" className="mt-btn">
+                            <Calendar className="h-4 w-4" />
                             <Editable id="services.btn-rdv.label">Prendre rendez-vous</Editable>
                         </Movable>
                     </div>

@@ -9,7 +9,16 @@ import { cssDuStyle } from '../../utils/styleTexte';
  * En mode édition : un clic sur le texte ouvre la fenêtre de modification (texte, mise en forme, retour au texte d'origine).
  * En malgache : texte malgache personnalisé (identifiant « .mg »), sinon texte personnalisé en français, sinon traduction d'origine.
  */
-export default function Editable({ id, as = 'span', children, className, style, ...rest }) {
+/** Met un mot du titre en italique (accent : rang du mot, négatif = en partant de la fin) : « Des soins adaptés à <em>tous</em> ». */
+function avecAccent(texte, accent) {
+    if (accent === undefined || typeof texte !== 'string') return [texte];
+    const mots = texte.split(' ');
+    const rang = accent < 0 ? mots.length + accent : accent;
+    if (mots.length < 2 || rang < 0 || rang >= mots.length) return [texte];
+    return [mots.slice(0, rang).join(' ') + (rang > 0 ? ' ' : ''), createElement('em', { key: 'accent' }, mots[rang]), (rang < mots.length - 1 ? ' ' : '') + mots.slice(rang + 1).join(' ')];
+}
+
+export default function Editable({ id, as = 'span', children, className, style, accent, ...rest }) {
     const { content, editMode, ouvrirEditeur } = useSiteContent();
     const { lang, t } = useLang();
     const francais = typeof children === 'string' ? children : '';
@@ -21,7 +30,7 @@ export default function Editable({ id, as = 'span', children, className, style, 
     // un texte saisi par le super administrateur garde ses retours à la ligne ; le texte d'origine n'est pas touché
     const styleFinal = { ...style, ...(personnalise ? { whiteSpace: 'pre-line' } : {}), ...cssDuStyle(miseEnForme) };
 
-    if (!editMode) return createElement(as, { className, style: styleFinal, ...rest }, text);
+    if (!editMode) return createElement(as, { className, style: styleFinal, ...rest }, ...avecAccent(text, accent));
 
     const ouvrir = event => {
         event.preventDefault(); event.stopPropagation();

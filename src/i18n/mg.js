@@ -108,6 +108,14 @@ export const MG = {
     "Annuler": "Foano",
     "Prendre un nouveau rendez-vous": "Haka fotoana vaovao",
 
+
+    // ---- design « montagne » (à faire relire par un locuteur malgache)
+    "Fermer": "Hidina",
+    "Menu": "Fisafidianana",
+    "Appeler le cabinet": "Antsoy ny foibe",
+    "Le cabinet en images": "Ny foibenay an-tsary",
+    "Espace du personnel": "Toeram-piasan'ny mpiasa",
+
     // ---- accueil
     "✨ Bienvenue au Cabinet d'Accouchement casafami": "✨ Tonga soa eto amin'ny Foibe Fiterahana casafami",
     "Votre santé,": "Ny fahasalamanao,",
