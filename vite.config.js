@@ -12,7 +12,6 @@ export default defineConfig({
           groups: [
             { name: 'react', test: /node_modules[/\\](react|react-dom|react-router|react-router-dom|scheduler)[/\\]/, priority: 30 },
             { name: 'icones', test: /node_modules[/\\]lucide-react[/\\]/, priority: 20 },
-            { name: 'reseau', test: /node_modules[/\\]axios[/\\]/, priority: 10 },
           ],
         },
       },
