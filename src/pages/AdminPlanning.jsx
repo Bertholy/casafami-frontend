@@ -7,7 +7,7 @@ import Notice from '../components/Notice';
 import { formatDateFr, todayISO } from '../constants/app';
 import { btnPrimary, btnSecondary, card, inputClass } from '../constants/ui';
 import { resetPlanningCache } from '../utils/horaires';
-import { apiErrorMessage, getRole, hasSession, homeForRole, LOGIN_PATH } from '../utils/auth';
+import { apiErrorMessage, getRole, hasSession, homeForRole, LOGIN_PATH, peut } from '../utils/auth';
 
 const JOURS = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'];
 const hhmm = value => (value ? String(value).slice(0, 5) : '');
@@ -33,7 +33,7 @@ export default function AdminPlanning() {
     useEffect(() => {
         const role = getRole();
         if (!hasSession()) { navigate(LOGIN_PATH); return undefined; }
-        if (role !== 'SUPER_ADMIN') { navigate(homeForRole(role)); return undefined; }
+        if (!peut('PLANNING_GERER')) { navigate(homeForRole(role)); return undefined; }
         const timer = window.setTimeout(load, 0);
         return () => window.clearTimeout(timer);
     }, [load, navigate]);
@@ -61,15 +61,16 @@ export default function AdminPlanning() {
         try {
             const { data } = await axiosClient.post('/admin/jours-fermes', { date: nouveau.date, motif: nouveau.motif });
             setNouveau({ date: '', motif: '' }); resetPlanningCache();
-            setNotice(data.rdvImpactes > 0
+            const prevenus = data.personnelPrevenu > 0 ? ` Le personnel est prévenu : ${data.personnelPrevenu} notification(s) et ${data.smsEnvoyes} SMS (simulés tant que le SMS réel n’est pas activé).` : '';
+            setNotice((data.rdvImpactes > 0
                 ? `Jour fermé. Attention : ${data.rdvImpactes} rendez-vous existent déjà ce jour-là — pensez à prévenir les patients (annulez-les ou déplacez-les).`
-                : 'Jour fermé : plus aucun créneau ne sera proposé.');
+                : 'Jour fermé : plus aucun créneau ne sera proposé.') + prevenus);
             await load();
         } catch (err) { setError(apiErrorMessage(err, 'Impossible de fermer ce jour.')); }
     };
 
     const rouvrir = async jour => {
-        try { await axiosClient.delete(`/admin/jours-fermes/${jour.id}`); resetPlanningCache(); setFermes(current => current.filter(j => j.id !== jour.id)); }
+        try { await axiosClient.delete(`/admin/jours-fermes/${jour.id}`); resetPlanningCache(); setFermes(current => current.filter(j => j.id !== jour.id)); setNotice('Jour rouvert. Le personnel en est informé.'); }
         catch (err) { setError(apiErrorMessage(err, 'Impossible de rouvrir ce jour.')); }
     };
 

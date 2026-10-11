@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
 import {
-    Activity, BarChart3, Baby, ClipboardCheck, DatabaseBackup, CalendarDays, CalendarPlus, Camera, CalendarClock, ExternalLink, FileSignature, KeyRound, LayoutDashboard, Loader2, LogOut, Menu, Moon, Palette,
+    Activity, BarChart3, Baby, ShieldCheck, ClipboardCheck, DatabaseBackup, CalendarDays, CalendarPlus, Camera, CalendarClock, ExternalLink, FileSignature, KeyRound, LayoutDashboard, Loader2, LogOut, Menu, Moon, Palette,
     Pencil, ScrollText, UsersRound, Stethoscope, Sun, Trash2, UserCog, UserRound, Users, X, HeartPulse,
 } from 'lucide-react';
 import axiosClient, { assetUrl } from '../api/axiosClient';
@@ -10,7 +10,8 @@ import NotificationBell from './NotificationBell';
 import MessagerieBouton from './MessagerieBouton';
 import { useTheme } from '../context/ThemeContext';
 import { APP_NAME, getRoleLabel } from '../constants/app';
-import { apiErrorMessage, clearSession, getEmail, getRole, homeForRole } from '../utils/auth';
+import { convertirImage } from '../utils/image';
+import { apiErrorMessage, clearSession, getEmail, getRole, homeForRole, majPermissions, peut } from '../utils/auth';
 
 /**
  * Coquille commune de tous les espaces du personnel : barre latérale, en-tête, recherche patient,
@@ -30,7 +31,11 @@ export default function AdminLayout({ title, subtitle, actions, children }) {
 
     useEffect(() => {
         let cancelled = false;
-        axiosClient.get('/profile').then(({ data }) => { if (!cancelled) setProfile(data); }).catch(() => {});
+        axiosClient.get('/profile').then(({ data }) => {
+            if (cancelled) return;
+            setProfile(data);
+            if (majPermissions(data.permissions)) window.location.reload(); // les droits ont changé depuis la dernière visite : la page s'adapte
+        }).catch(() => {});
         return () => { cancelled = true; };
     }, []);
 
@@ -40,59 +45,63 @@ export default function AdminLayout({ title, subtitle, actions, children }) {
         const file = event.target.files?.[0];
         event.target.value = '';
         if (!file) return;
-        const body = new FormData();
-        body.append('photo', file);
         setUploading(true); setPhotoError('');
+        const body = new FormData();
         try {
+            const { fichier } = await convertirImage(file);   // photo adaptée au site avant l'envoi
+            body.append('photo', fichier);
             const { data } = await axiosClient.put('/profile/photo', body, { headers: { 'Content-Type': 'multipart/form-data' } });
             setProfile(data);
         } catch (err) {
-            setPhotoError(apiErrorMessage(err, 'Utilisez une image JPEG ou PNG de moins de 5 Mo.'));
+            setPhotoError(err.response ? apiErrorMessage(err, 'La photo n’a pas pu être enregistrée.') : err.message);
         } finally { setUploading(false); }
     };
 
-    const isAdmin = role === 'SUPER_ADMIN';
-    const medical = ['SUPER_ADMIN', 'MEDECIN', 'SAGE_FEMME', 'INFIRMIERE'].includes(role);
+    // Le menu ne montre que ce que la personne a le droit de faire (réglé dans « Rôles et permissions » ; le serveur vérifie de toute façon).
+    const si = (code, item) => (peut(code) ? [item] : []);
     const sections = [
         {
             heading: 'Activité',
             items: [
                 { to: home, label: 'Tableau de bord', icon: LayoutDashboard, end: true },
-                ...(['MEDECIN', 'SAGE_FEMME', 'INFIRMIERE'].includes(role) ? [{ to: '/espace/mes-patients', label: 'Mes patients', icon: ClipboardCheck }] : []),
-                { to: home, state: { create: true }, label: 'Nouveau rendez-vous', icon: CalendarPlus, key: 'new' },
-                { to: '/calendrier', label: 'Calendrier', icon: CalendarDays },
-                ...(isAdmin || role === 'SECRETAIRE' ? [{ to: '/corbeille', label: 'Corbeille', icon: Trash2 }] : []),
+                ...(['MEDECIN', 'SAGE_FEMME', 'INFIRMIERE'].includes(role) ? si('RDV_VOIR', { to: '/espace/mes-patients', label: 'Mes patients', icon: ClipboardCheck }) : []),
+                ...si('RDV_CREER', { to: home, state: { create: true }, label: 'Nouveau rendez-vous', icon: CalendarPlus, key: 'new' }),
+                ...si('RDV_VOIR', { to: '/calendrier', label: 'Calendrier', icon: CalendarDays }),
+                ...si('RDV_CORBEILLE', { to: '/corbeille', label: 'Corbeille', icon: Trash2 }),
             ],
         },
-        ...(medical ? [{
+        {
             heading: 'Patients',
             items: [
-                { to: '/patients/dossier', label: 'Dossiers patients', icon: Users },
-                ...(role !== 'SECRETAIRE' ? [{ to: '/patients/maternite', label: 'Suivi maternité', icon: Baby }] : []),
-                ...(role !== 'INFIRMIERE' ? [{ to: '/assistant/ordonnance', label: 'Assistant d’ordonnance', icon: FileSignature }] : []),
+                ...si('DOSSIERS_LIRE', { to: '/patients/dossier', label: 'Dossiers patients', icon: Users }),
+                ...si('DOSSIERS_LIRE', { to: '/patients/maternite', label: 'Suivi maternité', icon: Baby }),
+                ...(['SUPER_ADMIN', 'MEDECIN', 'SAGE_FEMME'].includes(role) ? si('MALADIES_LIRE', { to: '/assistant/ordonnance', label: 'Assistant d’ordonnance', icon: FileSignature }) : []),
             ],
-        }] : []),
+        },
         {
             heading: 'Cabinet',
             items: [
-                { to: isAdmin ? '/admin/services' : '/services', label: isAdmin ? 'Gestion des services' : 'Services', icon: Stethoscope },
-                ...(role !== 'SECRETAIRE' ? [{ to: '/medecin/maladies', label: 'Maladies et traitements', icon: Activity }] : []),
-                ...(isAdmin || role === 'MEDECIN' || role === 'SECRETAIRE' ? [{ to: '/statistiques', label: 'Statistiques', icon: BarChart3 }] : []),
+                peut('SERVICES_GERER')
+                    ? { to: '/admin/services', label: 'Gestion des services', icon: Stethoscope }
+                    : { to: '/services', label: 'Services', icon: Stethoscope },
+                ...si('MALADIES_LIRE', { to: '/medecin/maladies', label: 'Maladies et traitements', icon: Activity }),
+                ...si('STATS_VOIR', { to: '/statistiques', label: 'Statistiques', icon: BarChart3 }),
             ],
         },
-        ...(isAdmin ? [{
+        {
             heading: 'Administration',
             items: [
-                { to: '/admin/utilisateurs', label: 'Comptes et accès', icon: UserCog },
-                { to: '/admin/occupation', label: 'Occupation du personnel', icon: UsersRound },
-                { to: '/admin/planning', label: 'Horaires et congés', icon: CalendarClock },
-                { to: '/admin/journal', label: 'Journal d’audit', icon: ScrollText },
-                { to: '/admin/sauvegardes', label: 'Sauvegardes', icon: DatabaseBackup },
-                { to: '/admin/personnalisation', label: 'Couleurs du site', icon: Palette },
-                { to: '/?edition=1', label: 'Modifier le site', icon: Pencil, key: 'edit-site' },
+                ...si('COMPTES_GERER', { to: '/admin/utilisateurs', label: 'Comptes et accès', icon: UserCog }),
+                ...si('PERMISSIONS_GERER', { to: '/admin/permissions', label: 'Rôles et permissions', icon: ShieldCheck }),
+                ...si('OCCUPATION_VOIR', { to: '/admin/occupation', label: 'Occupation du personnel', icon: UsersRound }),
+                ...si('PLANNING_GERER', { to: '/admin/planning', label: 'Horaires et congés', icon: CalendarClock }),
+                ...si('JOURNAL_VOIR', { to: '/admin/journal', label: 'Journal d’audit', icon: ScrollText }),
+                ...si('SAUVEGARDES_GERER', { to: '/admin/sauvegardes', label: 'Sauvegardes', icon: DatabaseBackup }),
+                ...si('SITE_MODIFIER', { to: '/admin/personnalisation', label: 'Couleurs du site', icon: Palette }),
+                ...si('SITE_MODIFIER', { to: '/?edition=1', label: 'Modifier le site', icon: Pencil, key: 'edit-site' }),
             ],
-        }] : []),
-    ];
+        },
+    ].filter(section => section.items.length > 0);
 
     const linkClass = ({ isActive }) => `group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition ${
         isActive ? 'bg-teal-500/15 text-white ring-1 ring-inset ring-teal-400/30' : 'text-slate-400 hover:bg-white/5 hover:text-white'}`;
@@ -134,7 +143,7 @@ export default function AdminLayout({ title, subtitle, actions, children }) {
 
                 <div className="border-t border-white/10 p-4">
                     <div className="flex items-center gap-3">
-                        <input ref={fileInput} type="file" accept="image/png,image/jpeg" className="hidden" onChange={uploadPhoto} />
+                        <input ref={fileInput} type="file" accept="image/*" className="hidden" onChange={uploadPhoto} />
                         <button type="button" onClick={() => fileInput.current?.click()} disabled={uploading}
                             title="Changer ma photo de profil" aria-label="Changer ma photo de profil"
                             className="group relative flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full bg-teal-500/20 text-teal-200 ring-2 ring-white/10 disabled:opacity-60">
@@ -161,7 +170,7 @@ export default function AdminLayout({ title, subtitle, actions, children }) {
                         {subtitle && <p className="hidden truncate text-xs text-slate-500 dark:text-gray-400 sm:block">{subtitle}</p>}
                     </div>
                     <div className="ml-auto flex items-center gap-2">
-                        <PatientSearch className="relative hidden w-56 md:block xl:w-72" />
+                        {peut('PATIENTS_RECHERCHER') && <PatientSearch className="relative hidden w-56 md:block xl:w-72" />}
                         <MessagerieBouton />
                         <NotificationBell onOpenRdv={notification => navigate(notification?.lien || (notification?.rendezVousId ? (role === 'SUPER_ADMIN' ? `${home}?rdv=${notification.rendezVousId}` : `/espace/mes-patients?rdv=${notification.rendezVousId}`) : home))} />
                         <button onClick={toggleTheme} aria-label="Changer de thème" title="Changer de thème"

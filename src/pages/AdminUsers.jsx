@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { KeyRound, Loader2, Pencil, Plus, ShieldCheck, Trash2, UserCog, X } from 'lucide-react';
 import axiosClient from '../api/axiosClient';
 import AdminLayout from '../components/AdminLayout';
-import { apiErrorMessage, clearSession, getEmail, getRole, hasSession, homeForRole, LOGIN_PATH } from '../utils/auth';
+import { apiErrorMessage, clearSession, getEmail, getRole, hasSession, homeForRole, LOGIN_PATH, peut } from '../utils/auth';
 
 const ROLES = [
     ['MEDECIN', 'Médecin'],
@@ -39,7 +39,7 @@ export default function AdminUsers() {
     useEffect(() => {
         const role = getRole();
         if (!hasSession()) { navigate(LOGIN_PATH); return undefined; }
-        if (role !== 'SUPER_ADMIN') { navigate(homeForRole(role)); return undefined; }
+        if (!peut('COMPTES_GERER')) { navigate(homeForRole(role)); return undefined; }
         const timer = window.setTimeout(() => load(), 0);
         return () => window.clearTimeout(timer);
     }, [load, navigate]);

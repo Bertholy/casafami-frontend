@@ -7,9 +7,8 @@ import ColumnChart from '../components/dashboard/ColumnChart';
 import Notice from '../components/Notice';
 import { STATUS, todayISO } from '../constants/app';
 import { card } from '../constants/ui';
-import { apiErrorMessage, getRole, hasSession, LOGIN_PATH, homeForRole } from '../utils/auth';
+import { apiErrorMessage, getRole, hasSession, LOGIN_PATH, homeForRole, peut } from '../utils/auth';
 
-const ALLOWED = ['SUPER_ADMIN', 'MEDECIN', 'SECRETAIRE'];
 const MOIS = ['janv.', 'févr.', 'mars', 'avr.', 'mai', 'juin', 'juil.', 'août', 'sept.', 'oct.', 'nov.', 'déc.'];
 const JOURS = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
 
@@ -66,7 +65,7 @@ export default function Statistiques() {
 
     useEffect(() => {
         if (!hasSession()) { navigate(LOGIN_PATH); return undefined; }
-        if (!ALLOWED.includes(role)) { navigate(homeForRole(role)); return undefined; }
+        if (!peut('STATS_VOIR')) { navigate(homeForRole(role)); return undefined; }
         const timer = window.setTimeout(load, 0);
         return () => window.clearTimeout(timer);
     }, [load, navigate, role]);

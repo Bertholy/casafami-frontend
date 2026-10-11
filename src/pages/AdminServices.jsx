@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { ImagePlus, Loader2, Pencil, Plus, Trash2, X } from 'lucide-react';
 import axiosClient, { assetUrl } from '../api/axiosClient';
 import AdminLayout from '../components/AdminLayout';
-import { apiErrorMessage, getRole, hasSession, homeForRole, LOGIN_PATH } from '../utils/auth';
+import { convertirImage } from '../utils/image';
+import { apiErrorMessage, getRole, hasSession, homeForRole, LOGIN_PATH, peut } from '../utils/auth';
 
 const EMPTY = { nom: '', description: '', duree: '', photo: null };
 const field = 'mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 font-normal outline-none transition focus:border-teal-600 focus:ring-2 focus:ring-teal-600/20 dark:border-gray-700 dark:bg-gray-950';
@@ -31,6 +32,22 @@ export default function AdminServices() {
     const [edition, setEdition] = useState(null); // { id, nom, description, duree, photo, imageUrl }
     const [editionSaving, setEditionSaving] = useState(false);
     const [editionError, setEditionError] = useState('');
+    const [conversion, setConversion] = useState({ en_cours: false, resume: '', erreur: '' });
+
+    /** Prépare la photo choisie (redimensionnement + JPEG) puis la confie au formulaire ; rien n'est refusé pour sa taille. */
+    const preparerPhoto = async (event, appliquer) => {
+        const choisi = event.target.files?.[0];
+        event.target.value = '';
+        if (!choisi) return;
+        setConversion({ en_cours: true, resume: '', erreur: '' });
+        try {
+            const { fichier, resume } = await convertirImage(choisi);
+            appliquer(fichier);
+            setConversion({ en_cours: false, resume, erreur: '' });
+        } catch (err) {
+            setConversion({ en_cours: false, resume: '', erreur: err.message });
+        }
+    };
 
     const load = useCallback(async () => {
         setLoading(true);
@@ -42,7 +59,7 @@ export default function AdminServices() {
     useEffect(() => {
         const role = getRole();
         if (!hasSession()) { navigate(LOGIN_PATH); return undefined; }
-        if (role !== 'SUPER_ADMIN') { navigate(homeForRole(role)); return undefined; }
+        if (!peut('SERVICES_GERER')) { navigate(homeForRole(role)); return undefined; }
         const timer = window.setTimeout(load, 0);
         return () => window.clearTimeout(timer);
     }, [load, navigate]);
@@ -100,10 +117,11 @@ export default function AdminServices() {
                     <label className="text-sm font-medium md:col-span-2">Description *<textarea required maxLength={500} rows={3} value={form.description} onChange={e => setForm(c => ({ ...c, description: e.target.value }))} placeholder="Décrivez ce service médical…" className={`${field} resize-y`} /><span className="mt-1 block text-right text-xs text-slate-400">{form.description.length}/500</span></label>
                     <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-dashed border-slate-300 p-4 text-sm transition hover:border-teal-600 dark:border-gray-700 md:col-span-2">
                         <ImagePlus className="shrink-0 text-teal-700" size={22} />
-                        <span className="min-w-0 flex-1"><span className="block font-medium">Photo du service *</span><span className="block truncate text-xs text-slate-500">{form.photo ? form.photo.name : 'JPEG ou PNG, 5 Mo maximum'}</span></span>
-                        <input required type="file" accept="image/png,image/jpeg" onChange={e => setForm(c => ({ ...c, photo: e.target.files?.[0] || null }))} className="w-56 text-xs" />
+                        <span className="min-w-0 flex-1"><span className="block font-medium">Photo du service *</span><span className="block truncate text-xs text-slate-500">{conversion.en_cours ? 'Conversion de la photo…' : form.photo ? form.photo.name : 'Toutes les photos sont acceptées : elles sont adaptées automatiquement'}</span></span>
+                        <input type="file" accept="image/*" onChange={e => preparerPhoto(e, fichier => setForm(c => ({ ...c, photo: fichier })))} className="w-56 text-xs" />
                     </label>
-                    <div className="flex justify-end md:col-span-2"><button disabled={saving} className="inline-flex items-center gap-2 rounded-xl bg-teal-700 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-teal-800 disabled:opacity-60">{saving ? <Loader2 size={17} className="animate-spin" /> : <Plus size={17} />}Ajouter au catalogue</button></div>
+                    {(conversion.resume || conversion.erreur) && <p role={conversion.erreur ? 'alert' : 'status'} className={`text-xs md:col-span-2 ${conversion.erreur ? 'text-rose-700 dark:text-rose-300' : 'text-emerald-700 dark:text-emerald-300'}`}>{conversion.erreur || conversion.resume}</p>}
+                    <div className="flex justify-end md:col-span-2"><button disabled={saving || conversion.en_cours} className="inline-flex items-center gap-2 rounded-xl bg-teal-700 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-teal-800 disabled:opacity-60">{saving ? <Loader2 size={17} className="animate-spin" /> : <Plus size={17} />}Ajouter au catalogue</button></div>
                 </form>
             </section>
 
@@ -131,9 +149,11 @@ export default function AdminServices() {
                         <label className="block text-sm font-medium">Description *<textarea required maxLength={500} rows={3} value={edition.description} onChange={e => setEdition({ ...edition, description: e.target.value })} className={field + ' resize-y'} /></label>
                         <div className="flex items-center gap-3 rounded-xl border border-dashed border-slate-300 p-3 text-sm dark:border-gray-700">
                             <img src={edition.photo ? URL.createObjectURL(edition.photo) : edition.imageUrl} alt="" className="h-14 w-20 rounded-lg object-cover" />
-                            <label className="min-w-0 flex-1 cursor-pointer"><span className="block font-medium">Changer la photo (facultatif)</span><span className="block truncate text-xs text-slate-500">{edition.photo ? edition.photo.name : 'JPEG ou PNG, 5 Mo maximum'}</span>
-                                <input type="file" accept="image/png,image/jpeg" onChange={e => setEdition({ ...edition, photo: e.target.files?.[0] || null })} className="mt-1 w-full text-xs" /></label>
+                            <label className="min-w-0 flex-1 cursor-pointer"><span className="block font-medium">Changer la photo (facultatif)</span><span className="block truncate text-xs text-slate-500">{conversion.en_cours ? 'Conversion de la photo…' : edition.photo ? edition.photo.name : 'Toutes les photos sont acceptées : elles sont adaptées automatiquement'}</span>
+                                <input type="file" accept="image/*" onChange={e => preparerPhoto(e, fichier => setEdition(c => ({ ...c, photo: fichier })))} className="mt-1 w-full text-xs" /></label>
                         </div>
+                        {conversion.resume && <p role="status" className="text-xs text-emerald-700 dark:text-emerald-300">{conversion.resume}</p>}
+                        {conversion.erreur && <p role="alert" className="text-xs text-rose-700 dark:text-rose-300">{conversion.erreur}</p>}
                         {editionError && <p role="alert" className="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700 dark:bg-rose-500/10 dark:text-rose-300">{editionError}</p>}
                         <div className="flex justify-end gap-2"><button type="button" onClick={() => setEdition(null)} className="rounded-xl border border-slate-200 px-4 py-2 text-sm dark:border-gray-700">Annuler</button><button disabled={editionSaving} className="inline-flex items-center gap-2 rounded-xl bg-teal-700 px-4 py-2 text-sm font-semibold text-white hover:bg-teal-800 disabled:opacity-50">{editionSaving && <Loader2 size={15} className="animate-spin" />}Enregistrer</button></div>
                     </form>

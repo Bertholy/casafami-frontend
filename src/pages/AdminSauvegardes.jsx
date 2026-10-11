@@ -5,7 +5,7 @@ import axiosClient from '../api/axiosClient';
 import AdminLayout from '../components/AdminLayout';
 import Notice from '../components/Notice';
 import { btnPrimary, btnSecondary, card } from '../constants/ui';
-import { apiErrorMessage, getRole, hasSession, homeForRole, LOGIN_PATH } from '../utils/auth';
+import { apiErrorMessage, getRole, hasSession, homeForRole, LOGIN_PATH, peut } from '../utils/auth';
 
 const taille = octets => (octets >= 1048576 ? `${(octets / 1048576).toFixed(1)} Mo` : `${Math.max(1, Math.round(octets / 1024))} Ko`);
 const quand = iso => new Date(iso).toLocaleString('fr-FR', { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
@@ -29,7 +29,7 @@ export default function AdminSauvegardes() {
     useEffect(() => {
         const role = getRole();
         if (!hasSession()) { navigate(LOGIN_PATH); return undefined; }
-        if (role !== 'SUPER_ADMIN') { navigate(homeForRole(role)); return undefined; }
+        if (!peut('SAUVEGARDES_GERER')) { navigate(homeForRole(role)); return undefined; }
         const timer = window.setTimeout(load, 0);
         return () => window.clearTimeout(timer);
     }, [load, navigate]);

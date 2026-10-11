@@ -6,7 +6,7 @@ import AdminLayout from '../components/AdminLayout';
 import Notice from '../components/Notice';
 import { STATUS, formatDateFr, hhmm, todayISO } from '../constants/app';
 import { btnPrimary, btnSecondary, card, inputClass } from '../constants/ui';
-import { apiErrorMessage, getRole, hasSession, homeForRole, LOGIN_PATH } from '../utils/auth';
+import { apiErrorMessage, getRole, hasSession, homeForRole, LOGIN_PATH, peut } from '../utils/auth';
 import { formatPhone } from '../utils/phone';
 
 const ROLES_PRATICIENS = ['MEDECIN', 'SAGE_FEMME', 'INFIRMIERE'];
@@ -41,7 +41,7 @@ export default function MesPatients() {
     useEffect(() => {
         const role = getRole();
         if (!hasSession()) { navigate(LOGIN_PATH); return undefined; }
-        if (!ROLES_PRATICIENS.includes(role)) { navigate(homeForRole(role)); return undefined; }
+        if (!ROLES_PRATICIENS.includes(role) || !peut('RDV_VOIR')) { navigate(homeForRole(role)); return undefined; }
         const premier = window.setTimeout(charger, 0);
         const intervalle = window.setInterval(() => { if (document.visibilityState === 'visible') charger(); }, 20000);
         return () => { window.clearTimeout(premier); window.clearInterval(intervalle); };

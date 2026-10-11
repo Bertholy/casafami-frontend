@@ -4,12 +4,13 @@ import { CalendarDays, RefreshCw, Trash2 } from 'lucide-react';
 import axiosClient from '../api/axiosClient';
 import AdminLayout from '../components/AdminLayout';
 import { getRoleLabel } from '../constants/app';
-import { apiErrorMessage, getRole, hasSession, homeForRole, LOGIN_PATH } from '../utils/auth';
+import { apiErrorMessage, getRole, hasSession, homeForRole, LOGIN_PATH, peut } from '../utils/auth';
 
 export default function Corbeille() {
     const navigate = useNavigate();
     const role = getRole();
     const superAdmin = role === 'SUPER_ADMIN';
+    const peutVider = peut('RDV_SUPPRIMER_DEFINITIVEMENT');
     const [items, setItems] = useState([]);
     const [error, setError] = useState('');
     const [notice, setNotice] = useState('');
@@ -22,7 +23,7 @@ export default function Corbeille() {
 
     useEffect(() => {
         if (!hasSession()) { navigate(LOGIN_PATH); return undefined; }
-        if (role !== 'SUPER_ADMIN' && role !== 'SECRETAIRE') { navigate(homeForRole(role)); return undefined; }
+        if (!peut('RDV_CORBEILLE')) { navigate(homeForRole(role)); return undefined; }
         const timer = window.setTimeout(load, 0);
         return () => window.clearTimeout(timer);
     }, [load, navigate, role]);
@@ -45,7 +46,7 @@ export default function Corbeille() {
             {error && <p role="alert" className="rounded-xl bg-rose-50 p-3 text-sm text-rose-700 dark:bg-rose-500/10 dark:text-rose-200">{error}</p>}
             {notice && <p role="status" className="rounded-xl bg-emerald-50 p-3 text-sm text-emerald-800 dark:bg-emerald-500/10 dark:text-emerald-200">{notice}</p>}
             <section className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
-                {superAdmin && (
+                {peutVider && (
                     <div className="flex justify-end border-b border-slate-200 p-4 dark:border-gray-800">
                         <button disabled={!items.length} onClick={() => setDialog('empty')} className="rounded-xl bg-rose-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-rose-800 disabled:opacity-40">Vider la corbeille</button>
                     </div>
@@ -69,7 +70,7 @@ export default function Corbeille() {
                                         <td className="px-4 py-3">
                                             <div className="flex gap-1">
                                                 <button onClick={() => run({ type: 'restore', id: rdv.id })} title="Restaurer" aria-label="Restaurer" className="rounded-lg p-2 text-teal-700 transition hover:bg-teal-50 dark:text-teal-300 dark:hover:bg-teal-500/10"><RefreshCw size={16} /></button>
-                                                {superAdmin && <button onClick={() => setDialog({ type: 'delete', id: rdv.id })} title="Supprimer définitivement" aria-label="Supprimer définitivement" className="rounded-lg p-2 text-rose-700 transition hover:bg-rose-50 dark:text-rose-300 dark:hover:bg-rose-500/10"><Trash2 size={16} /></button>}
+                                                {peutVider && <button onClick={() => setDialog({ type: 'delete', id: rdv.id })} title="Supprimer définitivement" aria-label="Supprimer définitivement" className="rounded-lg p-2 text-rose-700 transition hover:bg-rose-50 dark:text-rose-300 dark:hover:bg-rose-500/10"><Trash2 size={16} /></button>}
                                             </div>
                                         </td>
                                     </tr>

@@ -2,11 +2,10 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search } from 'lucide-react';
 import axiosClient from '../api/axiosClient';
-import { getRole } from '../utils/auth';
+import { peut } from '../utils/auth';
 import { formatPhone } from '../utils/phone';
 
 // Le personnel soignant ouvre le dossier du patient ; la secrétaire voit ses rendez-vous.
-const ROLES_DOSSIER = ['SUPER_ADMIN', 'MEDECIN', 'SAGE_FEMME', 'INFIRMIERE'];
 
 export default function PatientSearch({ className = 'relative z-30 mx-4 my-3 w-64' }) {
     const navigate = useNavigate();
@@ -27,7 +26,7 @@ export default function PatientSearch({ className = 'relative z-30 mx-4 my-3 w-6
     }, [term, active]);
 
     const open = patient => {
-        navigate(ROLES_DOSSIER.includes(getRole())
+        navigate(peut('DOSSIERS_LIRE')
             ? `/patients/dossier?telephone=${encodeURIComponent(patient.telephone)}`
             : `/mes-rdv?q=${encodeURIComponent(patient.telephone)}`);
         setQuery('');

@@ -4,7 +4,7 @@ import { Save, RotateCcw } from 'lucide-react';
 import axiosClient from '../api/axiosClient';
 import AdminLayout from '../components/AdminLayout';
 import { useTheme } from '../context/ThemeContext';
-import { apiErrorMessage, getRole, hasSession, homeForRole, LOGIN_PATH } from '../utils/auth';
+import { apiErrorMessage, getRole, hasSession, homeForRole, LOGIN_PATH, peut } from '../utils/auth';
 
 const labels = { primaryColor: 'Couleur principale', secondaryColor: 'Couleur secondaire', buttonColor: 'Boutons', linkColor: 'Liens', backgroundColor: 'Fond', panelColor: 'Cartes et panneaux', textColor: 'Texte', navColor: 'Barre de navigation', sidebarColor: 'Barre latérale', borderColor: 'Bordures et éléments interactifs' };
 const palettes = [
@@ -24,7 +24,7 @@ export default function AdminTheme() {
     useEffect(() => {
         const role = getRole();
         if (!hasSession()) navigate(LOGIN_PATH);
-        else if (role !== 'SUPER_ADMIN') navigate(homeForRole(role));
+        else if (!peut('SITE_MODIFIER')) navigate(homeForRole(role));
     }, [navigate]);
 
     const update = (key, value) => setSiteTheme(current => ({ ...current, [key]: value }));

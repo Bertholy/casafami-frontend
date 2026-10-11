@@ -6,7 +6,7 @@ import AdminLayout from '../components/AdminLayout';
 import Notice from '../components/Notice';
 import { getRoleLabel } from '../constants/app';
 import { card, inputClass } from '../constants/ui';
-import { apiErrorMessage, getRole, hasSession, homeForRole, LOGIN_PATH } from '../utils/auth';
+import { apiErrorMessage, getRole, hasSession, homeForRole, LOGIN_PATH, peut } from '../utils/auth';
 
 // Libellés lisibles des actions enregistrées par le serveur.
 const ACTIONS = {
@@ -44,7 +44,7 @@ export default function AdminJournal() {
     useEffect(() => {
         const role = getRole();
         if (!hasSession()) { navigate(LOGIN_PATH); return undefined; }
-        if (role !== 'SUPER_ADMIN') { navigate(homeForRole(role)); return undefined; }
+        if (!peut('JOURNAL_VOIR')) { navigate(homeForRole(role)); return undefined; }
         const timer = window.setTimeout(load, 250);
         return () => window.clearTimeout(timer);
     }, [load, navigate]);

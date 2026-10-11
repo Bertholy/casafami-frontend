@@ -1,5 +1,12 @@
 # Mises à jour — CASAFAMI (site)
 
+## Mise à jour suivante (11 octobre 2026, soir)
+
+- **Rôles et permissions** (menu Administration) : cases par rôle, exceptions par personne, retour aux droits d'origine. Les menus, boutons et pages du personnel s'adaptent aux droits de chacun.
+- **Modifier le site** : la grande barre du bas est remplacée par une petite barre d'outils ; un clic sur un texte ouvre une **fenêtre de modification** (texte, gras, italique, alignement, taille, couleur, aperçu, Enregistrer / Annuler / Remettre par défaut). Boutons « Ajouter un texte » (haut ou bas de page), « Annuler » la dernière modification, « Remettre par défaut » (cette page, menu et pied de page, tout le site). Chaque langue (FR / MG) a ses propres textes.
+- **Photos** : toute photo choisie (services, profil) est adaptée automatiquement ; plus de message « Image invalide ».
+- **Congés** : la page Horaires et congés indique combien de personnes ont été prévenues (notification + SMS).
+
 ## Version du 11 octobre 2026
 
 ### Site public (patients)

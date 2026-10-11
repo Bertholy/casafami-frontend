@@ -8,7 +8,7 @@ import PatientSearch from '../components/PatientSearch';
 import { formatDateFr, hhmm } from '../constants/app';
 import { btnPrimary, btnSecondary, card, inputClass } from '../constants/ui';
 import { checkSafety, ordonnanceTexte, printOrdonnance, suggestMaladies } from '../utils/ordonnance';
-import { apiErrorMessage, getRole, hasSession, homeForRole, LOGIN_PATH } from '../utils/auth';
+import { apiErrorMessage, getRole, hasSession, homeForRole, LOGIN_PATH, peut } from '../utils/auth';
 import { formatPhone } from '../utils/phone';
 
 const ALLOWED = ['SUPER_ADMIN', 'MEDECIN', 'SAGE_FEMME'];
@@ -44,7 +44,7 @@ export default function AssistantOrdonnance() {
 
     useEffect(() => {
         if (!hasSession()) { navigate(LOGIN_PATH); return undefined; }
-        if (!ALLOWED.includes(role)) { navigate(homeForRole(role)); return undefined; }
+        if (!ALLOWED.includes(role) || !peut('MALADIES_LIRE')) { navigate(homeForRole(role)); return undefined; }
         let cancelled = false;
         const timer = window.setTimeout(async () => {
             try {

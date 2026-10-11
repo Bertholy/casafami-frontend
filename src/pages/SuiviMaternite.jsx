@@ -6,10 +6,9 @@ import AdminLayout from '../components/AdminLayout';
 import Notice from '../components/Notice';
 import { formatDateFr } from '../constants/app';
 import { card } from '../constants/ui';
-import { apiErrorMessage, getRole, hasSession, homeForRole, LOGIN_PATH } from '../utils/auth';
+import { apiErrorMessage, getRole, hasSession, homeForRole, LOGIN_PATH, peut } from '../utils/auth';
 import { formatPhone } from '../utils/phone';
 
-const ROLES_MEDICAUX = ['SUPER_ADMIN', 'MEDECIN', 'SAGE_FEMME', 'INFIRMIERE'];
 const date = iso => formatDateFr(iso, { day: 'numeric', month: 'long', year: 'numeric' });
 const dossier = tel => `/patients/dossier?telephone=${encodeURIComponent(tel)}`;
 
@@ -29,7 +28,7 @@ export default function SuiviMaternite() {
     useEffect(() => {
         const role = getRole();
         if (!hasSession()) { navigate(LOGIN_PATH); return undefined; }
-        if (!ROLES_MEDICAUX.includes(role)) { navigate(homeForRole(role)); return undefined; }
+        if (!peut('DOSSIERS_LIRE')) { navigate(homeForRole(role)); return undefined; }
         const timer = window.setTimeout(charger, 0);
         return () => window.clearTimeout(timer);
     }, [charger, navigate]);

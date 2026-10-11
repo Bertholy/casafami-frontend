@@ -8,10 +8,9 @@ import PatientSearch from '../components/PatientSearch';
 import MaterniteDossier from '../components/maternite/MaterniteDossier';
 import { STATUS, formatDateFr, hhmm } from '../constants/app';
 import { btnPrimary, btnSecondary, card, inputClass } from '../constants/ui';
-import { apiErrorMessage, getRole, hasSession, LOGIN_PATH, homeForRole } from '../utils/auth';
+import { apiErrorMessage, getRole, hasSession, LOGIN_PATH, homeForRole, peut } from '../utils/auth';
 import { formatPhone } from '../utils/phone';
 
-const ROLES_MEDICAUX = ['SUPER_ADMIN', 'MEDECIN', 'SAGE_FEMME', 'INFIRMIERE'];
 const VIDE = { rendezVousId: '', dateConsultation: '', notes: '', diagnostic: '', ordonnance: '' };
 
 /** Dossier d'un patient : allergies, antécédents, historique des rendez-vous et comptes rendus de consultation. */
@@ -20,7 +19,8 @@ export default function DossierPatient() {
     const [params] = useSearchParams();
     const telephone = params.get('telephone');
     const role = getRole();
-    const peutSupprimer = role === 'MEDECIN' || role === 'SUPER_ADMIN';
+    const peutSupprimer = peut('DOSSIERS_SUPPRIMER');
+    const peutEcrire = peut('DOSSIERS_MODIFIER');
     const [dossier, setDossier] = useState(null);
     const [fiche, setFiche] = useState({ nom: '', allergies: '', antecedents: '', notes: '' });
     const [consultation, setConsultation] = useState(null); // formulaire ouvert (nouveau ou modification)
@@ -45,7 +45,7 @@ export default function DossierPatient() {
 
     useEffect(() => {
         if (!hasSession()) { navigate(LOGIN_PATH); return undefined; }
-        if (!ROLES_MEDICAUX.includes(role)) { navigate(homeForRole(role)); return undefined; }
+        if (!peut('DOSSIERS_LIRE')) { navigate(homeForRole(role)); return undefined; }
         const timer = window.setTimeout(load, 0);
         return () => window.clearTimeout(timer);
     }, [load, navigate, role]);
@@ -103,8 +103,9 @@ export default function DossierPatient() {
             <Notice tone="error" onClose={() => setError('')}>{error}</Notice>
             {loading && !dossier && <div className="flex items-center justify-center gap-2 p-12 text-sm text-slate-500"><Loader2 className="animate-spin" size={18} />Chargement du dossier…</div>}
 
+            {dossier && !peutEcrire && <Notice tone="info">Vous pouvez consulter ce dossier mais pas le modifier.</Notice>}
             {dossier && (
-                <div className="grid gap-6 xl:grid-cols-[380px_1fr]">
+                <fieldset disabled={!peutEcrire} className="m-0 min-w-0 border-0 p-0"><div className="grid gap-6 xl:grid-cols-[380px_1fr]">
                     <div className="space-y-6">
                         <form onSubmit={enregistrerFiche} className={`${card} space-y-4 p-5`}>
                             <div className="flex items-center gap-3">
@@ -188,7 +189,7 @@ export default function DossierPatient() {
                             )}
                         </section>
                     </div>
-                </div>
+                </div></fieldset>
             )}
         </AdminLayout>
     );

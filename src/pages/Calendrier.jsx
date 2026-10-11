@@ -6,7 +6,7 @@ import AdminLayout from '../components/AdminLayout';
 import Notice from '../components/Notice';
 import { STATUS, formatDateFr, hhmm, todayISO } from '../constants/app';
 import { btnPrimary, btnSecondary, card } from '../constants/ui';
-import { apiErrorMessage, getRole, hasSession, homeForRole, LOGIN_PATH } from '../utils/auth';
+import { apiErrorMessage, getRole, hasSession, homeForRole, LOGIN_PATH, peut } from '../utils/auth';
 
 const ENTETES = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
 
@@ -60,7 +60,7 @@ export default function Calendrier() {
     const ouvert = date => horaires.find(h => h.jourSemaine === ((date.getDay() + 6) % 7) + 1)?.ouvert ?? true;
     const jourSelectionne = (parJour[selection] || []).slice().sort((a, b) => hhmm(a.heureRdv).localeCompare(hhmm(b.heureRdv)));
     const selectionOuverte = ouvert(new Date(`${selection}T12:00:00`)) && !fermesParJour[selection];
-    const peutOuvrirDossier = ['SUPER_ADMIN', 'MEDECIN', 'SAGE_FEMME', 'INFIRMIERE'].includes(role);
+    const peutOuvrirDossier = peut('DOSSIERS_LIRE');
     const canCreate = selection >= today && selectionOuverte;
     const changerMois = delta => setMois(current => new Date(current.getFullYear(), current.getMonth() + delta, 1, 12));
 

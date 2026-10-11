@@ -7,7 +7,7 @@ import Notice from '../components/Notice';
 import OccupationGrid from '../components/dashboard/OccupationGrid';
 import { formatDateFr, todayISO } from '../constants/app';
 import { btnSecondary, card, inputClass } from '../constants/ui';
-import { apiErrorMessage, getRole, hasSession, homeForRole, LOGIN_PATH } from '../utils/auth';
+import { apiErrorMessage, getRole, hasSession, homeForRole, LOGIN_PATH, peut } from '../utils/auth';
 
 const decaler = (iso, jours) => { const d = new Date(`${iso}T12:00:00`); d.setDate(d.getDate() + jours); return d.toLocaleDateString('en-CA'); };
 
@@ -29,7 +29,7 @@ export default function AdminOccupation() {
     useEffect(() => {
         const role = getRole();
         if (!hasSession()) { navigate(LOGIN_PATH); return undefined; }
-        if (role !== 'SUPER_ADMIN') { navigate(homeForRole(role)); return undefined; }
+        if (!peut('OCCUPATION_VOIR')) { navigate(homeForRole(role)); return undefined; }
         const timer = window.setTimeout(load, 0);
         const interval = window.setInterval(load, 30000);
         return () => { window.clearTimeout(timer); window.clearInterval(interval); };

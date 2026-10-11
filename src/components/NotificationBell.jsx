@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { BadgeCheck, Bell, BellRing, CalendarCheck, CalendarClock, CalendarPlus, CalendarX, CheckCheck, KeyRound, ShieldAlert, Trash2, UserCheck, UserMinus } from 'lucide-react';
+import { BadgeCheck, Bell, BellRing, CalendarCheck, CalendarClock, CalendarOff, CalendarPlus, CalendarX, CheckCheck, KeyRound, ShieldAlert, Trash2, UserCheck, UserMinus } from 'lucide-react';
 import axiosClient from '../api/axiosClient';
 
 const REFRESH_MS = 30000;
 const ICONES = {
     RDV_ATTRIBUE: { Icone: CalendarCheck, classe: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300' },
+    CONGE: { Icone: CalendarOff, classe: 'bg-violet-100 text-violet-700 dark:bg-violet-500/15 dark:text-violet-300' },
     RDV_NOUVEAU: { Icone: CalendarPlus, classe: 'bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300' },
     RDV_MODIFIE: { Icone: CalendarClock, classe: 'bg-sky-100 text-sky-700 dark:bg-sky-500/15 dark:text-sky-300' },
     RDV_CORBEILLE: { Icone: Trash2, classe: 'bg-rose-100 text-rose-700 dark:bg-rose-500/15 dark:text-rose-300' },

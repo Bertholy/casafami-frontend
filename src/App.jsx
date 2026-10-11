@@ -4,9 +4,10 @@ import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import ScrollToTop from './components/ScrollToTop';
 import SiteEditorBar from './components/site/SiteEditorBar';
+import TextesAjoutes from './components/site/TextesAjoutes';
 import { SiteContentProvider } from './context/SiteContentContext';
 import { LangProvider } from './i18n/LangContext';
-import { STAFF_PREFIXES } from './constants/routes';
+import { PAGES_EDITABLES, STAFF_PREFIXES } from './constants/routes';
 
 // Chaque page est chargée seulement quand on la visite : le premier affichage du site est beaucoup plus léger.
 const Accueil = lazy(() => import('./pages/Accueil'));
@@ -27,6 +28,7 @@ const AdminPlanning = lazy(() => import('./pages/AdminPlanning'));
 const AdminJournal = lazy(() => import('./pages/AdminJournal'));
 const AdminOccupation = lazy(() => import('./pages/AdminOccupation'));
 const AdminSauvegardes = lazy(() => import('./pages/AdminSauvegardes'));
+const AdminPermissions = lazy(() => import('./pages/AdminPermissions'));
 const MesPatients = lazy(() => import('./pages/MesPatients'));
 const SuiviMaternite = lazy(() => import('./pages/SuiviMaternite'));
 const Messagerie = lazy(() => import('./pages/Messagerie'));
@@ -63,6 +65,7 @@ function AppContent() {
             <div className="min-h-screen flex flex-col bg-white dark:bg-gray-900 transition-colors">
                 {isPublicPage && <Navbar />}
                 <main className="grow">
+                    {isPublicPage && PAGES_EDITABLES[location.pathname] && <TextesAjoutes page={PAGES_EDITABLES[location.pathname]} zone="haut" />}
                     <Suspense fallback={<Chargement />}>
                     <Routes>
                         <Route path="/" element={<Accueil />} />
@@ -90,11 +93,13 @@ function AppContent() {
                         <Route path="/admin/journal" element={<AdminJournal />} />
                         <Route path="/admin/occupation" element={<AdminOccupation />} />
                         <Route path="/admin/sauvegardes" element={<AdminSauvegardes />} />
+                        <Route path="/admin/permissions" element={<AdminPermissions />} />
                         <Route path="/admin/personnalisation" element={<AdminTheme />} />
                         <Route path="/medecin/maladies" element={<MaladiesMedecin />} />
                         <Route path="*" element={<NotFound />} />
                     </Routes>
                     </Suspense>
+                    {isPublicPage && PAGES_EDITABLES[location.pathname] && <TextesAjoutes page={PAGES_EDITABLES[location.pathname]} zone="bas" />}
                 </main>
                 {isPublicPage && <Footer />}
             </div>

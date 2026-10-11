@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axiosClient from '../api/axiosClient';
 import AdminLayout from '../components/AdminLayout';
-import { apiErrorMessage, getRole, hasSession, homeForRole, LOGIN_PATH } from '../utils/auth';
+import { apiErrorMessage, getRole, hasSession, homeForRole, LOGIN_PATH, peut } from '../utils/auth';
 import { Plus, Trash2, Pill, Loader2, AlertCircle, Stethoscope, Activity, FileSignature, Pencil, Check, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
@@ -12,7 +12,7 @@ const card = 'rounded-2xl border border-slate-200/80 bg-white shadow-sm dark:bor
 function MaladiesMedecin() {
     const navigate = useNavigate();
     const role = getRole();
-    const canWrite = role === 'MEDECIN' || role === 'SUPER_ADMIN';
+    const canWrite = peut('MALADIES_MODIFIER');
     const [maladies, setMaladies] = useState([]);
     const [loading, setLoading] = useState(true);
     const [erreur, setErreur] = useState(null);
@@ -36,7 +36,7 @@ function MaladiesMedecin() {
 
     useEffect(() => {
         if (!hasSession()) { navigate(LOGIN_PATH); return undefined; }
-        if (role === 'SECRETAIRE') { navigate(homeForRole(role)); return undefined; }
+        if (!peut('MALADIES_LIRE')) { navigate(homeForRole(role)); return undefined; }
         const timer = window.setTimeout(chargerMaladies, 0);
         return () => window.clearTimeout(timer);
     }, [navigate, chargerMaladies, role]);
