@@ -1,0 +1,21 @@
+# Déploiement du site sur Netlify (gratuit). Guide complet : DEPLOIEMENT-EN-LIGNE.md (dépôt principal casafami).
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "22"
+  # Adresse du serveur (Render). À adapter si le service ne s'appelle pas « casafami-api ».
+  VITE_API_URL = "https://casafami-api.onrender.com/api"
+
+# Le site gère ses propres pages (/services, /prendre-rdv, /admin/...) : toute adresse renvoie vers index.html.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# Les fichiers générés (nom avec empreinte) peuvent être gardés un an par le navigateur.
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
