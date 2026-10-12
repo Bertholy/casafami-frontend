@@ -43,11 +43,11 @@ export default function PatientSearch({ className = 'relative z-30 mx-4 my-3 w-6
                 className="w-full rounded-xl border border-slate-200 bg-white py-2 pl-9 pr-3 text-sm outline-none transition focus:border-teal-600 focus:ring-2 focus:ring-teal-600/20 dark:border-gray-700 dark:bg-gray-900"
             />
             {active && (
-                <div className="absolute left-0 right-0 top-full z-50 mt-1 max-h-72 overflow-auto rounded-xl border border-slate-200 bg-white p-1 shadow-xl dark:border-gray-700 dark:bg-gray-900">
+                <div className="absolute right-0 top-full z-50 mt-1 max-h-96 w-[min(36rem,calc(100vw-2rem))] overflow-auto rounded-xl border border-slate-200 bg-white p-1 shadow-xl dark:border-gray-700 dark:bg-gray-900">
                     {results.length ? results.map((patient, index) => (
-                        <button key={`${patient.telephone}-${index}`} onClick={() => open(patient)} className="block w-full rounded-lg px-3 py-2 text-left hover:bg-teal-50 dark:hover:bg-gray-800">
-                            <span className="block text-sm font-medium">{patient.nom}</span>
-                            <span className="text-xs text-slate-500">{formatPhone(patient.telephone)}</span>
+                        <button key={`${patient.telephone}-${index}`} onClick={() => open(patient)} className="flex w-full items-center justify-between gap-4 rounded-lg px-4 py-2.5 text-left hover:bg-teal-50 dark:hover:bg-gray-800">
+                            <span className="min-w-0 truncate text-sm font-medium">{patient.nom}</span>
+                            <span className="shrink-0 text-sm tabular-nums text-slate-500 dark:text-gray-400">{formatPhone(patient.telephone)}</span>
                         </button>
                     )) : <p className="px-3 py-2 text-sm text-slate-500">Aucun patient trouvé</p>}
                 </div>

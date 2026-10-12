@@ -141,12 +141,12 @@ function MesRdv() {
                 </div>
             </section>
 
-            <div className="max-w-2xl mx-auto px-4 py-8">
+            <div className="max-w-6xl mx-auto px-4 py-8">
 
                 {/* ========== RECHERCHE ========== */}
                 <form
                     onSubmit={rechercher}
-                    className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 mb-6 border border-teal-100 dark:border-gray-700"
+                    className="mx-auto mb-6 max-w-2xl rounded-2xl border border-teal-100 bg-white p-6 shadow-lg dark:border-gray-700 dark:bg-gray-800"
                 >
                     <div className="flex gap-3">
                         <div className="relative flex-1">

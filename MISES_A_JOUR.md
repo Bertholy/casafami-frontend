@@ -8,6 +8,11 @@
 
 ## Mise à jour suivante (11 octobre 2026, soir)
 
+- **Petits nombres dans le menu du personnel** : une pastille bleue indique ce qui est nouveau depuis votre dernière visite de la page : Tableau de bord et Calendrier (nouveaux rendez-vous), Corbeille, Dossiers patients (nouveaux comptes rendus d'un collègue), Suivi maternité, Journal d'audit, et « Mes patients » (rendez-vous à accepter). Ouvrir la page remet le nombre à zéro. Chacun ne voit que les pages auxquelles il a droit.
+- **Services** : les cartes défilent toutes seules de la droite vers la gauche, en boucle, avec deux flèches (accueil et page « Nos services »).
+- **Mes RDV** : le tableau des résultats occupe toute la largeur ; la recherche de patient du personnel affiche une fenêtre de résultats plus large.
+- **Mode sombre** : fonds étagés (page, cartes, champs), bordures plus visibles, textes secondaires et liens plus clairs.
+
 - **Tableau de bord du personnel** : un médecin, une sage-femme ou une infirmière (sans droit d'attribuer ni de confirmer) a maintenant « Mon espace » : ses patients du jour, sa semaine, ses rendez-vous, avec seulement Accepter, Terminer, Dossier, Détail et Reçu. Plus de colonne « Praticien », de « À attribuer », de modification, de corbeille ni d'annulation, et les rendez-vous pas encore attribués n'y apparaissent pas. Le super administrateur garde le tableau de bord de gestion complet ; la secrétaire garde la vue d'accueil du cabinet sans attribution ni confirmation.
 
 - **Œil sur les mots de passe** : tous les champs de mot de passe (connexion, création de compte, réinitialisation, changement du mien, nouveau mot de passe oublié) ont un œil pour afficher ou masquer ce qu'on tape.

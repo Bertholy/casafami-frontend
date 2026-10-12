@@ -32,7 +32,7 @@
     font-family: 'Lato', 'Segoe UI', system-ui, sans-serif;
     color: var(--mt-texte);
 }
-.dark .theme-montagne { color: #e5e7eb; --casafami-link: #8fd8fb; --color-teal-300: #8fd8fb; --color-teal-400: #6cc6f2; }
+.dark .theme-montagne { color: #e5e7eb; --casafami-link: #8fd8fb; --dark-link: #8fd8fb; --color-teal-300: #8fd8fb; --color-teal-400: #6cc6f2; }
 
 .theme-montagne h1, .theme-montagne h2, .theme-montagne h3, .theme-montagne .font-titre {
     font-family: 'Montserrat', 'Segoe UI', system-ui, sans-serif;

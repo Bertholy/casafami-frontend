@@ -103,3 +103,31 @@ body {
 .animate-slow-zoom {
     animation: slowZoom 20s ease-in-out infinite alternate;
 }
+
+/* ========== MODE SOMBRE : surfaces étagées et textes plus lisibles ==========
+ * On redéfinit les gris du thème seulement quand la classe « dark » est active : fond de page < cartes < champs et survols,
+ * bordures plus visibles, textes secondaires nettement plus clairs. Le mode clair n'est pas touché. */
+.dark {
+    --color-gray-950: #0a1120;
+    --color-gray-900: #111b2e;
+    --color-gray-800: #1b2740;
+    --color-gray-700: #2b3a58;
+    --color-gray-600: #41547a;
+    --color-gray-500: #8393b0;
+    --color-gray-400: #a9b7cc;
+    --color-gray-300: #cdd7e6;
+    --color-gray-200: #e2e8f2;
+    --color-slate-950: #070c19;
+    --color-slate-900: #0e172b;
+    --color-slate-800: #1a2740;
+    --color-slate-700: #2b3a58;
+    --color-slate-500: #93a3bd;
+    --color-slate-400: #b3c0d4;
+    --color-slate-300: #cdd7e6;
+}
+.dark body { background-color: var(--color-gray-950); color: #e6ecf5; }
+.dark input::placeholder, .dark textarea::placeholder { color: #7f90ad; }
+.dark ::-webkit-scrollbar-track { background: #0a1120; }
+.dark :focus-visible { outline-color: #5eead4; }
+/* Liens et icônes « teal » : en mode sombre ils passent à une teinte claire (le design public a sa propre couleur claire) */
+.dark .text-teal-600, .dark .text-teal-700, .dark .hover\:text-teal-700:hover { color: var(--dark-link, #5eead4); }

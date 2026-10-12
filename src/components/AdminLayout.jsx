@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Link, NavLink, useNavigate } from 'react-router-dom';
+import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import {
     Activity, BarChart3, Baby, ShieldCheck, ClipboardCheck, DatabaseBackup, CalendarDays, CalendarPlus, Camera, CalendarClock, ExternalLink, FileSignature, KeyRound, LayoutDashboard, Loader2, LogOut, Menu, Moon, Palette,
     Pencil, ScrollText, UsersRound, Stethoscope, Sun, Trash2, UserCog, UserRound, Users, X, HeartPulse,
@@ -8,6 +8,7 @@ import axiosClient, { assetUrl } from '../api/axiosClient';
 import PatientSearch from './PatientSearch';
 import NotificationBell from './NotificationBell';
 import MessagerieBouton from './MessagerieBouton';
+import useNouveautes, { sectionDePage } from '../hooks/useNouveautes';
 import { useTheme } from '../context/ThemeContext';
 import { APP_NAME, getRoleLabel } from '../constants/app';
 import { convertirImage } from '../utils/image';
@@ -20,6 +21,8 @@ import ChampMotDePasse from './ChampMotDePasse';
  */
 export default function AdminLayout({ title, subtitle, actions, children }) {
     const navigate = useNavigate();
+    const { pathname } = useLocation();
+    const nombre = useNouveautes(sectionDePage(pathname));
     const { theme, toggleTheme } = useTheme();
     const role = getRole();
     const home = homeForRole(role);
@@ -64,18 +67,18 @@ export default function AdminLayout({ title, subtitle, actions, children }) {
         {
             heading: 'Activité',
             items: [
-                { to: home, label: ['MEDECIN', 'SAGE_FEMME', 'INFIRMIERE'].includes(role) && !peut('RDV_ATTRIBUER') && !peut('RDV_CONFIRMER') ? 'Mon espace' : 'Tableau de bord', icon: LayoutDashboard, end: true },
-                ...(['MEDECIN', 'SAGE_FEMME', 'INFIRMIERE'].includes(role) ? si('RDV_VOIR', { to: '/espace/mes-patients', label: 'Mes patients', icon: ClipboardCheck }) : []),
+                { to: home, label: ['MEDECIN', 'SAGE_FEMME', 'INFIRMIERE'].includes(role) && !peut('RDV_ATTRIBUER') && !peut('RDV_CONFIRMER') ? 'Mon espace' : 'Tableau de bord', icon: LayoutDashboard, end: true, badge: 'rdv' },
+                ...(['MEDECIN', 'SAGE_FEMME', 'INFIRMIERE'].includes(role) ? si('RDV_VOIR', { to: '/espace/mes-patients', label: 'Mes patients', icon: ClipboardCheck, badge: 'aAccepter' }) : []),
                 ...si('RDV_CREER', { to: home, state: { create: true }, label: 'Nouveau rendez-vous', icon: CalendarPlus, key: 'new' }),
-                ...si('RDV_VOIR', { to: '/calendrier', label: 'Calendrier', icon: CalendarDays }),
-                ...si('RDV_CORBEILLE', { to: '/corbeille', label: 'Corbeille', icon: Trash2 }),
+                ...si('RDV_VOIR', { to: '/calendrier', label: 'Calendrier', icon: CalendarDays, badge: 'calendrier' }),
+                ...si('RDV_CORBEILLE', { to: '/corbeille', label: 'Corbeille', icon: Trash2, badge: 'corbeille' }),
             ],
         },
         {
             heading: 'Patients',
             items: [
-                ...si('DOSSIERS_LIRE', { to: '/patients/dossier', label: 'Dossiers patients', icon: Users }),
-                ...si('DOSSIERS_LIRE', { to: '/patients/maternite', label: 'Suivi maternité', icon: Baby }),
+                ...si('DOSSIERS_LIRE', { to: '/patients/dossier', label: 'Dossiers patients', icon: Users, badge: 'dossiers' }),
+                ...si('DOSSIERS_LIRE', { to: '/patients/maternite', label: 'Suivi maternité', icon: Baby, badge: 'maternite' }),
                 ...(['SUPER_ADMIN', 'MEDECIN', 'SAGE_FEMME'].includes(role) ? si('MALADIES_LIRE', { to: '/assistant/ordonnance', label: 'Assistant d’ordonnance', icon: FileSignature }) : []),
             ],
         },
@@ -96,7 +99,7 @@ export default function AdminLayout({ title, subtitle, actions, children }) {
                 ...si('PERMISSIONS_GERER', { to: '/admin/permissions', label: 'Rôles et permissions', icon: ShieldCheck }),
                 ...si('OCCUPATION_VOIR', { to: '/admin/occupation', label: 'Occupation du personnel', icon: UsersRound }),
                 ...si('PLANNING_GERER', { to: '/admin/planning', label: 'Horaires et congés', icon: CalendarClock }),
-                ...si('JOURNAL_VOIR', { to: '/admin/journal', label: 'Journal d’audit', icon: ScrollText }),
+                ...si('JOURNAL_VOIR', { to: '/admin/journal', label: 'Journal d’audit', icon: ScrollText, badge: 'journal' }),
                 ...si('SAUVEGARDES_GERER', { to: '/admin/sauvegardes', label: 'Sauvegardes', icon: DatabaseBackup }),
                 ...si('SITE_MODIFIER', { to: '/admin/personnalisation', label: 'Couleurs du site', icon: Palette }),
                 ...si('SITE_MODIFIER', { to: '/?edition=1', label: 'Modifier le site', icon: Pencil, key: 'edit-site' }),
@@ -126,11 +129,13 @@ export default function AdminLayout({ title, subtitle, actions, children }) {
                             <div className="space-y-1">
                                 {section.items.map(item => {
                                     const Icon = item.icon;
+                                    const n = item.badge ? nombre(item.badge) : 0;
                                     return (
                                         <NavLink key={item.key || item.label} to={item.to} state={item.state} end={item.end}
                                             onClick={() => setMenuOpen(false)}
                                             className={item.key ? () => linkClass({ isActive: false }) : linkClass}>
                                             <Icon size={18} className="shrink-0" />{item.label}
+                                            {n > 0 && <span aria-label={`${n} nouveau${n > 1 ? 'x' : ''}`} className="ml-auto inline-flex min-w-[1.5rem] items-center justify-center rounded-full bg-sky-500 px-1.5 py-0.5 text-[11px] font-bold leading-none tabular-nums text-white shadow-sm">{n > 99 ? '99+' : n}</span>}
                                         </NavLink>
                                     );
                                 })}

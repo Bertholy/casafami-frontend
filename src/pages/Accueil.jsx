@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import Editable from '../components/site/Editable';
 import Movable from '../components/site/Movable';
+import Carrousel from '../components/site/Carrousel';
 import { useSiteContent } from '../context/SiteContentContext';
 import { summarizeHours, traduireJours, usePlanning } from '../utils/horaires';
 import { useLang } from '../i18n/LangContext';
@@ -109,7 +110,7 @@ function Accueil() {
                         </Movable>
                     </div>
 
-                    <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
+                    <Carrousel label={t("Nos services")}>
                         {SERVICES.map((service, i) => (
                             <article key={i} className="group text-center">
                                 <div className="mt-cadre">
@@ -123,7 +124,7 @@ function Accueil() {
                                 <Editable id={`accueil.service${i + 1}.desc`} as="p" className="mt-3 text-sm italic leading-relaxed text-gray-500 dark:text-gray-400">{service.desc}</Editable>
                             </article>
                         ))}
-                    </div>
+                    </Carrousel>
                 </div>
             </section>
 

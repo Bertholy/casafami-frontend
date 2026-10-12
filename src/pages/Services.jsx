@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import axiosClient, { assetUrl } from '../api/axiosClient';
 import Editable from '../components/site/Editable';
 import Movable from '../components/site/Movable';
+import Carrousel from '../components/site/Carrousel';
 import {
     Clock,
     Calendar,
@@ -100,7 +101,7 @@ function Services() {
                             <p className="text-lg text-gray-500 dark:text-gray-400">{t("Aucun service disponible pour le moment.")}</p>
                         </div>
                     ) : (
-                        <div className="grid grid-cols-1 gap-x-8 gap-y-12 sm:grid-cols-2 lg:grid-cols-4">
+                        <Carrousel label={t("Nos services")}>
                             {services.map(service => {
                                 const imageSrc = service.imageUrl ? assetUrl(service.imageUrl) : getImageForService(service.nom);
                                 return (
@@ -123,7 +124,7 @@ function Services() {
                                     </article>
                                 );
                             })}
-                        </div>
+                        </Carrousel>
                     )}
 
                     {/* CTA */}

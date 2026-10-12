@@ -111,6 +111,8 @@ export const MG = {
 
     // ---- design « montagne » (à faire relire par un locuteur malgache)
     "Fermer": "Hidina",
+    "Précédent": "Teo aloha",
+    "Suivant": "Manaraka",
     "Menu": "Fisafidianana",
     "Appeler le cabinet": "Antsoy ny foibe",
     "Le cabinet en images": "Ny foibenay an-tsary",
