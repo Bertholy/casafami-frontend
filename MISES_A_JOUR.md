@@ -8,6 +8,8 @@
 
 ## Mise à jour suivante (11 octobre 2026, soir)
 
+- **Tableau de bord du personnel** : un médecin, une sage-femme ou une infirmière (sans droit d'attribuer ni de confirmer) a maintenant « Mon espace » : ses patients du jour, sa semaine, ses rendez-vous, avec seulement Accepter, Terminer, Dossier, Détail et Reçu. Plus de colonne « Praticien », de « À attribuer », de modification, de corbeille ni d'annulation, et les rendez-vous pas encore attribués n'y apparaissent pas. Le super administrateur garde le tableau de bord de gestion complet ; la secrétaire garde la vue d'accueil du cabinet sans attribution ni confirmation.
+
 - **Œil sur les mots de passe** : tous les champs de mot de passe (connexion, création de compte, réinitialisation, changement du mien, nouveau mot de passe oublié) ont un œil pour afficher ou masquer ce qu'on tape.
 
 - **Rôles et permissions** (menu Administration) : cases par rôle, exceptions par personne, retour aux droits d'origine. Les menus, boutons et pages du personnel s'adaptent aux droits de chacun.

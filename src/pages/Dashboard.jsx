@@ -67,6 +67,8 @@ function Dashboard() {
     const estPraticien = ['MEDECIN', 'SAGE_FEMME', 'INFIRMIERE'].includes(role);
     const canOpenDossier = peut('DOSSIERS_LIRE');
     const droitAttribuer = peut('RDV_ATTRIBUER'), droitConfirmer = peut('RDV_CONFIRMER'), droitAccepter = peut('RDV_ACCEPTER');
+    // Un soignant qui ne répartit pas les rendez-vous (pas d'attribution ni de confirmation) a une vue personnelle : ses patients, pas la gestion du cabinet.
+    const vuePraticien = estPraticien && !droitAttribuer && !droitConfirmer;
     const droitTerminer = peut('RDV_TERMINER'), droitModifier = peut('RDV_MODIFIER'), droitCreer = peut('RDV_CREER');
 
     const [rdvs, setRdvs] = useState([]);
@@ -95,9 +97,14 @@ function Dashboard() {
                 axiosClient.get('/rendez-vous/dashboard', { params: { periode: period } }),
                 axiosClient.get('/rendez-vous/dashboard', { params: { periode: 'cette_semaine' } }),
             ]);
-            setRdvs(selected.data.rendezVous || []);
-            setStats({ ...EMPTY_STATS, ...selected.data.stats });
-            setWeekRdvs(week.data.rendezVous || []);
+            // Vue personnelle : seulement les rendez-vous confiés à cette personne (ceux pas encore attribués relèvent du cabinet).
+            const siens = liste => (vuePraticien ? (liste || []).filter(rdv => rdv.praticienId != null) : (liste || []));
+            const mesRdvs = siens(selected.data.rendezVous);
+            setRdvs(mesRdvs);
+            setStats(vuePraticien
+                ? { ...EMPTY_STATS, total: mesRdvs.length, pending: mesRdvs.filter(r => r.statut === 'EN_ATTENTE').length, confirmed: mesRdvs.filter(r => r.statut === 'CONFIRME').length, done: mesRdvs.filter(r => r.statut === 'TERMINE').length, cancelled: mesRdvs.filter(r => r.statut === 'ANNULE').length }
+                : { ...EMPTY_STATS, ...selected.data.stats });
+            setWeekRdvs(siens(week.data.rendezVous));
             if (rdvCible) {
                 try { const { data } = await axiosClient.get(`/rdv/${rdvCible}`); setCible({ id: rdvCible, rdv: data, absent: false }); }
                 catch { setCible({ id: rdvCible, rdv: null, absent: true }); }
@@ -106,7 +113,7 @@ function Dashboard() {
             console.error('Chargement du tableau de bord impossible', err);
             setError(apiErrorMessage(err, 'Impossible de charger le tableau de bord. Réessayez dans un instant.'));
         } finally { setLoading(false); }
-    }, [period, rdvCible]);
+    }, [period, rdvCible, vuePraticien]);
 
     // Redirige vers l'espace du rôle (ex. une secrétaire arrivée sur /medecin/dashboard), puis charge les données.
     useEffect(() => {
@@ -244,7 +251,7 @@ function Dashboard() {
     );
 
     return (
-        <AdminLayout title="Tableau de bord" subtitle={formatDateFr(today, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })} actions={newButton}>
+        <AdminLayout title={vuePraticien ? 'Mon espace' : 'Tableau de bord'} subtitle={formatDateFr(today, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })} actions={newButton}>
             {profile => <>
                 {/* ---------- Demande à traiter (ouverte depuis une notification) ---------- */}
                 {rdvCible && cible.id === rdvCible && (
@@ -263,24 +270,28 @@ function Dashboard() {
                             <p className="text-sm font-medium text-teal-100">Bonjour{profile?.nom ? `, ${profile.nom}` : ''}</p>
                             <h2 className="mt-1 text-2xl font-bold sm:text-3xl">
                                 {todayItems.length
-                                    ? `${todayItems.length} rendez-vous aujourd’hui`
-                                    : 'Aucun rendez-vous aujourd’hui'}
+                                    ? (vuePraticien ? `${todayItems.length} patient${todayItems.length > 1 ? 's' : ''} aujourd’hui` : `${todayItems.length} rendez-vous aujourd’hui`)
+                                    : (vuePraticien ? 'Aucun patient aujourd’hui' : 'Aucun rendez-vous aujourd’hui')}
                             </h2>
                             <p className="mt-2 max-w-xl text-sm text-teal-50">
-                                {pendingToday > 0
-                                    ? `${pendingToday} en attente de confirmation. Pensez à les valider pour prévenir les patients.`
+                                {vuePraticien
+                                    ? (rdvs.filter(rdv => peutAccepter(rdv, profile)).length > 0
+                                        ? `${rdvs.filter(rdv => peutAccepter(rdv, profile)).length} rendez-vous vous attendent : acceptez-les pour que le cabinet les confirme au patient.`
+                                        : 'Vos rendez-vous sont à jour.')
+                                : pendingToday > 0
+                                    ? (droitConfirmer ? `${pendingToday} en attente de confirmation. Pensez à les valider pour prévenir les patients.` : `${pendingToday} en attente de confirmation par le cabinet.`)
                                     : todayItems.length ? 'Tout est confirmé pour aujourd’hui.' : 'Profitez-en pour préparer la semaine ou saisir un nouveau rendez-vous.'}
                             </p>
                         </div>
                         <div className="flex flex-wrap gap-3">
                             {droitCreer && <button onClick={() => setModal({ type: 'create' })} className="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-semibold text-teal-800 shadow transition hover:bg-teal-50"><Plus size={17} />Nouveau rendez-vous</button>}
-                            <details className="relative">
+                            {peut('EXPORT_RDV') && <details className="relative">
                                 <summary className="inline-flex cursor-pointer list-none items-center gap-2 rounded-xl border border-white/30 bg-white/10 px-4 py-2.5 text-sm font-medium backdrop-blur transition hover:bg-white/20 [&::-webkit-details-marker]:hidden"><Download size={16} />Exporter</summary>
                                 <div className="absolute right-0 z-20 mt-2 w-56 overflow-hidden rounded-xl bg-white p-1 text-sm text-slate-800 shadow-xl dark:bg-gray-900 dark:text-gray-100">
                                     <button onClick={() => exportList('csv')} className="block w-full rounded-lg px-3 py-2 text-left hover:bg-slate-100 dark:hover:bg-gray-800">Excel (CSV) — {periodLabel.toLowerCase()}</button>
                                     <button onClick={() => exportList('pdf')} className="block w-full rounded-lg px-3 py-2 text-left hover:bg-slate-100 dark:hover:bg-gray-800">PDF — {periodLabel.toLowerCase()}</button>
                                 </div>
-                            </details>
+                            </details>}
                             <button onClick={() => load()} className="inline-flex items-center gap-2 rounded-xl border border-white/30 bg-white/10 px-4 py-2.5 text-sm font-medium backdrop-blur transition hover:bg-white/20"><RefreshCw size={16} className={loading ? 'animate-spin' : ''} />Actualiser</button>
                         </div>
                     </div>
@@ -318,14 +329,14 @@ function Dashboard() {
                 <section className="grid gap-6 xl:grid-cols-5">
                     <div className={`${card} p-5 xl:col-span-3`}>
                         <div className="mb-4 flex items-start justify-between gap-3">
-                            <div><h2 className="font-semibold">Rendez-vous de la semaine</h2><p className="text-xs text-slate-500 dark:text-gray-400">Par jour, hors rendez-vous annulés</p></div>
+                            <div><h2 className="font-semibold">{vuePraticien ? 'Ma semaine' : 'Rendez-vous de la semaine'}</h2><p className="text-xs text-slate-500 dark:text-gray-400">Par jour, hors rendez-vous annulés</p></div>
                             <span className="rounded-full bg-teal-100 px-3 py-1 text-xs font-semibold tabular-nums text-teal-800 dark:bg-teal-500/15 dark:text-teal-300">{week.reduce((sum, day) => sum + day.total, 0)} au total</span>
                         </div>
                         <WeekChart days={week} />
                     </div>
                     <div className={`${card} p-5 xl:col-span-2`}>
                         <div className="mb-4 flex items-center justify-between">
-                            <div><h2 className="font-semibold">Agenda du jour</h2><p className="text-xs text-slate-500 dark:text-gray-400">{formatDateFr(today, { weekday: 'long', day: 'numeric', month: 'long' })}</p></div>
+                            <div><h2 className="font-semibold">{vuePraticien ? 'Mes patients du jour' : 'Agenda du jour'}</h2><p className="text-xs text-slate-500 dark:text-gray-400">{formatDateFr(today, { weekday: 'long', day: 'numeric', month: 'long' })}</p></div>
                             <CalendarClock className="text-teal-600" size={20} />
                         </div>
                         <AgendaToday items={todayItems} peutConfirmer={rdv => peutAccepter(rdv, profile) || peutConfirmer(rdv)} libelle={rdv => (peutAccepter(rdv, profile) ? 'Accepter' : 'Confirmer')} onConfirm={rdv => (peutAccepter(rdv, profile) ? accepterRdv(rdv) : confirmRdv(rdv))} onOpen={rdv => setModal({ type: 'view', rdv })} />
@@ -337,7 +348,7 @@ function Dashboard() {
                     <div className="space-y-4 border-b border-slate-200 p-4 dark:border-gray-800 sm:p-5">
                         <div className="flex items-center justify-between">
                             <div>
-                                <h2 className="font-semibold">Liste des rendez-vous</h2>
+                                <h2 className="font-semibold">{vuePraticien ? 'Mes rendez-vous' : 'Liste des rendez-vous'}</h2>
                                 <p className="mt-0.5 text-xs text-slate-500 dark:text-gray-400">{filtered.length} résultat{filtered.length > 1 ? 's' : ''} · {periodLabel.toLowerCase()}</p>
                             </div>
                         </div>
@@ -361,7 +372,7 @@ function Dashboard() {
                     <div className="overflow-x-auto">
                         <table className="w-full min-w-[920px] border-collapse text-left text-sm">
                             <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500 dark:bg-gray-800/60 dark:text-gray-400">
-                                <tr>{['Patient', 'Date et heure', 'Service', 'Praticien', 'Statut', 'Actions'].map(label => <th key={label} scope="col" className="px-4 py-3 font-semibold">{label}</th>)}</tr>
+                                <tr>{['Patient', 'Date et heure', 'Service', ...(vuePraticien ? [] : ['Praticien']), 'Statut', 'Actions'].map(label => <th key={label} scope="col" className="px-4 py-3 font-semibold">{label}</th>)}</tr>
                             </thead>
                             <tbody className="divide-y divide-slate-100 dark:divide-gray-800">
                                 {visible.map(rdv => {
@@ -377,21 +388,21 @@ function Dashboard() {
                                             </td>
                                             <td className="px-4 py-3 whitespace-nowrap"><div className="font-medium">{formatDateFr(rdv.dateRdv)}</div><div className="text-xs text-slate-500 dark:text-gray-400">{hhmm(rdv.heureRdv)}</div></td>
                                             <td className="px-4 py-3 text-slate-600 dark:text-gray-300">{rdv.serviceNom || '—'}</td>
-                                            <td className="px-4 py-3 text-slate-600 dark:text-gray-300">{rdv.praticienNom ? <div className="flex flex-col items-start gap-1"><span className="inline-flex items-center gap-1.5 font-medium"><UserCheck size={14} className="text-teal-600" />{rdv.praticienNom}</span>{badgeAcceptation(rdv)}</div> : (droitAttribuer && rdv.statut !== 'ANNULE' && rdv.statut !== 'TERMINE' ? <button onClick={() => setAttribution({ rdv })} className="rounded-full bg-amber-100 px-2.5 py-1 text-xs font-semibold text-amber-800 transition hover:bg-amber-200 dark:bg-amber-500/15 dark:text-amber-300">À attribuer</button> : <span className="text-slate-400">Non attribué</span>)}</td>
+                                            {!vuePraticien && <td className="px-4 py-3 text-slate-600 dark:text-gray-300">{rdv.praticienNom ? <div className="flex flex-col items-start gap-1"><span className="inline-flex items-center gap-1.5 font-medium"><UserCheck size={14} className="text-teal-600" />{rdv.praticienNom}</span>{badgeAcceptation(rdv)}</div> : (droitAttribuer && rdv.statut !== 'ANNULE' && rdv.statut !== 'TERMINE' ? <button onClick={() => setAttribution({ rdv })} className="rounded-full bg-amber-100 px-2.5 py-1 text-xs font-semibold text-amber-800 transition hover:bg-amber-200 dark:bg-amber-500/15 dark:text-amber-300">À attribuer</button> : <span className="text-slate-400">Non attribué</span>)}</td>}
                                             <td className="px-4 py-3"><span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ${st.badge}`}><span className={`h-1.5 w-1.5 rounded-full ${st.dot}`} />{st.label}</span></td>
                                             <td className="px-4 py-3">
                                                 <div className="flex items-center gap-0.5">
                                                     {canOpenDossier && <Link to={`/patients/dossier?telephone=${encodeURIComponent(rdv.telephoneClient)}`} title="Dossier du patient" aria-label={`Dossier de ${rdv.nomClient}`} className="rounded-lg p-2 text-slate-500 transition hover:bg-slate-100 hover:text-teal-700 dark:text-gray-400 dark:hover:bg-gray-800"><FolderOpen size={16} /></Link>}
                                                     <IconButton label="Voir le détail" onClick={() => setModal({ type: 'view', rdv })}><Eye size={16} /></IconButton>
-                                                    {droitModifier && <IconButton label="Modifier" onClick={() => setModal({ type: 'edit', rdv })}><Pencil size={16} /></IconButton>}
+                                                    {droitModifier && !vuePraticien && <IconButton label="Modifier" onClick={() => setModal({ type: 'edit', rdv })}><Pencil size={16} /></IconButton>}
                                                     {peutAccepter(rdv, profile) && <IconButton label="Accepter ce rendez-vous (je le prends)" tone="text-emerald-700 hover:bg-emerald-50 dark:text-emerald-300 dark:hover:bg-emerald-500/10" onClick={() => accepterRdv(rdv)}><Check size={16} /></IconButton>}
                                                     {peutConfirmer(rdv) && <IconButton label="Confirmer le rendez-vous (le patient reçoit son SMS)" tone="text-emerald-700 hover:bg-emerald-50 dark:text-emerald-300 dark:hover:bg-emerald-500/10" onClick={() => confirmRdv(rdv)}><BadgeCheck size={16} /></IconButton>}
                                                     {droitAttribuer && (rdv.statut === 'EN_ATTENTE' || rdv.statut === 'CONFIRME') && <IconButton label="Attribuer à une personne du personnel" tone="text-violet-700 hover:bg-violet-50 dark:text-violet-300 dark:hover:bg-violet-500/10" onClick={() => setAttribution({ rdv })}><UserCheck size={16} /></IconButton>}
                                                     {peutTerminer(rdv, profile) && <IconButton label="Marquer comme terminé" tone="text-sky-700 hover:bg-sky-50 dark:text-sky-300 dark:hover:bg-sky-500/10" onClick={() => finishRdv(rdv)}><CheckCheck size={16} /></IconButton>}
                                                     <IconButton label="Télécharger le reçu PDF" onClick={() => downloadPdf(rdv)}><FileDown size={16} /></IconButton>
                                                     <IconButton label="Imprimer le reçu" onClick={() => printReceipt(rdv)}><Printer size={16} /></IconButton>
-                                                    {open && <IconButton label="Annuler le rendez-vous" tone="text-amber-700 hover:bg-amber-50 dark:text-amber-300 dark:hover:bg-amber-500/10" onClick={() => cancelRdv(rdv)}><Ban size={16} /></IconButton>}
-                                                    {droitModifier && <IconButton label="Mettre dans la corbeille" tone="text-rose-700 hover:bg-rose-50 dark:text-rose-300 dark:hover:bg-rose-500/10" onClick={() => trashRdv(rdv)}><Trash2 size={16} /></IconButton>}
+                                                    {open && !vuePraticien && <IconButton label="Annuler le rendez-vous" tone="text-amber-700 hover:bg-amber-50 dark:text-amber-300 dark:hover:bg-amber-500/10" onClick={() => cancelRdv(rdv)}><Ban size={16} /></IconButton>}
+                                                    {droitModifier && !vuePraticien && <IconButton label="Mettre dans la corbeille" tone="text-rose-700 hover:bg-rose-50 dark:text-rose-300 dark:hover:bg-rose-500/10" onClick={() => trashRdv(rdv)}><Trash2 size={16} /></IconButton>}
                                                 </div>
                                             </td>
                                         </tr>

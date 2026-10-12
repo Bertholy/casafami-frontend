@@ -64,7 +64,7 @@ export default function AdminLayout({ title, subtitle, actions, children }) {
         {
             heading: 'Activité',
             items: [
-                { to: home, label: 'Tableau de bord', icon: LayoutDashboard, end: true },
+                { to: home, label: ['MEDECIN', 'SAGE_FEMME', 'INFIRMIERE'].includes(role) && !peut('RDV_ATTRIBUER') && !peut('RDV_CONFIRMER') ? 'Mon espace' : 'Tableau de bord', icon: LayoutDashboard, end: true },
                 ...(['MEDECIN', 'SAGE_FEMME', 'INFIRMIERE'].includes(role) ? si('RDV_VOIR', { to: '/espace/mes-patients', label: 'Mes patients', icon: ClipboardCheck }) : []),
                 ...si('RDV_CREER', { to: home, state: { create: true }, label: 'Nouveau rendez-vous', icon: CalendarPlus, key: 'new' }),
                 ...si('RDV_VOIR', { to: '/calendrier', label: 'Calendrier', icon: CalendarDays }),
