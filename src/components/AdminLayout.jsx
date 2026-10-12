@@ -12,6 +12,7 @@ import { useTheme } from '../context/ThemeContext';
 import { APP_NAME, getRoleLabel } from '../constants/app';
 import { convertirImage } from '../utils/image';
 import { apiErrorMessage, clearSession, getEmail, getRole, homeForRole, majPermissions, peut } from '../utils/auth';
+import ChampMotDePasse from './ChampMotDePasse';
 
 /**
  * Coquille commune de tous les espaces du personnel : barre latérale, en-tête, recherche patient,
@@ -219,9 +220,9 @@ function PasswordDialog({ onClose }) {
                     </>
                 ) : (
                     <>
-                        <label className="block text-sm font-medium">Mot de passe actuel<input required type="password" autoComplete="current-password" value={form.ancienMotDePasse} onChange={e => setForm({ ...form, ancienMotDePasse: e.target.value })} className={field} /></label>
-                        <label className="block text-sm font-medium">Nouveau mot de passe (10 caractères minimum)<input required type="password" minLength={10} maxLength={72} autoComplete="new-password" value={form.nouveauMotDePasse} onChange={e => setForm({ ...form, nouveauMotDePasse: e.target.value })} className={field} /></label>
-                        <label className="block text-sm font-medium">Confirmer le nouveau mot de passe<input required type="password" minLength={10} maxLength={72} autoComplete="new-password" value={form.confirmation} onChange={e => setForm({ ...form, confirmation: e.target.value })} className={field} /></label>
+                        <label className="block text-sm font-medium">Mot de passe actuel<ChampMotDePasse required autoComplete="current-password" value={form.ancienMotDePasse} onChange={e => setForm({ ...form, ancienMotDePasse: e.target.value })} className={field} /></label>
+                        <label className="block text-sm font-medium">Nouveau mot de passe (10 caractères minimum)<ChampMotDePasse required minLength={10} maxLength={72} autoComplete="new-password" value={form.nouveauMotDePasse} onChange={e => setForm({ ...form, nouveauMotDePasse: e.target.value })} className={field} /></label>
+                        <label className="block text-sm font-medium">Confirmer le nouveau mot de passe<ChampMotDePasse required minLength={10} maxLength={72} autoComplete="new-password" value={form.confirmation} onChange={e => setForm({ ...form, confirmation: e.target.value })} className={field} /></label>
                         {error && <p role="alert" className="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700 dark:bg-rose-500/10 dark:text-rose-300">{error}</p>}
                         <div className="flex justify-end gap-2"><button type="button" onClick={onClose} className="rounded-xl border border-slate-200 px-4 py-2 text-sm dark:border-gray-700">Annuler</button><button disabled={saving} className="inline-flex items-center gap-2 rounded-xl bg-teal-700 px-4 py-2 text-sm font-semibold text-white hover:bg-teal-800 disabled:opacity-50">{saving && <Loader2 size={15} className="animate-spin" />}Modifier</button></div>
                     </>

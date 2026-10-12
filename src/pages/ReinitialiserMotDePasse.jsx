@@ -4,6 +4,7 @@ import { AlertCircle, CheckCircle2, Loader2, Lock } from 'lucide-react';
 import axiosClient from '../api/axiosClient';
 import AuthCard, { authButton, authInput } from '../components/AuthCard';
 import { apiErrorMessage } from '../utils/auth';
+import ChampMotDePasse from '../components/ChampMotDePasse';
 
 /** Page ouverte depuis le lien reçu par e-mail : choix du nouveau mot de passe. */
 export default function ReinitialiserMotDePasse() {
@@ -58,13 +59,13 @@ export default function ReinitialiserMotDePasse() {
                     )}
                     <label htmlFor="mdp-nouveau" className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">Nouveau mot de passe</label>
                     <div className="relative mb-5">
-                        <Lock className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
-                        <input id="mdp-nouveau" type="password" required minLength={10} maxLength={72} autoComplete="new-password" value={motDePasse} onChange={e => setMotDePasse(e.target.value)} className={authInput} />
+                        <Lock className="pointer-events-none absolute left-3 top-1/2 z-10 h-5 w-5 -translate-y-1/2 text-gray-400" />
+                        <ChampMotDePasse id="mdp-nouveau" required minLength={10} maxLength={72} autoComplete="new-password" value={motDePasse} onChange={e => setMotDePasse(e.target.value)} className={authInput} />
                     </div>
                     <label htmlFor="mdp-confirmation" className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">Confirmer le mot de passe</label>
                     <div className="relative mb-6">
-                        <Lock className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
-                        <input id="mdp-confirmation" type="password" required minLength={10} maxLength={72} autoComplete="new-password" value={confirmation} onChange={e => setConfirmation(e.target.value)} className={authInput} />
+                        <Lock className="pointer-events-none absolute left-3 top-1/2 z-10 h-5 w-5 -translate-y-1/2 text-gray-400" />
+                        <ChampMotDePasse id="mdp-confirmation" required minLength={10} maxLength={72} autoComplete="new-password" value={confirmation} onChange={e => setConfirmation(e.target.value)} className={authInput} />
                     </div>
                     <button type="submit" disabled={loading} className={authButton}>
                         {loading ? <><Loader2 className="h-5 w-5 animate-spin" />Enregistrement…</> : 'Changer mon mot de passe'}

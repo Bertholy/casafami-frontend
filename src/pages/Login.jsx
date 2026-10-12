@@ -4,6 +4,7 @@ import axiosClient from '../api/axiosClient';
 import { APP_NAME } from '../constants/app';
 import { apiErrorMessage, homeForRole, saveSession } from '../utils/auth';
 import { Lock, Mail, Loader2, AlertCircle, Stethoscope, ArrowLeft } from 'lucide-react';
+import ChampMotDePasse from '../components/ChampMotDePasse';
 
 function Login() {
     const navigate = useNavigate();
@@ -83,9 +84,8 @@ function Login() {
                             Mot de passe
                         </label>
                         <div className="relative">
-                            <Lock className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                            <input
-                                type="password"
+                            <Lock className="pointer-events-none absolute left-3 top-1/2 z-10 h-5 w-5 -translate-y-1/2 text-gray-400" />
+                            <ChampMotDePasse
                                 value={motDePasse}
                                 onChange={(e) => setMotDePasse(e.target.value)}
                                 required

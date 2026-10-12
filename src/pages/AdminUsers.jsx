@@ -4,6 +4,7 @@ import { KeyRound, Loader2, Pencil, Plus, ShieldCheck, Trash2, UserCog, X } from
 import axiosClient from '../api/axiosClient';
 import AdminLayout from '../components/AdminLayout';
 import { apiErrorMessage, clearSession, getEmail, getRole, hasSession, homeForRole, LOGIN_PATH, peut } from '../utils/auth';
+import ChampMotDePasse from '../components/ChampMotDePasse';
 
 const ROLES = [
     ['MEDECIN', 'Médecin'],
@@ -107,7 +108,7 @@ export default function AdminUsers() {
                 <form onSubmit={createUser} className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                     <input required maxLength={100} aria-label="Nom complet" placeholder="Nom complet" value={form.nom} onChange={e => setForm({ ...form, nom: e.target.value })} className={field} />
                     <input required type="email" aria-label="Adresse e-mail" placeholder="Adresse e-mail" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} className={field} />
-                    <input required type="password" minLength={10} maxLength={72} autoComplete="new-password" aria-label="Mot de passe" placeholder="Mot de passe (10 caractères min.)" value={form.motDePasse} onChange={e => setForm({ ...form, motDePasse: e.target.value })} className={field} />
+                    <ChampMotDePasse required minLength={10} maxLength={72} autoComplete="new-password" aria-label="Mot de passe" placeholder="Mot de passe (10 caractères min.)" value={form.motDePasse} onChange={e => setForm({ ...form, motDePasse: e.target.value })} className={field} />
                     <input type="tel" maxLength={20} aria-label="Téléphone" placeholder="Téléphone (facultatif)" value={form.telephone} onChange={e => setForm({ ...form, telephone: e.target.value })} className={field} />
                     <select aria-label="Rôle" value={form.role} onChange={e => setForm({ ...form, role: e.target.value })} className={field}>{ROLES.map(([key, label]) => <option key={key} value={key}>{label}</option>)}</select>
                     <button disabled={saving} className="inline-flex items-center justify-center gap-2 rounded-xl bg-teal-700 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-teal-800 disabled:opacity-60">{saving ? <Loader2 size={16} className="animate-spin" /> : <Plus size={16} />}Créer le compte</button>
@@ -163,7 +164,7 @@ export default function AdminUsers() {
                         ) : (
                             <>
                                 <p className="text-sm text-slate-600 dark:text-gray-300">Nouveau mot de passe pour <strong>{dialog.user.nom}</strong> ({dialog.user.email}).</p>
-                                <label className="block text-sm font-medium">Nouveau mot de passe (10 caractères minimum)<input required type="password" minLength={10} maxLength={72} autoComplete="new-password" value={dialog.motDePasse} onChange={e => setDialog({ ...dialog, motDePasse: e.target.value })} className={field + ' mt-1.5 w-full'} /></label>
+                                <label className="block text-sm font-medium">Nouveau mot de passe (10 caractères minimum)<ChampMotDePasse required minLength={10} maxLength={72} autoComplete="new-password" value={dialog.motDePasse} onChange={e => setDialog({ ...dialog, motDePasse: e.target.value })} className={field + ' mt-1.5 w-full'} /></label>
                             </>
                         )}
                         {dialogError && <p role="alert" className="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700 dark:bg-rose-500/10 dark:text-rose-300">{dialogError}</p>}
