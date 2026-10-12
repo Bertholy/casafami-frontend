@@ -110,7 +110,9 @@ export const MG = {
 
 
     // ---- design « montagne » (à faire relire par un locuteur malgache)
+    "à": "tamin'ny",
     "Fermer": "Hidina",
+    "Une réservation existe déjà à ce nom (rendez-vous du {date} à {heure}). Une nouvelle réservation sera possible à partir du {dispo}, ou dès que la première est annulée dans « Mes RDV ».": "Efa misy famandrihana amin'ity anarana ity (fotoana tamin'ny {date} tamin'ny {heure}). Azo atao indray ny famandrihana vaovao manomboka ny {dispo}, na raha vao foanana ao amin'ny « Ny fotoanako » ny voalohany.",
     "Précédent": "Teo aloha",
     "Suivant": "Manaraka",
     "Menu": "Fisafidianana",

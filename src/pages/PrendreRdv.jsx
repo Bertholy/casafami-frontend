@@ -98,7 +98,13 @@ function PrendreRdv() {
         } catch (err) {
             console.error('Création du rendez-vous impossible', err);
             setErreur(apiErrorMessage(err, t("Impossible d’enregistrer ce rendez-vous. Vérifiez les informations et le créneau, puis réessayez.")));
-            if (err.response?.status === 409) {
+            const reponse = err.response?.data;
+            if (reponse?.code === 'RESERVATION_RECENTE') {
+                // Même nom déjà réservé il y a moins de 3 jours : on indique le rendez-vous existant et la date de la prochaine réservation possible.
+                const jourFr = iso => String(iso).slice(0, 10).split('-').reverse().join('/');
+                setErreur(t("Une réservation existe déjà à ce nom (rendez-vous du {date} à {heure}). Une nouvelle réservation sera possible à partir du {dispo}, ou dès que la première est annulée dans « Mes RDV ».",
+                    { date: jourFr(reponse.dateRdvExistant), heure: String(reponse.heureRdvExistant).slice(0, 5), dispo: `${jourFr(reponse.disponibleLe)} ${t('à')} ${String(reponse.disponibleLe).slice(11, 16)}` }));
+            } else if (err.response?.status === 409) {
                 // Le créneau vient d'être pris : on le retire et on réaffiche ce qui reste libre ce jour-là.
                 setForm(current => ({ ...current, heureRdv: '' }));
                 refreshSlots();
