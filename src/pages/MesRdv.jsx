@@ -180,18 +180,18 @@ function MesRdv() {
     );
 
     return (
-        <div className="bg-linear-to-br from-teal-50 via-white to-blue-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 min-h-screen">
+        <div className="min-h-screen">
 
             {/* ========== HERO ========== */}
-            <section className="bg-linear-to-r from-teal-600 to-teal-700 dark:from-teal-700 dark:to-teal-800 py-12">
-                <div className="max-w-2xl mx-auto px-4 text-center">
-                    <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center mx-auto mb-4 border border-white/30 shadow-lg">
-                        <Calendar className="w-8 h-8 text-white" />
+            <section className="px-4 pb-2 pt-12">
+                <div className="mx-auto max-w-2xl text-center">
+                    <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-3xl bg-teal-50 text-teal-600 shadow-[0_0_0_1px_#dce9f0] dark:bg-gray-800 dark:text-teal-300 dark:shadow-none">
+                        <Calendar className="h-8 w-8" />
                     </div>
-                    <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">
+                    <h1 className="mb-3 text-3xl font-extrabold md:text-5xl">
                         {t("Mes rendez-vous")}
                     </h1>
-                    <p className="text-teal-100">
+                    <p className="text-lg text-slate-600 dark:text-gray-300">
                         <Editable id="mesrdv.hero.cle">Entrez la clé de suivi reçue lors de votre prise de rendez-vous, ou scannez votre QR code</Editable>
                     </p>
                 </div>
@@ -225,7 +225,7 @@ function MesRdv() {
                         <button
                             type="submit"
                             disabled={loading}
-                            className="bg-linear-to-r from-teal-600 to-teal-700 text-white px-6 py-3 rounded-xl font-bold hover:from-teal-700 hover:to-teal-800 transition disabled:opacity-50 flex items-center justify-center gap-2 shadow-md"
+                            className="mt-btn disabled:opacity-50"
                         >
                             {loading ? (
                                 <Loader2 className="w-5 h-5 animate-spin" />

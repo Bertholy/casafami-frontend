@@ -79,21 +79,19 @@ function Services() {
     }
 
     return (
-        <div className="bg-white transition-colors dark:bg-gray-900">
+        <div className="transition-colors">
 
             {/* ========== EN-TÊTE ========== */}
-            <section className="relative overflow-hidden py-24 text-center text-white">
-                <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: "url('/cabinet_1.jpg')" }} />
-                <div className="absolute inset-0" style={{ background: 'linear-gradient(180deg, rgba(3,44,74,.8), rgba(3,44,74,.62))' }} />
-                <div className="relative mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
-                    <Editable id="services.hero.badge" as="span" className="mb-6 inline-block border border-white/50 px-4 py-2 text-xs font-extrabold uppercase tracking-[0.22em]">Nos prestations</Editable>
-                    <Editable id="services.hero.titre" as="h1" accent={-1} className="mb-4 text-4xl font-bold uppercase leading-tight md:text-6xl [&_em]:text-[#bfeaff]">Nos services médicaux</Editable>
-                    <Editable id="services.hero.texte" as="p" className="mx-auto max-w-2xl text-lg text-white/90 md:text-xl">Des soins de qualité adaptés à vos besoins, assurés par une équipe expérimentée</Editable>
+            <section className="px-4 pb-6 pt-14 text-center sm:px-6 lg:px-8">
+                <div className="mx-auto max-w-3xl">
+                    <Editable id="services.hero.badge" as="span" className="mb-5 inline-block rounded-full bg-white px-4 py-2 text-xs font-extrabold uppercase tracking-[0.14em] text-teal-700 shadow-[0_0_0_1px_#dce9f0] dark:bg-gray-800 dark:text-teal-300 dark:shadow-none">Nos prestations</Editable>
+                    <Editable id="services.hero.titre" as="h1" accent={-1} className="mb-4 text-4xl font-extrabold leading-tight md:text-6xl [&_em]:text-teal-600 [&_em]:not-italic">Nos services médicaux</Editable>
+                    <Editable id="services.hero.texte" as="p" className="mx-auto max-w-2xl text-lg text-slate-600 dark:text-gray-300 md:text-xl">Des soins de qualité adaptés à vos besoins, assurés par une équipe expérimentée</Editable>
                 </div>
             </section>
 
             {/* ========== LISTE DES SERVICES ========== */}
-            <section className="mt-relief py-20">
+            <section className="py-14">
                 <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
 
                     {services.length === 0 ? (
@@ -105,22 +103,24 @@ function Services() {
                             {services.map(service => {
                                 const imageSrc = service.imageUrl ? assetUrl(service.imageUrl) : getImageForService(service.nom);
                                 return (
-                                    <article key={service.id} className="group text-center">
+                                    <article key={service.id} className="group mt-carte h-full p-3">
                                         <div className="mt-cadre">
-                                            <div className="aspect-[4/3] overflow-hidden">
+                                            <div className="aspect-[4/3] overflow-hidden rounded-[1.4rem]">
                                                 <img loading="lazy" decoding="async" src={imageSrc} alt={service.nom}
                                                     onError={event => { event.currentTarget.onerror = null; event.currentTarget.src = '/general.jpg'; }}
                                                     className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
                                             </div>
                                         </div>
-                                        <h3 className="mt-6 text-lg font-bold uppercase tracking-wide text-gray-800 dark:text-white">{t(service.nom)}</h3>
-                                        <p className="mt-2 flex items-center justify-center gap-2 font-titre text-sm font-bold text-teal-600 dark:text-teal-300">
-                                            <Clock className="h-3.5 w-3.5" />
-                                            <span>{service.duree ? t("Durée : {duree}", { duree: service.duree }) : t("Sur rendez-vous")}</span>
-                                        </p>
-                                        <p className="mt-3 text-sm italic leading-relaxed text-gray-500 dark:text-gray-400">
-                                            {service.description ? t(service.description) : t("Description à venir.")}
-                                        </p>
+                                        <div className="px-3 pb-4 pt-5">
+                                            <h3 className="text-lg font-extrabold text-slate-800 dark:text-white">{t(service.nom)}</h3>
+                                            <p className="mt-3 text-sm leading-relaxed text-slate-500 dark:text-gray-400">
+                                                {service.description ? t(service.description) : t("Description à venir.")}
+                                            </p>
+                                            <p className="mt-4 inline-flex items-center gap-2 rounded-full bg-teal-50 px-3 py-1.5 text-xs font-bold text-teal-700 dark:bg-gray-700 dark:text-teal-300">
+                                                <Clock className="h-3.5 w-3.5" />
+                                                <span>{service.duree ? t("Durée : {duree}", { duree: service.duree }) : t("Sur rendez-vous")}</span>
+                                            </p>
+                                        </div>
                                     </article>
                                 );
                             })}

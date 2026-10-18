@@ -67,7 +67,7 @@ function AppContent() {
             <ScrollToTop />
             <TitrePage />
             <a href="#contenu" className="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-[100] focus:rounded-lg focus:bg-white focus:px-4 focus:py-2 focus:text-sm focus:font-bold focus:text-gray-900 focus:shadow-lg">{t("Aller au contenu")}</a>
-            <div className={`min-h-screen flex flex-col bg-white dark:bg-gray-900 transition-colors ${isPublicPage || isLogin ? "theme-montagne" : ""}`}>
+            <div className={`min-h-screen flex flex-col bg-white dark:bg-gray-900 transition-colors ${isPublicPage || isLogin ? "theme-doux" : ""}`}>
                 {isPublicPage && <Navbar />}
                 <main id="contenu" tabIndex={-1} className="grow focus:outline-none">
                     {isPublicPage && PAGES_EDITABLES[location.pathname] && <TextesAjoutes page={PAGES_EDITABLES[location.pathname]} zone="haut" />}

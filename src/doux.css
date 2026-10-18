@@ -1,0 +1,106 @@
+/*
+ * Design « doux » du site public : fond bleu très clair, coins très arrondis, boutons en pilule, ombres légères,
+ * police ronde (Plus Jakarta Sans), une teinte chaude (sable et corail) pour les informations rassurantes.
+ * Tout est limité à .theme-doux : l'espace du personnel n'est pas touché.
+ * Pour revenir à l'ancien design : repasser sur la branche main (git checkout main), ou remettre la classe « theme-montagne » dans App.jsx.
+ */
+.theme-doux {
+    --mt-main: var(--site-primary, #0b77a8);
+    --mt-ardoise: #0e2a38;
+    --mt-ink: #12303f;
+    --mt-doux: #5b7482;
+    --mt-fond: #f5fafd;
+    --mt-sable: #fff4ea;
+    --mt-sable-bord: #f4dec9;
+    --mt-corail: #e8704a;
+    --mt-ombre: 0 12px 34px rgba(15, 80, 120, .08);
+
+    --casafami-primary: var(--mt-main);
+    --casafami-button: var(--site-button, var(--mt-main));
+    --casafami-link: var(--site-link, var(--mt-main));
+    --color-teal-50: color-mix(in srgb, var(--mt-main) 7%, white);
+    --color-teal-100: color-mix(in srgb, var(--mt-main) 14%, white);
+    --color-teal-200: color-mix(in srgb, var(--mt-main) 28%, white);
+    --color-teal-300: color-mix(in srgb, var(--mt-main) 48%, white);
+    --color-teal-400: color-mix(in srgb, var(--mt-main) 68%, white);
+    --color-teal-500: color-mix(in srgb, var(--mt-main) 86%, white);
+    --color-teal-600: var(--mt-main);
+    --color-teal-700: color-mix(in srgb, var(--mt-main) 86%, black);
+    --color-teal-800: color-mix(in srgb, var(--mt-main) 72%, black);
+    --color-teal-900: color-mix(in srgb, var(--mt-main) 55%, black);
+    --color-teal-950: color-mix(in srgb, var(--mt-main) 38%, black);
+
+    font-family: 'Plus Jakarta Sans', 'Segoe UI', system-ui, sans-serif;
+    color: var(--mt-ink);
+    background-color: var(--mt-fond);
+}
+.dark .theme-doux {
+    --mt-ardoise: #0a1a23;
+    --mt-fond: #0b1a22;
+    --mt-sable: #2a2118;
+    --mt-sable-bord: #3d2f21;
+    --casafami-link: #8fd8fb; --dark-link: #8fd8fb; --color-teal-300: #8fd8fb; --color-teal-400: #6cc6f2;
+    color: #e5eef3;
+    background-color: var(--mt-fond);
+}
+
+.theme-doux h1, .theme-doux h2, .theme-doux h3, .theme-doux .font-titre {
+    font-family: 'Plus Jakarta Sans', 'Segoe UI', system-ui, sans-serif;
+    letter-spacing: -.02em;
+}
+
+@layer components {
+/* ---- titres de section ---- */
+.theme-doux .mt-titre { font-weight: 800; line-height: 1.1; color: var(--mt-ink); }
+.theme-doux .mt-titre em { color: var(--mt-main); font-style: normal; }
+.dark .theme-doux .mt-titre { color: #f3f8fb; }
+.dark .theme-doux .mt-titre em { color: #8fd8fb; }
+.theme-doux .mt-regle::before { display: none; }
+.theme-doux .mt-clair .mt-titre, .theme-doux .mt-clair .mt-titre em { color: #fff; }
+
+/* ---- boutons en pilule ---- */
+.theme-doux .mt-btn, .theme-doux .mt-btn-ligne, .theme-doux .mt-btn-blanc, .theme-doux .mt-btn-blanc-plein {
+    display: inline-flex; align-items: center; justify-content: center; gap: .6rem; padding: 1rem 1.8rem;
+    font-size: .95rem; font-weight: 700; line-height: 1; border-radius: 999px; border: 0;
+    transition: background-color .2s, color .2s, box-shadow .2s, transform .2s; cursor: pointer;
+}
+.theme-doux .mt-btn { background: var(--casafami-button); color: #fff; box-shadow: 0 14px 30px color-mix(in srgb, var(--casafami-button) 32%, transparent); }
+.theme-doux .mt-btn:hover { background: color-mix(in srgb, var(--casafami-button) 85%, black); transform: translateY(-1px); }
+.theme-doux .mt-btn-ligne { background: #fff; color: var(--mt-ink); box-shadow: 0 0 0 1px #cfe0e9; }
+.theme-doux .mt-btn-ligne:hover { box-shadow: 0 0 0 2px var(--mt-main); color: var(--mt-main); }
+.dark .theme-doux .mt-btn-ligne { background: #14303d; color: #e5eef3; box-shadow: 0 0 0 1px #2a4756; }
+.theme-doux .mt-btn-blanc { background: transparent; color: #fff; box-shadow: inset 0 0 0 2px rgba(255, 255, 255, .85); }
+.theme-doux .mt-btn-blanc:hover { background: #fff; color: var(--mt-ardoise); }
+.theme-doux .mt-btn-blanc-plein { background: #fff; color: var(--mt-ink); }
+.theme-doux .mt-btn-blanc-plein:hover { background: #e3f3fa; }
+
+/* ---- surfaces ---- */
+.theme-doux .mt-gris { background: color-mix(in srgb, var(--mt-main) 6%, white); }
+.dark .theme-doux .mt-gris { background: #10242e; }
+.theme-doux .mt-ardoise { background: var(--mt-ardoise); color: #fff; }
+.theme-doux .mt-marine { background: var(--mt-main); color: #fff; }
+.theme-doux .mt-relief { background: transparent; }
+.theme-doux .mt-cadre { background: none; padding: 0; border-radius: 2rem; overflow: hidden; }
+.theme-doux .mt-carte { background: #fff; border-radius: 2rem; box-shadow: var(--mt-ombre); }
+.dark .theme-doux .mt-carte { background: #12293a; box-shadow: none; }
+.theme-doux .mt-sable { background: var(--mt-sable); box-shadow: inset 0 0 0 1px var(--mt-sable-bord); }
+
+/* ---- barre de navigation ---- */
+.theme-doux .mt-lien-nav {
+    position: relative; padding: .6rem 1.1rem; border-radius: 999px; font-size: .9rem; font-weight: 600; color: #3c5766; transition: background-color .2s, color .2s;
+}
+.theme-doux .mt-lien-nav:hover { background: color-mix(in srgb, var(--mt-main) 8%, white); color: var(--mt-ink); }
+.theme-doux .mt-lien-nav[aria-current='page'] { background: color-mix(in srgb, var(--mt-main) 14%, white); color: color-mix(in srgb, var(--mt-main) 72%, black); font-weight: 700; }
+.dark .theme-doux .mt-lien-nav { color: #b9d3e0; }
+.dark .theme-doux .mt-lien-nav:hover { background: rgba(255, 255, 255, .08); color: #fff; }
+.dark .theme-doux .mt-lien-nav[aria-current='page'] { background: rgba(143, 216, 251, .16); color: #8fd8fb; }
+
+/* ---- ligne « libellé ........ valeur » (horaires) ---- */
+.theme-doux .mt-ligne { display: flex; align-items: baseline; gap: .75rem; }
+.theme-doux .mt-ligne > .mt-points { flex: 1; border-bottom: 1px dashed #cfdce4; transform: translateY(-.3rem); min-width: 1rem; }
+.dark .theme-doux .mt-ligne > .mt-points { border-color: #3a5463; }
+}
+
+/* Le conteneur racine garde sa classe bg-white : on lui rend le fond bleuté du thème. */
+:root:not(.dark) .theme-doux.bg-white { background-color: var(--mt-fond); }
+.dark .theme-doux.dark\:bg-gray-900 { background-color: var(--mt-fond); }

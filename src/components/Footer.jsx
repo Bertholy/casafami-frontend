@@ -6,7 +6,7 @@ import { summarizeHours, traduireJours, usePlanning } from '../utils/horaires';
 import { useLang } from '../i18n/LangContext';
 import { hasSession } from '../utils/auth';
 
-const titreColonne = 'mb-5 text-xs font-extrabold uppercase tracking-[0.2em] text-white';
+const titreColonne = 'mb-5 text-xs font-extrabold uppercase tracking-[0.14em] text-[#7fd0f0]';
 
 /** Pied de page du site public : bandeau ardoise, liens soulignés, coordonnées et horaires du cabinet. */
 function Footer() {
@@ -26,13 +26,13 @@ function Footer() {
     };
 
     return (
-        <footer className="mt-ardoise transition-colors">
+        <footer className="mt-ardoise mt-16 rounded-t-[3rem] transition-colors">
             <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
 
                 {/* ========== LOGO + LIENS ========== */}
                 <div className="flex flex-col items-start justify-between gap-8 border-b border-white/20 pb-10 lg:flex-row lg:items-center">
                     <div className="flex items-center gap-4">
-                        <img src="/logo_casafami.png" alt={t("casafami")} onClick={clicLogo} draggable={false} className="h-16 w-16 select-none bg-white object-contain p-1.5" />
+                        <img src="/logo_casafami.png" alt={t("casafami")} onClick={clicLogo} draggable={false} className="h-16 w-16 select-none rounded-2xl bg-white object-contain p-1.5" />
                         <Editable id="footer.description" as="p" className="max-w-xs text-sm leading-relaxed text-white/75">
                             Cabinet d'Accouchement Sainte Famille. Votre santé et celle de votre famille, notre priorité.
                         </Editable>
@@ -40,10 +40,10 @@ function Footer() {
                     <div>
                         <Editable id="footer.liens.titre" as="h3" className="sr-only">Liens rapides</Editable>
                         <ul className="flex flex-wrap gap-x-8 gap-y-3 text-sm font-bold text-white">
-                            <li><Link to="/" className="underline underline-offset-4 hover:text-[#bfeaff]">{t("Accueil")}</Link></li>
-                            <li><Link to="/services" className="underline underline-offset-4 hover:text-[#bfeaff]">{t("Nos services")}</Link></li>
-                            <li><Link to="/prendre-rdv" className="underline underline-offset-4 hover:text-[#bfeaff]">{t("Prendre RDV")}</Link></li>
-                            <li><Link to="/mes-rdv" className="underline underline-offset-4 hover:text-[#bfeaff]">{t("Mes RDV")}</Link></li>
+                            <li><Link to="/" className="text-white/90 transition hover:text-[#7fd0f0]">{t("Accueil")}</Link></li>
+                            <li><Link to="/services" className="text-white/90 transition hover:text-[#7fd0f0]">{t("Nos services")}</Link></li>
+                            <li><Link to="/prendre-rdv" className="text-white/90 transition hover:text-[#7fd0f0]">{t("Prendre RDV")}</Link></li>
+                            <li><Link to="/mes-rdv" className="text-white/90 transition hover:text-[#7fd0f0]">{t("Mes RDV")}</Link></li>
                         </ul>
                     </div>
                 </div>
@@ -97,9 +97,9 @@ function Footer() {
                         <h3 className={titreColonne}>{t("Prendre rendez-vous")}</h3>
                         <div className="flex items-start gap-2.5">
                             <Phone className="mt-2 h-4 w-4 shrink-0 text-[#bfeaff]" />
-                            <div className="font-titre text-xl font-bold leading-snug text-white">
-                                <Editable id="footer.tel1" as="p" className="underline underline-offset-4">034 06 759 28</Editable>
-                                <Editable id="footer.tel2" as="p" className="underline underline-offset-4">032 43 035 07</Editable>
+                            <div className="font-titre text-xl font-extrabold leading-snug text-white">
+                                <Editable id="footer.tel1" as="p" >034 06 759 28</Editable>
+                                <Editable id="footer.tel2" as="p" >032 43 035 07</Editable>
                             </div>
                         </div>
                         <Link to="/prendre-rdv" className="mt-btn-blanc mt-6">{t("Prendre rendez-vous")}</Link>
@@ -108,10 +108,10 @@ function Footer() {
 
                 {/* ========== COPYRIGHT ========== */}
                 <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-white/20 pt-6 md:flex-row">
-                    <p className="text-xs font-bold uppercase tracking-wide text-white/55">
+                    <p className="text-xs text-white/60">
                         © {new Date().getFullYear()} casafami - {t("Cabinet d'Accouchement Sainte Famille. Tous droits réservés.")}
                         <br />
-                        <span className="normal-case tracking-normal font-normal">{t("Site conçu et réalisé par VONJIARIMANANA Alpha Bertholy")}</span>
+                        <span>{t("Site conçu et réalisé par VONJIARIMANANA Alpha Bertholy")}</span>
                     </p>
                     {/* Le lien n'est montré qu'au personnel déjà connecté ; les autres accèdent à la connexion par son adresse (/medecin/login). */}
                     {hasSession() && (

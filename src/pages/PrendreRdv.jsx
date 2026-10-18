@@ -240,33 +240,30 @@ function PrendreRdv() {
 
     // ========== FORMULAIRE ==========
     return (
-        <div className="bg-white dark:bg-gray-900 transition-colors">
+        <div className="transition-colors">
 
             {/* ========== HERO ========== */}
-            <section className="relative bg-linear-to-br from-teal-600 via-teal-700 to-teal-800 dark:from-teal-700 dark:to-teal-900 py-16 overflow-hidden">
-                <div className="absolute top-0 right-0 w-64 h-64 bg-white rounded-full mix-blend-overlay filter blur-3xl opacity-10"></div>
-                <div className="absolute bottom-0 left-0 w-64 h-64 bg-white rounded-full mix-blend-overlay filter blur-3xl opacity-10"></div>
-
-                <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="flex items-center gap-2 text-sm text-teal-100 mb-6">
-                        <Link to="/" className="hover:text-white transition">{t("Accueil")}</Link>
-                        <ChevronRight className="w-4 h-4" />
-                        <span className="text-white font-medium">{t("Prendre RDV")}</span>
+            <section className="px-4 pb-6 pt-10 sm:px-6 lg:px-8">
+                <div className="mx-auto max-w-7xl">
+                    <div className="mb-6 flex items-center gap-2 text-sm text-slate-500 dark:text-gray-400">
+                        <Link to="/" className="transition hover:text-teal-700">{t("Accueil")}</Link>
+                        <ChevronRight className="h-4 w-4" />
+                        <span className="font-medium text-slate-800 dark:text-white">{t("Prendre RDV")}</span>
                     </div>
 
                     <div className="text-center">
-                        <span className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm text-white border border-white/30 px-4 py-2 rounded-full text-sm font-semibold mb-4">
-                            <Calendar className="w-4 h-4" />
+                        <span className="mb-4 inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-semibold text-teal-700 shadow-[0_0_0_1px_#dce9f0] dark:bg-gray-800 dark:text-teal-300 dark:shadow-none">
+                            <Calendar className="h-4 w-4" />
                             {t("Réservation en ligne")}
                         </span>
-                        <Editable id="rdv.hero.titre" as="h1" className="text-4xl md:text-5xl font-bold text-white mb-4">Prenez votre rendez-vous</Editable>
-                        <Editable id="rdv.hero.texte" as="p" className="text-lg text-teal-100 max-w-2xl mx-auto">Remplissez le formulaire en 2 minutes. Confirmation par SMS.</Editable>
+                        <Editable id="rdv.hero.titre" as="h1" className="mb-3 text-4xl font-extrabold md:text-5xl">Prenez votre rendez-vous</Editable>
+                        <Editable id="rdv.hero.texte" as="p" className="mx-auto max-w-2xl text-lg text-slate-600 dark:text-gray-300">Remplissez le formulaire en 2 minutes. Confirmation par SMS.</Editable>
                     </div>
                 </div>
             </section>
 
             {/* ========== ÉTAPES ========== */}
-            <section className="border-b border-teal-100 bg-teal-50 py-6 dark:border-gray-700 dark:bg-gray-800">
+            <section className="py-6">
                 <ol className="mx-auto flex max-w-xl items-start px-4" aria-label={t("Étapes de la réservation")}>
                     {etapes.map((etape, i) => (
                         <li key={i} className="relative flex flex-1 flex-col items-center text-center" aria-current={i === etapeCourante ? 'step' : undefined}>
@@ -283,7 +280,7 @@ function PrendreRdv() {
             </section>
 
             {/* ========== FORMULAIRE ========== */}
-            <section className="py-12 bg-white dark:bg-gray-900">
+            <section className="py-12">
                 <div className="mx-auto max-w-6xl px-4">
 
                     {erreur && (
@@ -297,7 +294,7 @@ function PrendreRdv() {
                     )}
 
                     <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-start">
-                    <form onSubmit={onSubmit} className="bg-white dark:bg-gray-800 rounded-3xl shadow-xl border border-gray-100 dark:border-gray-700 overflow-hidden">
+                    <form onSubmit={onSubmit} className="mt-carte overflow-hidden">
 
                         {/* ========== SECTION 1 : INFORMATIONS ========== */}
                         <div className="p-6 md:p-8 border-b border-gray-100 dark:border-gray-700">
@@ -519,7 +516,7 @@ function PrendreRdv() {
                             <button
                                 type="submit"
                                 disabled={loading}
-                                className="w-full bg-linear-to-r from-teal-600 to-teal-700 text-white py-4 rounded-xl font-bold text-lg hover:from-teal-700 hover:to-teal-800 transition-all shadow-lg hover:shadow-xl disabled:opacity-60 disabled:cursor-wait flex items-center justify-center gap-2"
+                                className="mt-btn w-full py-4 text-lg disabled:cursor-wait disabled:opacity-60"
                             >
                                 {loading ? (
                                     <>
