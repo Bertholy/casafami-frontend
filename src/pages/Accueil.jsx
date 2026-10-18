@@ -212,9 +212,9 @@ function Accueil() {
                     <div className="mt-ardoise flex flex-col justify-between rounded-[2rem] p-8 sm:p-10">
                         <div className="space-y-8">
                             <div className="flex gap-4">
-                                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/10 text-[#7fd0f0]"><MapPin className="h-5 w-5" /></span>
+                                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/10 text-(--mt-main-clair)"><MapPin className="h-5 w-5" /></span>
                                 <div className="text-white/90">
-                                    <Editable id="accueil.adresse.titre" as="h3" className="mb-2 text-sm font-extrabold uppercase tracking-[0.14em] text-[#7fd0f0]">Adresse</Editable>
+                                    <Editable id="accueil.adresse.titre" as="h3" className="mb-2 text-sm font-extrabold uppercase tracking-[0.14em] text-(--mt-main-clair)">Adresse</Editable>
                                     <Editable id="accueil.adresse.nom" as="p" className="font-bold text-white">casafami</Editable>
                                     <Editable id="accueil.adresse.ligne1" as="p">Chez Rasazy VERO</Editable>
                                     <Editable id="accueil.adresse.ligne2" as="p">Andongona - ANTSOHIHY</Editable>
@@ -222,9 +222,9 @@ function Accueil() {
                                 </div>
                             </div>
                             <div className="flex gap-4">
-                                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/10 text-[#7fd0f0]"><Phone className="h-5 w-5" /></span>
+                                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/10 text-(--mt-main-clair)"><Phone className="h-5 w-5" /></span>
                                 <div className="text-white/90">
-                                    <Editable id="accueil.tel.titre" as="h3" className="mb-2 text-sm font-extrabold uppercase tracking-[0.14em] text-[#7fd0f0]">Téléphone</Editable>
+                                    <Editable id="accueil.tel.titre" as="h3" className="mb-2 text-sm font-extrabold uppercase tracking-[0.14em] text-(--mt-main-clair)">Téléphone</Editable>
                                     <Editable id="accueil.tel.numero1" as="p" className="font-titre text-xl font-extrabold text-white">034 06 759 28</Editable>
                                     <Editable id="accueil.tel.numero2" as="p" className="font-titre text-xl font-extrabold text-white">032 43 035 07</Editable>
                                     <Editable id="accueil.tel.note" as="p" className="text-sm text-white/60">Appel & SMS</Editable>

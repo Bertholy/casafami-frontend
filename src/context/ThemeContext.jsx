@@ -2,11 +2,22 @@ import { createContext, useContext, useEffect, useState } from 'react';
 import axiosClient from '../api/axiosClient';
 
 const DEFAULT_THEME = {
-    primaryColor: '#0f766e', secondaryColor: '#14b8a6', buttonColor: '#0f766e', linkColor: '#0f766e',
+    primaryColor: '#03cce6', secondaryColor: '#5be3f5', buttonColor: '#03cce6', linkColor: '#0794a8',
     backgroundColor: '#ffffff', panelColor: '#f8fafc', textColor: '#1f2937', navColor: '#0f172a',
     sidebarColor: '#0f172a', borderColor: '#e2e8f0',
 };
+// Anciennes couleurs d'origine (vert du premier design, bleu de la version précédente) : elles sont enregistrées chez les
+// visiteurs et en base, mais ne sont pas un choix du super administrateur ; on les traite comme « pas de couleur choisie ».
+const COULEURS_PAR_DEFAUT = new Set(['#0f766e', '#14b8a6', '#0a8fc7', '#03cce6', '#5be3f5', '#0794a8']);
 const ThemeContext = createContext(null);
+
+/** Texte lisible sur une couleur de fond : bleu nuit sur une couleur claire (comme le cyan), blanc sur une couleur foncée. */
+function texteSur(couleur) {
+    const m = /^#?([0-9a-f]{6})$/i.exec(String(couleur || '').trim());
+    if (!m) return '#05303a';
+    const [r, g, b] = [0, 2, 4].map(i => parseInt(m[1].slice(i, i + 2), 16) / 255).map(v => (v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4));
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b > 0.3 ? '#05303a' : '#ffffff';
+}
 const CSS_KEYS = {
     primaryColor: '--casafami-primary', secondaryColor: '--casafami-secondary', buttonColor: '--casafami-button',
     linkColor: '--casafami-link', backgroundColor: '--casafami-background', panelColor: '--casafami-panel',
@@ -32,8 +43,9 @@ export function ThemeProvider({ children }) {
         // une couleur choisie par le super administrateur dans « Couleurs du site » est en revanche respectée.
         [['primaryColor', '--site-primary'], ['buttonColor', '--site-button'], ['linkColor', '--site-link']].forEach(([key, property]) => {
             const valeur = siteTheme[key];
-            if (valeur && valeur.toLowerCase() !== DEFAULT_THEME[key].toLowerCase()) root.style.setProperty(property, valeur);
-            else root.style.removeProperty(property);
+            const surProperty = property.replace('--site-', '--site-sur-');
+            if (valeur && !COULEURS_PAR_DEFAUT.has(valeur.toLowerCase())) { root.style.setProperty(property, valeur); root.style.setProperty(surProperty, texteSur(valeur)); }
+            else { root.style.removeProperty(property); root.style.removeProperty(surProperty); }
         });
         localStorage.setItem('siteTheme', JSON.stringify(siteTheme));
     }, [theme, siteTheme]);

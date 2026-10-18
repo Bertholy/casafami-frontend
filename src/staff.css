@@ -5,21 +5,26 @@
  * Pour revenir au vert d'origine : retirer la classe « theme-staff » dans AdminLayout.jsx.
  */
 .theme-staff {
-    --mt-main: var(--site-primary, #0a8fc7);
+    --mt-main: var(--site-primary, #03cce6);
+    --mt-main-fort: color-mix(in srgb, var(--mt-main) 60%, black);
+    --mt-main-clair: color-mix(in srgb, var(--mt-main) 70%, white);
+    --mt-sur-main: var(--site-sur-primary, #05303a);
+    --mt-bouton: var(--site-button, var(--mt-main));
+    --mt-sur-bouton: var(--site-sur-button, var(--mt-sur-main));
     --casafami-primary: var(--mt-main);
-    --casafami-button: var(--site-button, var(--mt-main));
-    --casafami-link: var(--site-link, var(--mt-main));
+    --casafami-button: var(--site-button, var(--mt-main-fort));
+    --casafami-link: var(--site-link, var(--mt-main-fort));
     --color-teal-50: color-mix(in srgb, var(--mt-main) 7%, white);
     --color-teal-100: color-mix(in srgb, var(--mt-main) 14%, white);
     --color-teal-200: color-mix(in srgb, var(--mt-main) 28%, white);
     --color-teal-300: color-mix(in srgb, var(--mt-main) 48%, white);
     --color-teal-400: color-mix(in srgb, var(--mt-main) 68%, white);
-    --color-teal-500: color-mix(in srgb, var(--mt-main) 86%, white);
-    --color-teal-600: var(--mt-main);
-    --color-teal-700: color-mix(in srgb, var(--mt-main) 86%, black);
-    --color-teal-800: color-mix(in srgb, var(--mt-main) 72%, black);
-    --color-teal-900: color-mix(in srgb, var(--mt-main) 55%, black);
-    --color-teal-950: color-mix(in srgb, var(--mt-main) 38%, black);
+    --color-teal-500: var(--mt-main);
+    --color-teal-600: var(--mt-main-fort);
+    --color-teal-700: color-mix(in srgb, var(--mt-main) 48%, black);
+    --color-teal-800: color-mix(in srgb, var(--mt-main) 38%, black);
+    --color-teal-900: color-mix(in srgb, var(--mt-main) 28%, black);
+    --color-teal-950: color-mix(in srgb, var(--mt-main) 20%, black);
 }
-.dark .theme-staff { --casafami-link: #8fd8fb; --dark-link: #8fd8fb; --color-teal-300: #8fd8fb; --color-teal-400: #6cc6f2; }
-.dark .theme-staff :focus-visible { outline-color: #8fd8fb; }
+.dark .theme-staff { --casafami-link: var(--mt-main-clair); --dark-link: var(--mt-main-clair); --color-teal-300: var(--mt-main-clair); --color-teal-400: var(--mt-main); }
+.dark .theme-staff :focus-visible { outline-color: var(--mt-main-clair); }

@@ -5,7 +5,12 @@
  * Pour revenir à l'ancien design : repasser sur la branche main (git checkout main), ou remettre la classe « theme-montagne » dans App.jsx.
  */
 .theme-doux {
-    --mt-main: var(--site-primary, #0b77a8);
+    --mt-main: var(--site-primary, #03cce6); /* cyan du bâtiment du cabinet : la couleur de CASAFAMI */
+    --mt-main-fort: color-mix(in srgb, var(--mt-main) 60%, black);
+    --mt-main-clair: color-mix(in srgb, var(--mt-main) 70%, white);
+    --mt-sur-main: var(--site-sur-primary, #05303a);
+    --mt-bouton: var(--site-button, var(--mt-main));
+    --mt-sur-bouton: var(--site-sur-button, var(--mt-sur-main));
     --mt-ardoise: #0e2a38;
     --mt-ink: #12303f;
     --mt-doux: #5b7482;
@@ -16,19 +21,20 @@
     --mt-ombre: 0 12px 34px rgba(15, 80, 120, .08);
 
     --casafami-primary: var(--mt-main);
-    --casafami-button: var(--site-button, var(--mt-main));
-    --casafami-link: var(--site-link, var(--mt-main));
+    --casafami-button: var(--site-button, var(--mt-main-fort));
+    --casafami-link: var(--site-link, var(--mt-main-fort));
     --color-teal-50: color-mix(in srgb, var(--mt-main) 7%, white);
     --color-teal-100: color-mix(in srgb, var(--mt-main) 14%, white);
     --color-teal-200: color-mix(in srgb, var(--mt-main) 28%, white);
     --color-teal-300: color-mix(in srgb, var(--mt-main) 48%, white);
     --color-teal-400: color-mix(in srgb, var(--mt-main) 68%, white);
-    --color-teal-500: color-mix(in srgb, var(--mt-main) 86%, white);
-    --color-teal-600: var(--mt-main);
-    --color-teal-700: color-mix(in srgb, var(--mt-main) 86%, black);
-    --color-teal-800: color-mix(in srgb, var(--mt-main) 72%, black);
-    --color-teal-900: color-mix(in srgb, var(--mt-main) 55%, black);
-    --color-teal-950: color-mix(in srgb, var(--mt-main) 38%, black);
+    --color-teal-500: var(--mt-main);
+    /* le cyan pur est trop clair pour du texte ou un fond à texte blanc : on utilise sa version foncée */
+    --color-teal-600: var(--mt-main-fort);
+    --color-teal-700: color-mix(in srgb, var(--mt-main) 48%, black);
+    --color-teal-800: color-mix(in srgb, var(--mt-main) 38%, black);
+    --color-teal-900: color-mix(in srgb, var(--mt-main) 28%, black);
+    --color-teal-950: color-mix(in srgb, var(--mt-main) 20%, black);
 
     font-family: 'Plus Jakarta Sans', 'Segoe UI', system-ui, sans-serif;
     color: var(--mt-ink);
@@ -39,7 +45,7 @@
     --mt-fond: #0b1a22;
     --mt-sable: #2a2118;
     --mt-sable-bord: #3d2f21;
-    --casafami-link: #8fd8fb; --dark-link: #8fd8fb; --color-teal-300: #8fd8fb; --color-teal-400: #6cc6f2;
+    --casafami-link: var(--mt-main-clair); --dark-link: var(--mt-main-clair); --color-teal-300: var(--mt-main-clair); --color-teal-400: var(--mt-main);
     color: #e5eef3;
     background-color: var(--mt-fond);
 }
@@ -54,7 +60,7 @@
 .theme-doux .mt-titre { font-weight: 800; line-height: 1.1; color: var(--mt-ink); }
 .theme-doux .mt-titre em { color: var(--mt-main); font-style: normal; }
 .dark .theme-doux .mt-titre { color: #f3f8fb; }
-.dark .theme-doux .mt-titre em { color: #8fd8fb; }
+.dark .theme-doux .mt-titre em { color: var(--mt-main-clair); }
 .theme-doux .mt-regle::before { display: none; }
 .theme-doux .mt-clair .mt-titre, .theme-doux .mt-clair .mt-titre em { color: #fff; }
 
@@ -64,15 +70,15 @@
     font-size: .95rem; font-weight: 700; line-height: 1; border-radius: 999px; border: 0;
     transition: background-color .2s, color .2s, box-shadow .2s, transform .2s; cursor: pointer;
 }
-.theme-doux .mt-btn { background: var(--casafami-button); color: #fff; box-shadow: 0 14px 30px color-mix(in srgb, var(--casafami-button) 32%, transparent); }
-.theme-doux .mt-btn:hover { background: color-mix(in srgb, var(--casafami-button) 85%, black); transform: translateY(-1px); }
+.theme-doux .mt-btn { background: var(--mt-bouton); color: var(--mt-sur-bouton); box-shadow: 0 14px 30px color-mix(in srgb, var(--mt-bouton) 38%, transparent); }
+.theme-doux .mt-btn:hover { background: color-mix(in srgb, var(--mt-bouton) 88%, black); transform: translateY(-1px); }
 .theme-doux .mt-btn-ligne { background: #fff; color: var(--mt-ink); box-shadow: 0 0 0 1px #cfe0e9; }
 .theme-doux .mt-btn-ligne:hover { box-shadow: 0 0 0 2px var(--mt-main); color: var(--mt-main); }
 .dark .theme-doux .mt-btn-ligne { background: #14303d; color: #e5eef3; box-shadow: 0 0 0 1px #2a4756; }
 .theme-doux .mt-btn-blanc { background: transparent; color: #fff; box-shadow: inset 0 0 0 2px rgba(255, 255, 255, .85); }
 .theme-doux .mt-btn-blanc:hover { background: #fff; color: var(--mt-ardoise); }
 .theme-doux .mt-btn-blanc-plein { background: #fff; color: var(--mt-ink); }
-.theme-doux .mt-btn-blanc-plein:hover { background: #e3f3fa; }
+.theme-doux .mt-btn-blanc-plein:hover { background: var(--mt-main-clair); }
 
 /* ---- surfaces ---- */
 .theme-doux .mt-gris { background: color-mix(in srgb, var(--mt-main) 6%, white); }
@@ -90,10 +96,10 @@
     position: relative; padding: .6rem 1.1rem; border-radius: 999px; font-size: .9rem; font-weight: 600; color: #3c5766; transition: background-color .2s, color .2s;
 }
 .theme-doux .mt-lien-nav:hover { background: color-mix(in srgb, var(--mt-main) 8%, white); color: var(--mt-ink); }
-.theme-doux .mt-lien-nav[aria-current='page'] { background: color-mix(in srgb, var(--mt-main) 14%, white); color: color-mix(in srgb, var(--mt-main) 72%, black); font-weight: 700; }
+.theme-doux .mt-lien-nav[aria-current='page'] { background: color-mix(in srgb, var(--mt-main) 18%, white); color: color-mix(in srgb, var(--mt-main) 44%, black); font-weight: 700; }
 .dark .theme-doux .mt-lien-nav { color: #b9d3e0; }
 .dark .theme-doux .mt-lien-nav:hover { background: rgba(255, 255, 255, .08); color: #fff; }
-.dark .theme-doux .mt-lien-nav[aria-current='page'] { background: rgba(143, 216, 251, .16); color: #8fd8fb; }
+.dark .theme-doux .mt-lien-nav[aria-current='page'] { background: color-mix(in srgb, var(--mt-main) 18%, transparent); color: var(--mt-main-clair); }
 
 /* ---- ligne « libellé ........ valeur » (horaires) ---- */
 .theme-doux .mt-ligne { display: flex; align-items: baseline; gap: .75rem; }

@@ -6,7 +6,7 @@ import { summarizeHours, traduireJours, usePlanning } from '../utils/horaires';
 import { useLang } from '../i18n/LangContext';
 import { hasSession } from '../utils/auth';
 
-const titreColonne = 'mb-5 text-xs font-extrabold uppercase tracking-[0.14em] text-[#7fd0f0]';
+const titreColonne = 'mb-5 text-xs font-extrabold uppercase tracking-[0.14em] text-(--mt-main-clair)';
 
 /** Pied de page du site public : bandeau ardoise, liens soulignés, coordonnées et horaires du cabinet. */
 function Footer() {
@@ -40,10 +40,10 @@ function Footer() {
                     <div>
                         <Editable id="footer.liens.titre" as="h3" className="sr-only">Liens rapides</Editable>
                         <ul className="flex flex-wrap gap-x-8 gap-y-3 text-sm font-bold text-white">
-                            <li><Link to="/" className="text-white/90 transition hover:text-[#7fd0f0]">{t("Accueil")}</Link></li>
-                            <li><Link to="/services" className="text-white/90 transition hover:text-[#7fd0f0]">{t("Nos services")}</Link></li>
-                            <li><Link to="/prendre-rdv" className="text-white/90 transition hover:text-[#7fd0f0]">{t("Prendre RDV")}</Link></li>
-                            <li><Link to="/mes-rdv" className="text-white/90 transition hover:text-[#7fd0f0]">{t("Mes RDV")}</Link></li>
+                            <li><Link to="/" className="text-white/90 transition hover:text-(--mt-main-clair)">{t("Accueil")}</Link></li>
+                            <li><Link to="/services" className="text-white/90 transition hover:text-(--mt-main-clair)">{t("Nos services")}</Link></li>
+                            <li><Link to="/prendre-rdv" className="text-white/90 transition hover:text-(--mt-main-clair)">{t("Prendre RDV")}</Link></li>
+                            <li><Link to="/mes-rdv" className="text-white/90 transition hover:text-(--mt-main-clair)">{t("Mes RDV")}</Link></li>
                         </ul>
                     </div>
                 </div>
@@ -56,7 +56,7 @@ function Footer() {
                         <ul className="space-y-3 text-sm">
                             {horaires.map(h => (
                                 <li key={h.label} className="flex items-start gap-2.5">
-                                    <Clock className="mt-1 h-4 w-4 shrink-0 text-[#bfeaff]" />
+                                    <Clock className="mt-1 h-4 w-4 shrink-0 text-(--mt-main-clair)" />
                                     <div>
                                         <p className="font-bold text-white">{traduireJours(h.label, t)}</p>
                                         <p className="text-white/70">{h.matin && h.apresMidi ? `${h.matin} · ${h.apresMidi}` : h.global}</p>
@@ -78,7 +78,7 @@ function Footer() {
                         <Editable id="footer.contact.titre" as="h3" className={titreColonne}>Contact</Editable>
                         <ul className="space-y-4 text-sm">
                             <li className="flex items-start gap-2.5">
-                                <MapPin className="mt-1 h-4 w-4 shrink-0 text-[#bfeaff]" />
+                                <MapPin className="mt-1 h-4 w-4 shrink-0 text-(--mt-main-clair)" />
                                 <div>
                                     <Editable id="footer.adresse.ligne1" as="p" className="font-bold text-white">Chez Rasazy VERO</Editable>
                                     <Editable id="footer.adresse.ligne2" as="p" className="text-white/70">Andongona - Antsohihy</Editable>
@@ -86,7 +86,7 @@ function Footer() {
                                 </div>
                             </li>
                             <li className="flex items-start gap-2.5">
-                                <Mail className="mt-1 h-4 w-4 shrink-0 text-[#bfeaff]" />
+                                <Mail className="mt-1 h-4 w-4 shrink-0 text-(--mt-main-clair)" />
                                 <Editable id="footer.email" as="p" className="font-bold text-white">contact@casafami.mg</Editable>
                             </li>
                         </ul>
@@ -96,7 +96,7 @@ function Footer() {
                     <div>
                         <h3 className={titreColonne}>{t("Prendre rendez-vous")}</h3>
                         <div className="flex items-start gap-2.5">
-                            <Phone className="mt-2 h-4 w-4 shrink-0 text-[#bfeaff]" />
+                            <Phone className="mt-2 h-4 w-4 shrink-0 text-(--mt-main-clair)" />
                             <div className="font-titre text-xl font-extrabold leading-snug text-white">
                                 <Editable id="footer.tel1" as="p" >034 06 759 28</Editable>
                                 <Editable id="footer.tel2" as="p" >032 43 035 07</Editable>
