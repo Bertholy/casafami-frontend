@@ -215,7 +215,7 @@ function PasswordDialog({ onClose }) {
     };
 
     return (
-        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-slate-950/50 p-4 backdrop-blur-sm" onMouseDown={e => { if (e.target === e.currentTarget) onClose(); }}>
+        <div className="fixed inset-0 z-70 flex items-center justify-center bg-slate-950/50 p-4 backdrop-blur-sm" onMouseDown={e => { if (e.target === e.currentTarget) onClose(); }}>
             <form onSubmit={submit} role="dialog" aria-modal="true" aria-label="Changer mon mot de passe" className="w-full max-w-md space-y-4 rounded-2xl bg-white p-6 text-slate-800 shadow-2xl dark:bg-gray-900 dark:text-gray-100">
                 <div className="flex items-center justify-between"><h2 className="font-semibold">Changer mon mot de passe</h2><button type="button" onClick={onClose} aria-label="Fermer"><X size={18} /></button></div>
                 {done ? (

@@ -1,20 +1,26 @@
-import { Languages } from 'lucide-react';
+import { Globe } from 'lucide-react';
 import { useLang } from '../i18n/LangContext';
 
 const OPTIONS = [['fr', 'FR', 'Français'], ['mg', 'MG', 'Malagasy']];
 
-/** Sélecteur de langue du site public (français / malgache), mémorisé dans le navigateur. */
+/** Sélecteur de langue du site public (français / malgache), mémorisé dans le navigateur. Conçu pour la barre de navigation colorée. */
 export default function LangSwitch({ className = '' }) {
     const { lang, setLang } = useLang();
     return (
-        <div role="group" aria-label="Langue / Fiteny" className={`inline-flex items-center gap-1 rounded-lg bg-gray-100 p-1 dark:bg-gray-800 ${className}`}>
-            <Languages className="ml-1 h-4 w-4 text-gray-500 dark:text-gray-400" aria-hidden="true" />
-            {OPTIONS.map(([code, court, nom]) => (
-                <button key={code} type="button" onClick={() => setLang(code)} aria-pressed={lang === code} title={nom} lang={code}
-                    className={`rounded-md px-2.5 py-1 text-xs font-bold transition ${lang === code ? 'bg-teal-600 text-white shadow-sm' : 'text-gray-600 hover:bg-gray-200 dark:text-gray-300 dark:hover:bg-gray-700'}`}>
-                    {court}
-                </button>
-            ))}
+        <div role="group" aria-label="Langue / Fiteny" className={`inline-flex items-center gap-1.5 rounded-full bg-white/15 py-0.5 pl-2.5 pr-0.5 text-white backdrop-blur-sm ${className}`}>
+            <Globe className="h-4 w-4 shrink-0 text-white/90" aria-hidden="true" />
+            <div className="flex items-center">
+                {OPTIONS.map(([code, court, nom]) => {
+                    const actif = lang === code;
+                    return (
+                        <button key={code} type="button" onClick={() => setLang(code)} aria-pressed={actif} lang={code} title={nom}
+                            className={`rounded-full px-3 py-1.5 text-xs font-extrabold tracking-wide transition focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-white ${actif ? 'bg-white text-(--mt-main) shadow-sm' : 'text-white/90 hover:bg-white/20 hover:text-white'}`}>
+                            {court}
+                            <span className="sr-only"> — {nom}</span>
+                        </button>
+                    );
+                })}
+            </div>
         </div>
     );
 }

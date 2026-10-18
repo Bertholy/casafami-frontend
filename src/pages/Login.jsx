@@ -32,12 +32,12 @@ function Login() {
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-teal-50 via-white to-teal-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 py-12 px-4">
+        <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-teal-50 via-white to-teal-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 py-12 px-4">
             <div className="w-full max-w-md">
 
                 {/* Logo + Titre */}
                 <div className="text-center mb-8">
-                    <div className="w-20 h-20 bg-gradient-to-br from-teal-500 to-teal-700 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-xl">
+                    <div className="w-20 h-20 bg-linear-to-br from-teal-500 to-teal-700 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-xl">
                         <Stethoscope className="w-10 h-10 text-white" />
                     </div>
                     <h1 className="text-3xl font-bold text-gray-800 dark:text-white mb-2">
@@ -55,7 +55,7 @@ function Login() {
                 >
                     {erreur && (
                         <div className="bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 rounded-xl p-4 mb-6 flex items-center gap-3">
-                            <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0" />
+                            <AlertCircle className="w-5 h-5 text-red-500 shrink-0" />
                             <p className="text-sm text-red-700 dark:text-red-400">{erreur}</p>
                         </div>
                     )}
@@ -103,7 +103,7 @@ function Login() {
                     <button
                         type="submit"
                         disabled={loading}
-                        className="w-full bg-gradient-to-r from-teal-600 to-teal-700 text-white py-4 rounded-xl font-bold hover:from-teal-700 hover:to-teal-800 transition shadow-lg disabled:opacity-50 flex items-center justify-center gap-2"
+                        className="w-full bg-linear-to-r from-teal-600 to-teal-700 text-white py-4 rounded-xl font-bold hover:from-teal-700 hover:to-teal-800 transition shadow-lg disabled:opacity-50 flex items-center justify-center gap-2"
                     >
                         {loading ? (
                             <>

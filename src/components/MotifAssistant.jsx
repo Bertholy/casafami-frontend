@@ -92,7 +92,7 @@ export default function MotifAssistant({ services = [], onApply, onClose }) {
     return (
         <div className="fixed inset-0 z-[90] flex items-end justify-center bg-slate-950/60 p-0 backdrop-blur-sm sm:items-center sm:p-4" onMouseDown={e => { if (e.target === e.currentTarget) onClose(); }}>
             <section role="dialog" aria-modal="true" aria-label={t("Assistant pour préciser votre motif")} className="flex max-h-[92vh] w-full max-w-xl flex-col overflow-hidden rounded-t-3xl bg-white shadow-2xl dark:bg-gray-900 sm:rounded-3xl">
-                <header className="flex items-center gap-3 border-b border-slate-200 bg-gradient-to-r from-teal-600 to-teal-700 px-5 py-4 text-white dark:border-gray-800">
+                <header className="flex items-center gap-3 border-b border-slate-200 bg-linear-to-r from-teal-600 to-teal-700 px-5 py-4 text-white dark:border-gray-800">
                     <span className="flex h-10 w-10 items-center justify-center rounded-full bg-white/20"><Bot size={22} /></span>
                     <div className="min-w-0 flex-1">
                         <h2 className="font-bold leading-tight">{t("Assistant de rendez-vous")}</h2>

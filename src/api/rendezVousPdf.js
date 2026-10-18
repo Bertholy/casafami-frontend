@@ -2,10 +2,10 @@ import axiosClient from './axiosClient';
 
 export async function downloadRendezVousPdf(rendezVous) {
     try {
-        const accessToken = localStorage.getItem(`rdv-access-${rendezVous.id}`);
+        // La clé de suivi prouve que le visiteur est le titulaire du rendez-vous (le personnel connecté n'en a pas besoin).
         const response = await axiosClient.get(`/rendez-vous/${rendezVous.id}/pdf`, {
             responseType: 'blob',
-            headers: accessToken ? { 'X-RDV-Access-Token': accessToken } : {},
+            headers: rendezVous.cleSuivi ? { 'X-RDV-Access-Token': rendezVous.cleSuivi } : {},
         });
         const url = URL.createObjectURL(new Blob([response.data], { type: 'application/pdf' }));
         const anchor = window.document.createElement('a');

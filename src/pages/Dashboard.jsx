@@ -2,11 +2,11 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import {
     BadgeCheck, Ban, UserCheck, CalendarCheck, CalendarClock, CalendarDays, Check, CheckCheck, ChevronLeft, ChevronRight, Clock3,
-    Download, Eye, FileDown, FolderOpen, Loader2, Pencil, Plus, Printer, RefreshCw, Search, Trash2, X,
+    Download, Eye, FileDown, FolderOpen, Loader2, Pencil, Image as ImageIcon, Plus, RefreshCw, Search, Trash2, X,
 } from 'lucide-react';
 import axiosClient from '../api/axiosClient';
 import { downloadRendezVousPdf } from '../api/rendezVousPdf';
-import { printReceipt } from '../utils/receipt';
+import { downloadReceiptImage } from '../utils/receipt';
 import AdminLayout from '../components/AdminLayout';
 import WeekChart from '../components/dashboard/WeekChart';
 import AgendaToday from '../components/dashboard/AgendaToday';
@@ -224,14 +224,15 @@ function Dashboard() {
         catch (pdfError) { setError(pdfError.message || 'Le reçu PDF n’a pas pu être téléchargé.'); }
     };
 
+    const downloadImage = async rdv => {
+        try { await downloadReceiptImage(rdv); }
+        catch { setError('Le reçu en image n’a pas pu être créé.'); }
+    };
+
     const onSaved = async (saved, editing) => {
         setModal(null);
         setNotice(editing ? 'Rendez-vous modifié.' : 'Rendez-vous enregistré.');
         await load();
-        if (!editing) {
-            try { await downloadRendezVousPdf(saved); }
-            catch (pdfError) { setError(pdfError.message || 'Le rendez-vous est enregistré, mais le PDF n’a pas pu être téléchargé.'); }
-        }
     };
 
     const kpis = [
@@ -262,7 +263,7 @@ function Dashboard() {
                 )}
 
                 {/* ---------- Bandeau d'accueil ---------- */}
-                <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-teal-700 via-teal-600 to-emerald-600 p-6 text-white shadow-lg sm:p-8">
+                <section className="relative overflow-hidden rounded-3xl bg-linear-to-br from-teal-700 via-teal-600 to-emerald-600 p-6 text-white shadow-lg sm:p-8">
                     <div className="pointer-events-none absolute -right-10 -top-16 h-56 w-56 rounded-full bg-white/10 blur-2xl" />
                     <div className="pointer-events-none absolute -bottom-20 right-1/3 h-48 w-48 rounded-full bg-emerald-300/20 blur-3xl" />
                     <div className="relative flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
@@ -370,7 +371,7 @@ function Dashboard() {
                     </div>
 
                     <div className="overflow-x-auto">
-                        <table className="w-full min-w-[920px] border-collapse text-left text-sm">
+                        <table className="w-full min-w-230 border-collapse text-left text-sm">
                             <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500 dark:bg-gray-800/60 dark:text-gray-400">
                                 <tr>{['Patient', 'Date et heure', 'Service', ...(vuePraticien ? [] : ['Praticien']), 'Statut', 'Actions'].map(label => <th key={label} scope="col" className="px-4 py-3 font-semibold">{label}</th>)}</tr>
                             </thead>
@@ -383,7 +384,7 @@ function Dashboard() {
                                             <td className="px-4 py-3">
                                                 <div className="flex items-center gap-3">
                                                     <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-teal-100 text-sm font-bold text-teal-800 dark:bg-teal-500/15 dark:text-teal-300" aria-hidden="true">{rdv.nomClient?.trim().charAt(0).toUpperCase()}</span>
-                                                    <div className="min-w-0"><div className="truncate font-medium">{rdv.nomClient}</div><div className="text-xs text-slate-500 dark:text-gray-400">{formatPhone(rdv.telephoneClient)}</div></div>
+                                                    <div className="min-w-0"><div className="truncate font-medium">{rdv.nomClient}</div><div className="text-xs text-slate-500 dark:text-gray-400">{formatPhone(rdv.telephoneClient)}</div>{rdv.cleSuivi && <div title="Clé de suivi du patient (à donner s'il l'a perdue)" className="select-all font-mono text-xs text-teal-700 dark:text-teal-400">{rdv.cleSuivi}</div>}</div>
                                                 </div>
                                             </td>
                                             <td className="px-4 py-3 whitespace-nowrap"><div className="font-medium">{formatDateFr(rdv.dateRdv)}</div><div className="text-xs text-slate-500 dark:text-gray-400">{hhmm(rdv.heureRdv)}</div></td>
@@ -400,7 +401,7 @@ function Dashboard() {
                                                     {droitAttribuer && (rdv.statut === 'EN_ATTENTE' || rdv.statut === 'CONFIRME') && <IconButton label="Attribuer à une personne du personnel" tone="text-violet-700 hover:bg-violet-50 dark:text-violet-300 dark:hover:bg-violet-500/10" onClick={() => setAttribution({ rdv })}><UserCheck size={16} /></IconButton>}
                                                     {peutTerminer(rdv, profile) && <IconButton label="Marquer comme terminé" tone="text-sky-700 hover:bg-sky-50 dark:text-sky-300 dark:hover:bg-sky-500/10" onClick={() => finishRdv(rdv)}><CheckCheck size={16} /></IconButton>}
                                                     <IconButton label="Télécharger le reçu PDF" onClick={() => downloadPdf(rdv)}><FileDown size={16} /></IconButton>
-                                                    <IconButton label="Imprimer le reçu" onClick={() => printReceipt(rdv)}><Printer size={16} /></IconButton>
+                                                    <IconButton label="Télécharger le reçu en image" onClick={() => downloadImage(rdv)}><ImageIcon size={16} /></IconButton>
                                                     {open && !vuePraticien && <IconButton label="Annuler le rendez-vous" tone="text-amber-700 hover:bg-amber-50 dark:text-amber-300 dark:hover:bg-amber-500/10" onClick={() => cancelRdv(rdv)}><Ban size={16} /></IconButton>}
                                                     {droitModifier && !vuePraticien && <IconButton label="Mettre dans la corbeille" tone="text-rose-700 hover:bg-rose-50 dark:text-rose-300 dark:hover:bg-rose-500/10" onClick={() => trashRdv(rdv)}><Trash2 size={16} /></IconButton>}
                                                 </div>
@@ -434,14 +435,14 @@ function Dashboard() {
                 </section>
 
                 {toast && (
-                    <div role="status" className="fixed bottom-5 right-5 z-[60] flex items-center gap-4 rounded-xl bg-slate-900 px-4 py-3 text-sm text-white shadow-xl">
+                    <div role="status" className="fixed bottom-5 right-5 z-60 flex items-center gap-4 rounded-xl bg-slate-900 px-4 py-3 text-sm text-white shadow-xl">
                         <span>{toast.message}</span>
                         {toast.undo && <button onClick={async () => { try { await toast.undo(); setToast(null); } catch { setError('Impossible de restaurer ce rendez-vous (le créneau a peut-être été repris).'); setToast(null); } }} className="font-semibold text-teal-300">Annuler</button>}
                         <button onClick={() => setToast(null)} aria-label="Fermer" className="text-slate-300"><X size={16} /></button>
                     </div>
                 )}
                 {confirmDialog && (
-                    <div className="fixed inset-0 z-[70] flex items-center justify-center bg-slate-950/50 p-4 backdrop-blur-sm">
+                    <div className="fixed inset-0 z-70 flex items-center justify-center bg-slate-950/50 p-4 backdrop-blur-sm">
                         <section role="alertdialog" aria-modal="true" aria-label={confirmDialog.title} className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl dark:bg-gray-900">
                             <h2 className="font-semibold">{confirmDialog.title}</h2>
                             <p className="mt-3 text-sm text-slate-600 dark:text-gray-300">{confirmDialog.message}</p>

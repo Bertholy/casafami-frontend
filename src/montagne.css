@@ -79,8 +79,8 @@
 .theme-montagne .mt-marine { background: var(--mt-main); color: #fff; }
 .theme-montagne .mt-relief { background-color: #fff; background-image: url('/relief.svg'); background-size: 720px auto; }
 .dark .theme-montagne .mt-relief { background-color: #111827; background-image: none; }
-.theme-montagne .mt-cadre { background: #f2f2f2; padding: 12px; }
-.dark .theme-montagne .mt-cadre { background: #1f2937; }
+/* Photos sans cadre ni bordure : l'image occupe toute la place. */
+.theme-montagne .mt-cadre { background: none; padding: 0; }
 
 /* ---- barre de navigation ---- */
 .theme-montagne .mt-lien-nav {
