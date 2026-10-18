@@ -1,16 +1,29 @@
-import { Link } from 'react-router-dom';
+import { useRef } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { MapPin, Phone, Mail, Clock, Heart } from 'lucide-react';
 import Editable from './site/Editable';
 import { summarizeHours, traduireJours, usePlanning } from '../utils/horaires';
 import { useLang } from '../i18n/LangContext';
+import { hasSession } from '../utils/auth';
 
 const titreColonne = 'mb-5 text-xs font-extrabold uppercase tracking-[0.2em] text-white';
 
 /** Pied de page du site public : bandeau ardoise, liens soulignés, coordonnées et horaires du cabinet. */
 function Footer() {
     const { t } = useLang();
+    const navigate = useNavigate();
+    const clics = useRef({ nombre: 0, dernier: 0 });
     const planning = usePlanning();
     const horaires = summarizeHours(planning?.horaires);
+
+    // Accès discret du personnel : 5 clics rapprochés (moins de 2 s entre deux clics) sur le logo ouvrent la page de connexion.
+    const clicLogo = () => {
+        const maintenant = Date.now();
+        const c = clics.current;
+        c.nombre = maintenant - c.dernier < 2000 ? c.nombre + 1 : 1;
+        c.dernier = maintenant;
+        if (c.nombre >= 5) { c.nombre = 0; navigate('/medecin/login'); }
+    };
 
     return (
         <footer className="mt-ardoise transition-colors">
@@ -19,7 +32,7 @@ function Footer() {
                 {/* ========== LOGO + LIENS ========== */}
                 <div className="flex flex-col items-start justify-between gap-8 border-b border-white/20 pb-10 lg:flex-row lg:items-center">
                     <div className="flex items-center gap-4">
-                        <img src="/logo_casafami.png" alt={t("casafami")} className="h-16 w-16 bg-white object-contain p-1.5" />
+                        <img src="/logo_casafami.png" alt={t("casafami")} onClick={clicLogo} draggable={false} className="h-16 w-16 select-none bg-white object-contain p-1.5" />
                         <Editable id="footer.description" as="p" className="max-w-xs text-sm leading-relaxed text-white/75">
                             Cabinet d'Accouchement Sainte Famille. Votre santé et celle de votre famille, notre priorité.
                         </Editable>
@@ -100,9 +113,12 @@ function Footer() {
                         <br />
                         <span className="normal-case tracking-normal font-normal">{t("Site conçu et réalisé par VONJIARIMANANA Alpha Bertholy")}</span>
                     </p>
-                    <Link to="/medecin/login" className="whitespace-nowrap text-xs text-white/60 transition hover:text-white">
-                        {t("🔐 Espace du personnel")}
-                    </Link>
+                    {/* Le lien n'est montré qu'au personnel déjà connecté ; les autres accèdent à la connexion par son adresse (/medecin/login). */}
+                    {hasSession() && (
+                        <Link to="/medecin/login" className="whitespace-nowrap text-xs text-white/60 transition hover:text-white">
+                            {t("🔐 Espace du personnel")}
+                        </Link>
+                    )}
                 </div>
             </div>
         </footer>

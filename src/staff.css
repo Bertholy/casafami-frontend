@@ -1,0 +1,25 @@
+/*
+ * Espace du personnel et du super administrateur : même couleur principale que le site public et la page de connexion
+ * (réglable dans « Couleurs du site »). Avant, le tableau de bord restait vert alors que le reste était bleu.
+ * Les statuts (confirmé, annulé, en attente…) gardent leurs couleurs propres (vert, rouge, ambre).
+ * Pour revenir au vert d'origine : retirer la classe « theme-staff » dans AdminLayout.jsx.
+ */
+.theme-staff {
+    --mt-main: var(--site-primary, #0a8fc7);
+    --casafami-primary: var(--mt-main);
+    --casafami-button: var(--site-button, var(--mt-main));
+    --casafami-link: var(--site-link, var(--mt-main));
+    --color-teal-50: color-mix(in srgb, var(--mt-main) 7%, white);
+    --color-teal-100: color-mix(in srgb, var(--mt-main) 14%, white);
+    --color-teal-200: color-mix(in srgb, var(--mt-main) 28%, white);
+    --color-teal-300: color-mix(in srgb, var(--mt-main) 48%, white);
+    --color-teal-400: color-mix(in srgb, var(--mt-main) 68%, white);
+    --color-teal-500: color-mix(in srgb, var(--mt-main) 86%, white);
+    --color-teal-600: var(--mt-main);
+    --color-teal-700: color-mix(in srgb, var(--mt-main) 86%, black);
+    --color-teal-800: color-mix(in srgb, var(--mt-main) 72%, black);
+    --color-teal-900: color-mix(in srgb, var(--mt-main) 55%, black);
+    --color-teal-950: color-mix(in srgb, var(--mt-main) 38%, black);
+}
+.dark .theme-staff { --casafami-link: #8fd8fb; --dark-link: #8fd8fb; --color-teal-300: #8fd8fb; --color-teal-400: #6cc6f2; }
+.dark .theme-staff :focus-visible { outline-color: #8fd8fb; }

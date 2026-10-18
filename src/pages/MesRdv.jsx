@@ -1,10 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import axiosClient from '../api/axiosClient';
 import { apiErrorMessage, hasSession } from '../utils/auth';
 import { formatPhone } from '../utils/phone';
 import Editable from '../components/site/Editable';
 import QrCode from '../components/QrCode';
+import ConfirmDialog from '../components/ConfirmDialog';
 import { downloadReceiptImage } from '../utils/receipt';
 import { downloadRendezVousPdf } from '../api/rendezVousPdf';
 import { estUneCleComplete, formaterCle, lienSuivi } from '../utils/suivi';
@@ -20,6 +21,8 @@ import {
     Image as ImageIcon,
     ScanLine,
     CalendarCheck,
+    Copy,
+    Check,
 } from 'lucide-react';
 import { useLang } from '../i18n/LangContext';
 
@@ -45,6 +48,15 @@ function MesRdv() {
     const [rdvs, setRdvs] = useState(null);
     const [loading, setLoading] = useState(false);
     const [erreur, setErreur] = useState(null);
+    const [aAnnuler, setAAnnuler] = useState(null);
+    const [annulationEnCours, setAnnulationEnCours] = useState(false);
+    const [cleCopiee, setCleCopiee] = useState(null);
+    const resultatsRef = useRef(null);
+
+    // Les résultats (ou l'erreur) apparaissent sous le formulaire : on y amène la personne, surtout sur téléphone.
+    useEffect(() => {
+        if (rdvs || erreur) resultatsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, [rdvs, erreur]);
 
     useEffect(() => {
         // ?cle= vient du QR code ; ?q= vient de la recherche de patients du personnel.
@@ -85,8 +97,8 @@ function MesRdv() {
     };
 
     const annuler = async (rdv) => {
-        if (!window.confirm(t("Annuler ce RDV ?"))) return;
         setErreur(null);
+        setAnnulationEnCours(true);
         try {
             // La clé de suivi prouve que le rendez-vous est bien celui de ce visiteur (le personnel connecté en est dispensé).
             const res = await axiosClient.put(`/rdv/${rdv.id}/annuler`, null, { headers: rdv.cleSuivi ? { 'X-RDV-Access-Token': rdv.cleSuivi } : {} });
@@ -95,7 +107,15 @@ function MesRdv() {
             setErreur(err.response?.status === 403
                 ? t("Annulation impossible. Contactez le cabinet pour annuler ce rendez-vous.")
                 : apiErrorMessage(err, t("Impossible d'annuler")));
+        } finally {
+            setAnnulationEnCours(false);
+            setAAnnuler(null);
         }
+    };
+
+    const copierCle = async (cle) => {
+        try { await navigator.clipboard.writeText(cle); setCleCopiee(cle); window.setTimeout(() => setCleCopiee(null), 2000); }
+        catch { setCleCopiee(null); }
     };
 
     // Le reçu n'est jamais téléchargé automatiquement : le patient le demande lui-même.
@@ -218,6 +238,9 @@ function MesRdv() {
                     <p className="mt-3 text-xs text-gray-500 dark:text-gray-400">{t("Votre clé de suivi figure sur la page de confirmation et sur le reçu. Scannez le QR code avec votre téléphone pour ouvrir directement votre rendez-vous. Clé perdue ? Contactez le cabinet.")}</p>
                 </form>
 
+                <div ref={resultatsRef} className="scroll-mt-28" />
+                <p className="sr-only" role="status" aria-live="polite">{rdvs ? (rdvs.length === 0 ? t("Aucun RDV trouvé") : `${rdvs.length} ${rdvs.length > 1 ? t("rendez-vous trouvés") : t("rendez-vous trouvé")}`) : ''}</p>
+
                 {/* ========== ERREUR ========== */}
                 {erreur && (
                     <div role="alert" className="bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 rounded-xl p-4 mb-6 text-red-700 dark:text-red-400 text-sm shadow-sm">
@@ -286,7 +309,12 @@ function MesRdv() {
                                                     <div className="min-w-0 flex-1">
                                                         <div className="mb-4 flex flex-wrap items-center gap-3">
                                                             <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold ${statut.classes}`}><StatusIcon className="h-3 w-3" />{statut.label}</span>
-                                                            {rdv.cleSuivi && <span className="select-all font-mono text-sm font-bold tracking-widest text-teal-800 dark:text-teal-300">{rdv.cleSuivi}</span>}
+                                                            {rdv.cleSuivi && (
+                                                                <span className="inline-flex items-center gap-1">
+                                                                    <span className="select-all font-mono text-sm font-bold tracking-widest text-teal-800 dark:text-teal-300">{rdv.cleSuivi}</span>
+                                                                    <button type="button" onClick={() => copierCle(rdv.cleSuivi)} aria-label={t("Copier la clé")} className="rounded-md p-1.5 text-teal-700 hover:bg-teal-50 dark:text-teal-300 dark:hover:bg-gray-700">{cleCopiee === rdv.cleSuivi ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}</button>
+                                                                </span>
+                                                            )}
                                                         </div>
                                                         <dl className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm">
                                                             {champ(t("Patient"), rdv.nomClient)}
@@ -307,7 +335,7 @@ function MesRdv() {
                                                 <div className="mt-5 flex flex-wrap gap-2 border-t border-slate-100 pt-4 dark:border-gray-700">
                                                     <button type="button" onClick={() => telecharger(rdv)} className="inline-flex items-center gap-2 rounded-lg bg-teal-700 px-3 py-2 text-xs font-semibold text-white hover:bg-teal-800"><FileDown className="h-4 w-4" />{t("Télécharger en PDF")}</button>
                                                     <button type="button" onClick={() => telechargerImage(rdv)} className="inline-flex items-center gap-2 rounded-lg border border-teal-200 px-3 py-2 text-xs font-semibold text-teal-800 hover:bg-teal-50 dark:border-gray-600 dark:text-teal-300 dark:hover:bg-gray-700"><ImageIcon className="h-4 w-4" />{t("Télécharger en image")}</button>
-                                                    {peutAnnuler && <button type="button" onClick={() => annuler(rdv)} className="rounded-lg bg-rose-600 px-3 py-2 text-xs font-semibold text-white hover:bg-rose-700">{t("Annuler")}</button>}
+                                                    {peutAnnuler && <button type="button" onClick={() => setAAnnuler(rdv)} className="rounded-lg bg-rose-600 px-3 py-2 text-xs font-semibold text-white hover:bg-rose-700">{t("Annuler")}</button>}
                                                 </div>
                                                 {tropTard && <p className="mt-3 text-xs text-amber-700 dark:text-amber-300">{t("L’annulation n’est plus possible à moins de 2 heures du rendez-vous. Contactez le cabinet.")}</p>}
                                             </article>
@@ -330,6 +358,18 @@ function MesRdv() {
                     </div>
                 )}
             </div>
+
+            {aAnnuler && (
+                <ConfirmDialog
+                    titre={t("Annuler ce rendez-vous ?")}
+                    message={t("Votre rendez-vous du {date} à {heure} sera annulé. Cette action est définitive.", { date: String(aAnnuler.dateRdv).split('-').reverse().join('/'), heure: String(aAnnuler.heureRdv).slice(0, 5) })}
+                    confirmer={t("Oui, annuler")}
+                    retour={t("Non, le garder")}
+                    enCours={annulationEnCours}
+                    onConfirm={() => annuler(aAnnuler)}
+                    onCancel={() => setAAnnuler(null)}
+                />
+            )}
         </div>
     );
 }

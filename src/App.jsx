@@ -6,7 +6,8 @@ import ScrollToTop from './components/ScrollToTop';
 import SiteEditorBar from './components/site/SiteEditorBar';
 import TextesAjoutes from './components/site/TextesAjoutes';
 import { SiteContentProvider } from './context/SiteContentContext';
-import { LangProvider } from './i18n/LangContext';
+import TitrePage from './components/TitrePage';
+import { LangProvider, useLang } from './i18n/LangContext';
 import { PAGES_EDITABLES, STAFF_PREFIXES } from './constants/routes';
 
 // Chaque page est chargée seulement quand on la visite : le premier affichage du site est beaucoup plus léger.
@@ -45,26 +46,30 @@ function Chargement() {
 }
 
 function NotFound() {
+    const { t } = useLang();
     return (
         <div className="flex min-h-[60vh] flex-col items-center justify-center gap-3 px-4 text-center">
             <p className="text-6xl font-bold text-teal-600">404</p>
-            <p className="text-gray-600 dark:text-gray-300">Cette page n’existe pas.</p>
-            <Link to="/" className="rounded-xl bg-teal-600 px-5 py-2.5 font-semibold text-white hover:bg-teal-700">Retour à l’accueil</Link>
+            <p className="text-gray-600 dark:text-gray-300">{t("Cette page n’existe pas.")}</p>
+            <Link to="/" className="rounded-xl bg-teal-600 px-5 py-2.5 font-semibold text-white hover:bg-teal-700">{t("Retour à l’accueil")}</Link>
         </div>
     );
 }
 
 function AppContent() {
     const location = useLocation();
+    const { t } = useLang();
     const isStaffPage = STAFF_PREFIXES.some(prefix => location.pathname.startsWith(prefix));
     const isLogin = ['/medecin/login', '/medecin/mot-de-passe-oublie', '/medecin/reinitialiser'].includes(location.pathname);
     const isPublicPage = !isStaffPage && !isLogin;
     return (
         <>
             <ScrollToTop />
+            <TitrePage />
+            <a href="#contenu" className="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-[100] focus:rounded-lg focus:bg-white focus:px-4 focus:py-2 focus:text-sm focus:font-bold focus:text-gray-900 focus:shadow-lg">{t("Aller au contenu")}</a>
             <div className={`min-h-screen flex flex-col bg-white dark:bg-gray-900 transition-colors ${isPublicPage || isLogin ? "theme-montagne" : ""}`}>
                 {isPublicPage && <Navbar />}
-                <main className="grow">
+                <main id="contenu" tabIndex={-1} className="grow focus:outline-none">
                     {isPublicPage && PAGES_EDITABLES[location.pathname] && <TextesAjoutes page={PAGES_EDITABLES[location.pathname]} zone="haut" />}
                     <Suspense fallback={<Chargement />}>
                     <Routes>

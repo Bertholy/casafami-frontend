@@ -263,7 +263,7 @@ function Dashboard() {
                 )}
 
                 {/* ---------- Bandeau d'accueil ---------- */}
-                <section className="relative overflow-hidden rounded-3xl bg-linear-to-br from-teal-700 via-teal-600 to-emerald-600 p-6 text-white shadow-lg sm:p-8">
+                <section className="relative overflow-hidden rounded-3xl bg-linear-to-br from-teal-800 via-teal-700 to-teal-500 p-6 text-white shadow-lg sm:p-8">
                     <div className="pointer-events-none absolute -right-10 -top-16 h-56 w-56 rounded-full bg-white/10 blur-2xl" />
                     <div className="pointer-events-none absolute -bottom-20 right-1/3 h-48 w-48 rounded-full bg-emerald-300/20 blur-3xl" />
                     <div className="relative flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">

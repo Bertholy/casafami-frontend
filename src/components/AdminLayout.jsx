@@ -108,10 +108,10 @@ export default function AdminLayout({ title, subtitle, actions, children }) {
     ].filter(section => section.items.length > 0);
 
     const linkClass = ({ isActive }) => `group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition ${
-        isActive ? 'bg-teal-500/15 text-white ring-1 ring-inset ring-teal-400/30' : 'text-slate-400 hover:bg-white/5 hover:text-white'}`;
+        isActive ? 'bg-teal-500/15 text-white ring-1 ring-inset ring-teal-400/30' : 'text-slate-400 hover:bg-white/5 hover:text-white'} focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-teal-300`;
 
     return (
-        <div className="min-h-screen bg-slate-50 text-slate-800 dark:bg-gray-950 dark:text-gray-100">
+        <div className="theme-staff min-h-screen bg-slate-50 text-slate-800 dark:bg-gray-950 dark:text-gray-100">
             <aside className={`${menuOpen ? 'translate-x-0' : '-translate-x-full'} fixed inset-y-0 left-0 z-40 flex w-72 flex-col bg-slate-950 text-slate-200 transition-transform duration-200 lg:translate-x-0`}>
                 <div className="flex h-20 items-center gap-3 px-6">
                     <img src="/logo_casafami.png" alt="" className="h-11 w-11 rounded-xl bg-white object-contain p-1" />
@@ -157,8 +157,8 @@ export default function AdminLayout({ title, subtitle, actions, children }) {
                             <span className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 transition group-hover:opacity-100"><Camera size={15} /></span>
                         </button>
                         <div className="min-w-0 flex-1">
-                            <div className="truncate text-sm font-semibold text-white">{profile?.nom || getEmail()}</div>
-                            <div className="truncate text-xs text-teal-300">{getRoleLabel(role)}</div>
+                            <div className="line-clamp-2 break-words text-sm font-semibold leading-tight text-white" title={profile?.nom || getEmail()}>{profile?.nom || getEmail()}</div>
+                            {(profile?.nom || getEmail()) !== getRoleLabel(role) && <div className="mt-1 inline-block max-w-full truncate rounded-full bg-teal-500/15 px-2 py-0.5 text-[11px] font-medium text-teal-200">{getRoleLabel(role)}</div>}
                         </div>
                         <button onClick={() => setPasswordOpen(true)} title="Changer mon mot de passe" aria-label="Changer mon mot de passe" className="rounded-lg p-2 text-slate-400 transition hover:bg-white/10 hover:text-white"><KeyRound size={18} /></button>
                         <button onClick={logout} title="Déconnexion" aria-label="Déconnexion" className="rounded-lg p-2 text-slate-400 transition hover:bg-white/10 hover:text-white"><LogOut size={18} /></button>
@@ -172,7 +172,7 @@ export default function AdminLayout({ title, subtitle, actions, children }) {
                 <header className="sticky top-0 z-20 flex h-20 items-center gap-3 border-b border-slate-200/80 bg-white/80 px-4 backdrop-blur-md dark:border-gray-800 dark:bg-gray-900/80 sm:px-8">
                     <button onClick={() => setMenuOpen(true)} className="rounded-lg p-2 hover:bg-slate-100 dark:hover:bg-gray-800 lg:hidden" aria-label="Ouvrir le menu"><Menu size={20} /></button>
                     <div className="min-w-0">
-                        <h1 className="truncate text-lg font-bold leading-tight sm:text-xl">{title}</h1>
+                        <h1 className="truncate text-base font-bold leading-tight sm:text-xl">{title}</h1>
                         {subtitle && <p className="hidden truncate text-xs text-slate-500 dark:text-gray-400 sm:block">{subtitle}</p>}
                     </div>
                     <div className="ml-auto flex items-center gap-2">

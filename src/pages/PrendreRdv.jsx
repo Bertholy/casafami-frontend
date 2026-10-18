@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import axiosClient from '../api/axiosClient';
 import { apiErrorMessage } from '../utils/auth';
@@ -60,6 +60,18 @@ function PrendreRdv() {
     const [assistantOuvert, setAssistantOuvert] = useState(false);
     const [erreurPdf, setErreurPdf] = useState('');
     const [cleCopiee, setCleCopiee] = useState(false);
+    const [telephoneTouche, setTelephoneTouche] = useState(false);
+    const erreurRef = useRef(null);
+
+    // Le message d'erreur est en haut du formulaire alors que le bouton est en bas : on y amène la personne.
+    useEffect(() => {
+        if (erreur) erreurRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, [erreur]);
+
+    // La confirmation remplace le formulaire : on repart du haut de la page pour la lire en entier.
+    useEffect(() => {
+        if (succes) window.scrollTo({ top: 0, behavior: 'smooth' });
+    }, [succes]);
 
     // Le reçu n'est jamais téléchargé tout seul : le patient le demande lui-même (bouton ci-dessous, ou QR code dans « Mes RDV »).
     const telechargerPdf = async () => {
@@ -139,9 +151,11 @@ function PrendreRdv() {
             setErreur(apiErrorMessage(err, t("Impossible d’enregistrer ce rendez-vous. Vérifiez les informations et le créneau, puis réessayez.")));
             const reponse = err.response?.data;
             if (reponse?.code === 'RESERVATION_RECENTE') {
-                // Même nom déjà réservé il y a moins de 3 jours : on indique le rendez-vous existant et la date de la prochaine réservation possible.
+                // Même nom ou même numéro déjà réservé il y a moins de 7 jours : on indique le rendez-vous existant et la date de la prochaine réservation possible.
                 const jourFr = iso => String(iso).slice(0, 10).split('-').reverse().join('/');
-                setErreur(t("Une réservation existe déjà à ce nom (rendez-vous du {date} à {heure}). Une nouvelle réservation sera possible à partir du {dispo}, ou dès que la première est annulée dans « Mes RDV ».",
+                setErreur(t(reponse.critere === 'TELEPHONE'
+                    ? "Une réservation existe déjà avec ce numéro de téléphone (rendez-vous du {date} à {heure}). Une nouvelle réservation sera possible à partir du {dispo}, ou dès que la première est annulée dans « Mes RDV »."
+                    : "Une réservation existe déjà à ce nom (rendez-vous du {date} à {heure}). Une nouvelle réservation sera possible à partir du {dispo}, ou dès que la première est annulée dans « Mes RDV ».",
                     { date: jourFr(reponse.dateRdvExistant), heure: String(reponse.heureRdvExistant).slice(0, 5), dispo: `${jourFr(reponse.disponibleLe)} ${t('à')} ${String(reponse.disponibleLe).slice(11, 16)}` }));
             } else if (err.response?.status === 409) {
                 // Le créneau vient d'être pris : on le retire et on réaffiche ce qui reste libre ce jour-là.
@@ -273,7 +287,7 @@ function PrendreRdv() {
                 <div className="mx-auto max-w-6xl px-4">
 
                     {erreur && (
-                        <div className="bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 rounded-xl p-4 mb-6 flex items-start gap-3">
+                        <div ref={erreurRef} role="alert" className="bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 rounded-xl p-4 mb-6 flex items-start gap-3">
                             <AlertCircle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
                             <div>
                                 <p className="font-semibold text-red-700 dark:text-red-400">{t("Erreur")}</p>
@@ -303,12 +317,15 @@ function PrendreRdv() {
 
                             <div className="space-y-4">
                                 <div>
-                                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                                    <label htmlFor="nomClient" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                                         {t("Nom complet *")}
                                     </label>
                                     <input
+                                        id="nomClient"
                                         type="text"
                                         name="nomClient"
+                                        autoComplete="name"
+                                        maxLength={100}
                                         value={form.nomClient}
                                         onChange={onChange}
                                         required
@@ -319,11 +336,13 @@ function PrendreRdv() {
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div>
-                                        <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                                        <label htmlFor="ageClient" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                                             {t("Âge *")}
                                         </label>
                                         <input
+                                            id="ageClient"
                                             type="number"
+                                            inputMode="numeric"
                                             name="ageClient"
                                             value={form.ageClient}
                                             onChange={onChange}
@@ -336,16 +355,20 @@ function PrendreRdv() {
                                     </div>
 
                                     <div>
-                                        <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                                        <label htmlFor="telephoneClient" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                                             {t("Téléphone *")}
                                         </label>
                                         <div className="relative">
                                             <Phone className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
                                             <input
+                                                id="telephoneClient"
                                                 type="tel"
                                                 name="telephoneClient"
                                                 value={form.telephoneClient}
                                                 onChange={onChange}
+                                                onBlur={() => setTelephoneTouche(true)}
+                                                aria-invalid={telephoneTouche && form.telephoneClient !== '' && !isPlausiblePhone(form.telephoneClient)}
+                                                aria-describedby="aide-telephone"
                                                 required
                                                 placeholder="034 12 345 67"
                                                 inputMode="tel"
@@ -354,7 +377,9 @@ function PrendreRdv() {
                                                 className="w-full pl-10 pr-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-800 dark:text-white focus:border-teal-500 focus:outline-none transition"
                                             />
                                         </div>
-                                        <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">{t("Exemple : 034 12 345 67")}</p>
+                                        {telephoneTouche && form.telephoneClient !== '' && !isPlausiblePhone(form.telephoneClient)
+                                            ? <p id="aide-telephone" className="mt-1 text-xs font-medium text-red-600 dark:text-red-400">{t("Ce numéro ne semble pas valide. Exemple : 034 12 345 67")}</p>
+                                            : <p id="aide-telephone" className="mt-1 text-xs text-gray-500 dark:text-gray-400">{t("Exemple : 034 12 345 67")}</p>}
                                     </div>
                                 </div>
 
@@ -493,8 +518,8 @@ function PrendreRdv() {
                         <div className="p-6 md:p-8 bg-gray-50 dark:bg-gray-800/50">
                             <button
                                 type="submit"
-                                disabled={loading || !heureChoisie}
-                                className="w-full bg-linear-to-r from-teal-600 to-teal-700 text-white py-4 rounded-xl font-bold text-lg hover:from-teal-700 hover:to-teal-800 transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                disabled={loading}
+                                className="w-full bg-linear-to-r from-teal-600 to-teal-700 text-white py-4 rounded-xl font-bold text-lg hover:from-teal-700 hover:to-teal-800 transition-all shadow-lg hover:shadow-xl disabled:opacity-60 disabled:cursor-wait flex items-center justify-center gap-2"
                             >
                                 {loading ? (
                                     <>
@@ -508,7 +533,12 @@ function PrendreRdv() {
                                     </>
                                 )}
                             </button>
-                            <p className="text-center text-xs text-gray-400 dark:text-gray-500 mt-4">
+                            <p aria-live="polite" className={`mt-3 text-center text-sm ${heureChoisie ? 'font-medium text-teal-700 dark:text-teal-300' : 'text-gray-500 dark:text-gray-400'}`}>
+                                {heureChoisie
+                                    ? t("Rendez-vous le {date} à {heure}", { date: formaterJour(form.dateRdv, lang, { weekday: 'long', day: 'numeric', month: 'long' }), heure: heureChoisie })
+                                    : form.dateRdv ? t("Choisissez un créneau pour continuer.") : t("Choisissez une date et un créneau pour continuer.")}
+                            </p>
+                            <p className="text-center text-xs text-gray-400 dark:text-gray-500 mt-2">
                                 {t("Sans inscription · Confirmation par SMS · Annulation gratuite")}
                             </p>
                         </div>

@@ -83,6 +83,18 @@ export const MG = {
     "Sans inscription · Confirmation par SMS · Annulation gratuite": "Tsy mila misoratra anarana · Fanamafisana amin'ny SMS · Fanafoanana maimaim-poana",
 
     // ---- mes rendez-vous
+    "Une réservation existe déjà avec ce numéro de téléphone (rendez-vous du {date} à {heure}). Une nouvelle réservation sera possible à partir du {dispo}, ou dès que la première est annulée dans « Mes RDV ».": "Efa misy famandrihana amin'ity laharana finday ity (fotoana amin'ny {date} amin'ny {heure}). Azo atao indray ny famandrihana vaovao manomboka amin'ny {dispo}, na raha vao foanana ny voalohany ao amin'ny « Ny fotoanako ».",
+    "Annuler ce rendez-vous ?": "Foanana ve ity fotoana ity ?",
+    "Votre rendez-vous du {date} à {heure} sera annulé. Cette action est définitive.": "Ho foanana ny fotoanao amin'ny {date} amin'ny {heure}. Tsy azo averina io hetsika io.",
+    "Oui, annuler": "Eny, foano",
+    "Non, le garder": "Tsia, tazomy",
+    "Ce numéro ne semble pas valide. Exemple : 034 12 345 67": "Toa diso ity laharana ity. Ohatra : 034 12 345 67",
+    "Rendez-vous le {date} à {heure}": "Fotoana amin'ny {date} amin'ny {heure}",
+    "Choisissez un créneau pour continuer.": "Mifidiana ora hanohizana.",
+    "Choisissez une date et un créneau pour continuer.": "Mifidiana daty sy ora hanohizana.",
+    "Aller au contenu": "Mankanesa any amin'ny votoatiny",
+    "Cette page n’existe pas.": "Tsy misy ity pejy ity.",
+    "Retour à l’accueil": "Hiverina any amin'ny fandraisana",
     "Étapes de la réservation": "Dingana amin'ny famandrihana",
     "Aujourd’hui": "Anio",
     "Demain": "Rahampitso",

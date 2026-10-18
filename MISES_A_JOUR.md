@@ -8,7 +8,7 @@
 
 ## Mise à jour suivante (11 octobre 2026, soir)
 
-- **Réservation en ligne : un même nom ne peut pas réserver deux fois avant 3 jours.** Le nom est comparé sans tenir compte des majuscules, des accents ni de l'ordre des mots. Le message indique le rendez-vous existant et la date à partir de laquelle on peut réserver de nouveau (en français et en malagasy) ; annuler la première réservation libère aussitôt le nom. Le personnel (secrétaire, médecin…) n'est pas concerné.
+- **Réservation en ligne : un même nom ou un même numéro de téléphone ne peut pas réserver deux fois avant 7 jours.** Le nom est comparé sans tenir compte des majuscules, des accents ni de l'ordre des mots. Le message indique le rendez-vous existant et la date à partir de laquelle on peut réserver de nouveau (en français et en malagasy) ; annuler la première réservation libère aussitôt le nom. Le personnel (secrétaire, médecin…) n'est pas concerné.
 
 - **Petits nombres dans le menu du personnel** : une pastille bleue indique ce qui est nouveau depuis votre dernière visite de la page : Tableau de bord et Calendrier (nouveaux rendez-vous), Corbeille, Dossiers patients (nouveaux comptes rendus d'un collègue), Suivi maternité, Journal d'audit, et « Mes patients » (rendez-vous à accepter). Ouvrir la page remet le nombre à zéro. Chacun ne voit que les pages auxquelles il a droit.
 - **Services** : les cartes défilent toutes seules de la droite vers la gauche, en boucle, avec deux flèches (accueil et page « Nos services »).
