@@ -28,3 +28,30 @@
 }
 .dark .theme-staff { --casafami-link: var(--mt-main-clair); --dark-link: var(--mt-main-clair); --color-teal-300: var(--mt-main-clair); --color-teal-400: var(--mt-main); }
 .dark .theme-staff :focus-visible { outline-color: var(--mt-main-clair); }
+
+/*
+ * Design « doux » de l'espace du personnel : fond bleuté, coins plus arrondis, ombres légères, police ronde, boutons en pilule.
+ * Pour revenir à l'ancien aspect : retirer ce bloc, ou repasser sur la branche design-doux ou main.
+ */
+.theme-staff {
+    --radius-lg: .9rem; --radius-xl: 1.15rem; --radius-2xl: 1.75rem; --radius-3xl: 2.25rem;
+    --shadow-sm: 0 8px 26px rgba(15, 80, 120, .07);
+    --shadow-md: 0 14px 36px rgba(15, 80, 120, .11);
+    --shadow-lg: 0 22px 50px rgba(15, 80, 120, .14);
+    font-family: 'Plus Jakarta Sans', 'Segoe UI', system-ui, sans-serif;
+}
+.theme-staff h1, .theme-staff h2, .theme-staff h3 { letter-spacing: -.015em; }
+/* bordures de cartes presque invisibles : c'est l'ombre qui sépare */
+.theme-staff .border-slate-200\/80, .theme-staff .border-slate-200 { border-color: rgba(15, 80, 120, .08); }
+/* boutons pleins du personnel : le cyan de la marque, texte bleu nuit, forme de pilule */
+.theme-staff button.bg-teal-700.text-white, .theme-staff a.bg-teal-700.text-white,
+.theme-staff button.bg-teal-600.text-white, .theme-staff a.bg-teal-600.text-white {
+    background-color: var(--mt-bouton); color: var(--mt-sur-bouton); border-radius: 999px;
+}
+.theme-staff button.bg-teal-700.text-white:hover, .theme-staff a.bg-teal-700.text-white:hover,
+.theme-staff button.bg-teal-600.text-white:hover, .theme-staff a.bg-teal-600.text-white:hover {
+    background-color: color-mix(in srgb, var(--mt-bouton) 88%, black);
+}
+.theme-staff input:not([type='checkbox']):not([type='radio']):not([type='file']):not([type='range']), .theme-staff select, .theme-staff textarea {
+    border-radius: 1rem;
+}

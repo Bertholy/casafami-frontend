@@ -107,14 +107,14 @@ export default function AdminLayout({ title, subtitle, actions, children }) {
         },
     ].filter(section => section.items.length > 0);
 
-    const linkClass = ({ isActive }) => `group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition ${
-        isActive ? 'bg-teal-500/15 text-white ring-1 ring-inset ring-teal-400/30' : 'text-slate-400 hover:bg-white/5 hover:text-white'} focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-teal-300`;
+    const linkClass = ({ isActive }) => `group flex items-center gap-3 rounded-2xl px-3.5 py-2.5 text-sm transition ${
+        isActive ? 'bg-(--mt-main) font-bold text-(--mt-sur-main) shadow-[0_10px_24px_rgba(3,204,230,.28)]' : 'font-medium text-slate-300 hover:bg-white/8 hover:text-white'} focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-teal-300`;
 
     return (
-        <div className="theme-staff min-h-screen bg-slate-50 text-slate-800 dark:bg-gray-950 dark:text-gray-100">
-            <aside className={`${menuOpen ? 'translate-x-0' : '-translate-x-full'} fixed inset-y-0 left-0 z-40 flex w-72 flex-col bg-slate-950 text-slate-200 transition-transform duration-200 lg:translate-x-0`}>
+        <div className="theme-staff min-h-screen bg-[#f1f7fa] text-slate-800 dark:bg-gray-950 dark:text-gray-100">
+            <aside className={`${menuOpen ? 'translate-x-0' : '-translate-x-full'} fixed inset-y-0 left-0 z-40 flex w-72 flex-col bg-[#0e2a38] text-slate-200 transition-transform duration-200 lg:inset-y-3 lg:left-3 lg:translate-x-0 lg:rounded-[2rem] lg:shadow-[0_24px_60px_rgba(14,42,56,.35)]`}>
                 <div className="flex h-20 items-center gap-3 px-6">
-                    <img src="/logo_casafami.png" alt="" className="h-11 w-11 rounded-xl bg-white object-contain p-1" />
+                    <img src="/logo_casafami.png" alt="" className="h-11 w-11 rounded-2xl bg-white object-contain p-1" />
                     <div>
                         <div className="font-bold tracking-wide text-white">{APP_NAME}</div>
                         <div className="flex items-center gap-1 text-xs text-teal-300"><HeartPulse size={12} />Gestion du cabinet</div>
@@ -147,7 +147,7 @@ export default function AdminLayout({ title, subtitle, actions, children }) {
                     </Link>
                 </nav>
 
-                <div className="border-t border-white/10 p-4">
+                <div className="m-3 rounded-3xl bg-white/[0.06] p-3">
                     <div className="flex items-center gap-3">
                         <input ref={fileInput} type="file" accept="image/*" className="hidden" onChange={uploadPhoto} />
                         <button type="button" onClick={() => fileInput.current?.click()} disabled={uploading}
@@ -168,8 +168,8 @@ export default function AdminLayout({ title, subtitle, actions, children }) {
             </aside>
             {menuOpen && <button className="fixed inset-0 z-30 bg-black/50 lg:hidden" aria-label="Fermer le menu" onClick={() => setMenuOpen(false)} />}
 
-            <div className="lg:pl-72">
-                <header className="sticky top-0 z-20 flex h-20 items-center gap-3 border-b border-slate-200/80 bg-white/80 px-4 backdrop-blur-md dark:border-gray-800 dark:bg-gray-900/80 sm:px-8">
+            <div className="lg:pl-[19rem]">
+                <header className="sticky top-0 z-20 flex h-20 items-center gap-3 bg-[#f1f7fa]/85 px-4 backdrop-blur-md dark:bg-gray-950/85 sm:px-8">
                     <button onClick={() => setMenuOpen(true)} className="rounded-lg p-2 hover:bg-slate-100 dark:hover:bg-gray-800 lg:hidden" aria-label="Ouvrir le menu"><Menu size={20} /></button>
                     <div className="min-w-0">
                         <h1 className="truncate text-base font-bold leading-tight sm:text-xl">{title}</h1>

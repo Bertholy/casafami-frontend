@@ -263,18 +263,18 @@ function Dashboard() {
                 )}
 
                 {/* ---------- Bandeau d'accueil ---------- */}
-                <section className="relative overflow-hidden rounded-3xl bg-linear-to-br from-teal-800 via-teal-700 to-teal-500 p-6 text-white shadow-lg sm:p-8">
-                    <div className="pointer-events-none absolute -right-10 -top-16 h-56 w-56 rounded-full bg-white/10 blur-2xl" />
-                    <div className="pointer-events-none absolute -bottom-20 right-1/3 h-48 w-48 rounded-full bg-emerald-300/20 blur-3xl" />
+                <section className="relative overflow-hidden rounded-[2rem] bg-linear-to-br from-(--mt-main) via-(--mt-main) to-(--mt-main-clair) p-6 text-(--mt-sur-main) shadow-[0_24px_60px_rgba(3,204,230,.30)] sm:p-8">
+                    <div className="pointer-events-none absolute -right-10 -top-16 h-56 w-56 rounded-full bg-white/30 blur-2xl" />
+                    <div className="pointer-events-none absolute -bottom-20 right-1/3 h-48 w-48 rounded-full bg-white/25 blur-3xl" />
                     <div className="relative flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
                         <div>
-                            <p className="text-sm font-medium text-teal-100">Bonjour{profile?.nom ? `, ${profile.nom}` : ''}</p>
+                            <p className="text-sm font-semibold opacity-80">Bonjour{profile?.nom ? `, ${profile.nom}` : ''}</p>
                             <h2 className="mt-1 text-2xl font-bold sm:text-3xl">
                                 {todayItems.length
                                     ? (vuePraticien ? `${todayItems.length} patient${todayItems.length > 1 ? 's' : ''} aujourd’hui` : `${todayItems.length} rendez-vous aujourd’hui`)
                                     : (vuePraticien ? 'Aucun patient aujourd’hui' : 'Aucun rendez-vous aujourd’hui')}
                             </h2>
-                            <p className="mt-2 max-w-xl text-sm text-teal-50">
+                            <p className="mt-2 max-w-xl text-sm opacity-85">
                                 {vuePraticien
                                     ? (rdvs.filter(rdv => peutAccepter(rdv, profile)).length > 0
                                         ? `${rdvs.filter(rdv => peutAccepter(rdv, profile)).length} rendez-vous vous attendent : acceptez-les pour que le cabinet les confirme au patient.`
@@ -285,15 +285,15 @@ function Dashboard() {
                             </p>
                         </div>
                         <div className="flex flex-wrap gap-3">
-                            {droitCreer && <button onClick={() => setModal({ type: 'create' })} className="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-semibold text-teal-800 shadow transition hover:bg-teal-50"><Plus size={17} />Nouveau rendez-vous</button>}
+                            {droitCreer && <button onClick={() => setModal({ type: 'create' })} className="inline-flex items-center gap-2 rounded-full bg-[#0e2a38] px-5 py-2.5 text-sm font-bold text-white shadow-lg transition hover:bg-[#12384a]"><Plus size={17} />Nouveau rendez-vous</button>}
                             {peut('EXPORT_RDV') && <details className="relative">
-                                <summary className="inline-flex cursor-pointer list-none items-center gap-2 rounded-xl border border-white/30 bg-white/10 px-4 py-2.5 text-sm font-medium backdrop-blur transition hover:bg-white/20 [&::-webkit-details-marker]:hidden"><Download size={16} />Exporter</summary>
+                                <summary className="inline-flex cursor-pointer list-none items-center gap-2 rounded-full bg-white/45 px-5 py-2.5 text-sm font-bold backdrop-blur transition hover:bg-white/70 [&::-webkit-details-marker]:hidden"><Download size={16} />Exporter</summary>
                                 <div className="absolute right-0 z-20 mt-2 w-56 overflow-hidden rounded-xl bg-white p-1 text-sm text-slate-800 shadow-xl dark:bg-gray-900 dark:text-gray-100">
                                     <button onClick={() => exportList('csv')} className="block w-full rounded-lg px-3 py-2 text-left hover:bg-slate-100 dark:hover:bg-gray-800">Excel (CSV) — {periodLabel.toLowerCase()}</button>
                                     <button onClick={() => exportList('pdf')} className="block w-full rounded-lg px-3 py-2 text-left hover:bg-slate-100 dark:hover:bg-gray-800">PDF — {periodLabel.toLowerCase()}</button>
                                 </div>
                             </details>}
-                            <button onClick={() => load()} className="inline-flex items-center gap-2 rounded-xl border border-white/30 bg-white/10 px-4 py-2.5 text-sm font-medium backdrop-blur transition hover:bg-white/20"><RefreshCw size={16} className={loading ? 'animate-spin' : ''} />Actualiser</button>
+                            <button onClick={() => load()} className="inline-flex items-center gap-2 rounded-full bg-white/45 px-5 py-2.5 text-sm font-bold backdrop-blur transition hover:bg-white/70"><RefreshCw size={16} className={loading ? 'animate-spin' : ''} />Actualiser</button>
                         </div>
                     </div>
                 </section>
@@ -305,10 +305,10 @@ function Dashboard() {
                 <section aria-label="Indicateurs">
                     <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
                         <h2 className="font-semibold">Vue d’ensemble · <span className="text-teal-700 dark:text-teal-300">{periodLabel}</span></h2>
-                        <div role="tablist" aria-label="Période" className="inline-flex rounded-xl bg-slate-100 p-1 dark:bg-gray-800">
+                        <div role="tablist" aria-label="Période" className="inline-flex max-w-full overflow-x-auto rounded-full bg-white p-1 shadow-sm dark:bg-gray-800">
                             {PERIODS.map(([key, label]) => (
                                 <button key={key} role="tab" aria-selected={period === key} onClick={() => { setPeriod(key); setPage(1); }}
-                                    className={`rounded-lg px-3 py-1.5 text-xs font-medium transition sm:text-sm ${period === key ? 'bg-white text-teal-800 shadow-sm dark:bg-gray-950 dark:text-teal-300' : 'text-slate-600 hover:text-slate-900 dark:text-gray-400'}`}>{label}</button>
+                                    className={`whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-semibold transition sm:px-4 sm:text-sm ${period === key ? 'bg-(--mt-main) text-(--mt-sur-main) shadow-sm' : 'text-slate-600 hover:text-slate-900 dark:text-gray-400'}`}>{label}</button>
                             ))}
                         </div>
                     </div>
@@ -320,7 +320,7 @@ function Dashboard() {
                                     <span className="text-xs font-medium text-slate-500 dark:text-gray-400 sm:text-sm">{label}</span>
                                     <span className={`rounded-xl p-2 ${tone}`}><Icon size={17} /></span>
                                 </div>
-                                <div className="mt-3 text-3xl font-bold tabular-nums">{loading ? <span className="inline-block h-8 w-10 animate-pulse rounded bg-slate-200 dark:bg-gray-800" /> : value}</div>
+                                <div className="mt-3 text-4xl font-extrabold tabular-nums">{loading ? <span className="inline-block h-8 w-10 animate-pulse rounded bg-slate-200 dark:bg-gray-800" /> : value}</div>
                             </button>
                         ))}
                     </div>
