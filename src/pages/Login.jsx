@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axiosClient from '../api/axiosClient';
-import { APP_NAME } from '../constants/app';
 import { apiErrorMessage, homeForRole, saveSession } from '../utils/auth';
 import { Lock, Mail, Loader2, AlertCircle, ArrowLeft } from 'lucide-react';
 import ChampMotDePasse from '../components/ChampMotDePasse';
@@ -34,7 +33,7 @@ function Login() {
 
     return (
         <AuthFond>
-            <AuthEntete titre={`Espace du personnel ${APP_NAME}`} sousTitre="Connectez-vous pour gérer vos rendez-vous" />
+            <AuthEntete titre="Espace du personnel" sousTitre="Connectez-vous pour gérer vos rendez-vous" />
 
             <AuthCarte>
                 <form onSubmit={onSubmit}>
