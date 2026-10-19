@@ -29,6 +29,7 @@ import {
     Bot,
     MessageSquare,
     ShieldCheck,
+    Sparkles,
     Sunrise,
     Sunset,
 } from 'lucide-react';
@@ -57,6 +58,7 @@ function PrendreRdv() {
     const [loading, setLoading] = useState(false);
     const [erreur, setErreur] = useState(null);
     const [succes, setSucces] = useState(null);
+    const [methode, setMethode] = useState(null);   // null : choix du parcours ; 'moi' : formulaire seul ; 'ia' : assistant puis formulaire
     const [assistantOuvert, setAssistantOuvert] = useState(false);
     const [erreurPdf, setErreurPdf] = useState('');
     const [cleCopiee, setCleCopiee] = useState(false);
@@ -72,6 +74,11 @@ function PrendreRdv() {
     useEffect(() => {
         if (succes) window.scrollTo({ top: 0, behavior: 'smooth' });
     }, [succes]);
+
+    // Changer de méthode, ou passer de l'assistant au formulaire : on repart du haut de la réservation.
+    useEffect(() => {
+        if (methode) document.getElementById('reservation')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, [methode, assistantOuvert]);
 
     // Le reçu n'est jamais téléchargé tout seul : le patient le demande lui-même (bouton ci-dessous, ou QR code dans « Mes RDV »).
     const telechargerPdf = async () => {
@@ -119,6 +126,8 @@ function PrendreRdv() {
         { label: t("Heure"), fait: Boolean(heureChoisie) },
     ];
     const etapeCourante = etapes.findIndex(etape => !etape.fait);
+    // Le formulaire n'apparaît qu'après le choix du parcours, et pas pendant que l'assistant prépare le motif.
+    const formulaireVisible = Boolean(methode) && !assistantOuvert;
 
     const onChange = (e) => {
         const { name } = e.target;
@@ -130,6 +139,10 @@ function PrendreRdv() {
         setForm(current => ({ ...current, motif, serviceId: serviceId && !current.serviceId ? String(serviceId) : current.serviceId }));
         setAssistantOuvert(false);
     };
+
+    // Le parcours se choisit ici : seul (formulaire) ou avec l'assistant, qui prépare le motif avant le formulaire.
+    const choisirMethode = nouvelle => { setMethode(nouvelle); setAssistantOuvert(nouvelle === 'ia'); };
+    const revenirAuChoix = () => { setMethode(null); setAssistantOuvert(false); };
 
     const onSubmit = async (e) => {
         e.preventDefault();
@@ -224,6 +237,8 @@ function PrendreRdv() {
                             <button
                                 onClick={() => {
                                     setSucces(null);
+                                    setMethode(null);
+                                    setAssistantOuvert(false);
                                     setForm({ nomClient: '', ageClient: '', telephoneClient: '', motif: '', dateRdv: '', heureRdv: '', serviceId: '' });
                                 }}
                                 className="flex-1 bg-teal-600 text-white py-3 rounded-xl font-semibold hover:bg-teal-700 transition"
@@ -262,8 +277,48 @@ function PrendreRdv() {
                 </div>
             </section>
 
+            {/* ========== CHOIX DU PARCOURS : SOI-MÊME OU PAR L'IA ========== */}
+            {!methode && (
+                <section id="reservation" className="pb-16 pt-4">
+                    <div className="mx-auto max-w-4xl px-4">
+                        <div className="mb-10 text-center">
+                            <Editable id="rdv.choix.titre" as="h2" className="mb-3 text-3xl font-extrabold md:text-4xl">Comment voulez-vous prendre rendez-vous ?</Editable>
+                            <Editable id="rdv.choix.texte" as="p" className="text-lg text-slate-600 dark:text-gray-300">Choisissez la façon la plus simple pour vous.</Editable>
+                        </div>
+
+                        <div className="grid gap-6 md:grid-cols-2">
+                            <article className="mt-carte flex flex-col p-8">
+                                <span className="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-teal-100 text-teal-700 dark:bg-teal-500/15 dark:text-teal-300"><User className="h-7 w-7" /></span>
+                                <h3 className="mb-2 text-xl font-bold text-gray-800 dark:text-white">{t("Prendre RDV moi-même")}</h3>
+                                <p className="mb-8 flex-1 text-gray-600 dark:text-gray-300">{t("Vous remplissez vous-même le formulaire : service, motif, date et heure.")}</p>
+                                <button type="button" onClick={() => choisirMethode('moi')} className="mt-btn-ligne w-full py-3">{t("Remplir le formulaire")}</button>
+                            </article>
+
+                            <article className="mt-carte flex flex-col p-8">
+                                <span className="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-teal-600 text-white"><Bot className="h-7 w-7" /></span>
+                                <h3 className="mb-2 text-xl font-bold text-gray-800 dark:text-white">{t("Par l’IA")}</h3>
+                                <p className="mb-8 flex-1 text-gray-600 dark:text-gray-300">{t("Décrivez ce qui vous amène : l’assistant vous pose quelques questions, propose le service adapté et prépare le motif. Vous choisissez ensuite la date et l’heure.")}</p>
+                                <button type="button" onClick={() => choisirMethode('ia')} className="mt-btn w-full py-3">{t("Commencer avec l’assistant")}</button>
+                            </article>
+                        </div>
+
+                        <p className="mt-6 text-center text-sm text-slate-500 dark:text-gray-400">{t("Dans les deux cas, vous pouvez modifier le motif avant de confirmer.")}</p>
+                    </div>
+                </section>
+            )}
+
+            {/* ========== ASSISTANT IA, INTÉGRÉ À LA PAGE ========== */}
+            {assistantOuvert && (
+                <section id="reservation" className="pb-16 pt-4">
+                    <div className="mx-auto max-w-2xl px-4">
+                        <MotifAssistant embarque services={services} onApply={appliquerMotif} onClose={revenirAuChoix} />
+                    </div>
+                </section>
+            )}
+
             {/* ========== ÉTAPES ========== */}
-            <section className="py-6">
+            {formulaireVisible && (
+            <section id="reservation" className="py-6">
                 <ol className="mx-auto flex max-w-xl items-start px-4" aria-label={t("Étapes de la réservation")}>
                     {etapes.map((etape, i) => (
                         <li key={i} className="relative flex flex-1 flex-col items-center text-center" aria-current={i === etapeCourante ? 'step' : undefined}>
@@ -279,7 +334,10 @@ function PrendreRdv() {
                 </ol>
             </section>
 
+            )}
+
             {/* ========== FORMULAIRE ========== */}
+            {formulaireVisible && (
             <section className="py-12">
                 <div className="mx-auto max-w-6xl px-4">
 
@@ -295,6 +353,15 @@ function PrendreRdv() {
 
                     <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-start">
                     <form onSubmit={onSubmit} className="mt-carte overflow-hidden">
+
+                        {/* ========== PARCOURS CHOISI ========== */}
+                        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-gray-100 px-6 py-4 dark:border-gray-700 md:px-8">
+                            <span className="inline-flex items-center gap-2 text-sm font-semibold text-teal-800 dark:text-teal-300">
+                                {methode === 'ia' ? <Bot className="h-4 w-4" /> : <User className="h-4 w-4" />}
+                                {methode === 'ia' ? t("Par l’IA") : t("Prendre RDV moi-même")}
+                            </span>
+                            <button type="button" onClick={revenirAuChoix} className="text-sm font-semibold text-teal-700 underline-offset-2 hover:underline dark:text-teal-300">{t("Changer de méthode")}</button>
+                        </div>
 
                         {/* ========== SECTION 1 : INFORMATIONS ========== */}
                         <div className="p-6 md:p-8 border-b border-gray-100 dark:border-gray-700">
@@ -388,9 +455,10 @@ function PrendreRdv() {
                                 <div>
                                     <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
                                         <label htmlFor="motif" className="block text-sm font-semibold text-gray-700 dark:text-gray-300">{t("Motif du rendez-vous")}</label>
-                                        <button type="button" onClick={() => setAssistantOuvert(true)} className="inline-flex items-center gap-2 rounded-xl bg-linear-to-r from-teal-600 to-teal-700 px-4 py-2 text-sm font-bold text-white shadow-md transition hover:from-teal-700 hover:to-teal-800"><Bot className="h-4 w-4" />{t("Aidez-moi à préciser mon motif")}</button>
+                                        {methode === 'ia' && <button type="button" onClick={() => setAssistantOuvert(true)} className="inline-flex items-center gap-2 rounded-xl border border-teal-300 px-3 py-1.5 text-sm font-semibold text-teal-800 transition hover:bg-teal-50 dark:border-teal-700 dark:text-teal-200 dark:hover:bg-gray-800"><Bot className="h-4 w-4" />{t("Revoir avec l’assistant")}</button>}
                                     </div>
-                                    <p className="mb-2 text-sm text-gray-500">{t("Répondez à quelques questions : l’assistant prépare pour vous un motif précis, que vous pouvez modifier. Il ne pose pas de diagnostic ; en cas d’urgence, appelez le cabinet ou les urgences.")}</p>
+                                    {methode === 'moi' && <p className="mb-2 text-sm text-gray-500">{t("Décrivez brièvement la raison de votre visite. En cas d’urgence, appelez le cabinet ou les urgences.")}</p>}
+                                    {methode === 'ia' && form.motif && <p className="mb-2 flex items-start gap-2 rounded-xl bg-teal-50 px-3 py-2 text-sm text-teal-900 dark:bg-teal-500/10 dark:text-teal-100"><Sparkles className="mt-0.5 h-4 w-4 shrink-0" />{t("Motif préparé par l’assistant. Vérifiez-le et modifiez-le si besoin.")}</p>}
                                     <textarea id="motif" name="motif" value={form.motif} onChange={onChange} maxLength={2000} rows={4} placeholder={t("Expliquez brièvement la raison de votre rendez-vous : suivi de grossesse, consultation prénatale, échographie, douleurs ou autre demande.")} className="w-full resize-y rounded-xl border-2 border-gray-200 bg-white px-4 py-3 text-gray-800 focus:border-teal-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white" />
                                     <p className="mt-1 text-right text-xs text-gray-500">{form.motif.length}/2000</p>
                                 </div>
@@ -567,7 +635,7 @@ function PrendreRdv() {
                     </div>
                 </div>
             </section>
-            {assistantOuvert && <MotifAssistant services={services} onApply={appliquerMotif} onClose={() => setAssistantOuvert(false)} />}
+            )}
         </div>
     );
 }

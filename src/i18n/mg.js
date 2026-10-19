@@ -481,4 +481,19 @@ export const MG = {
     "Test de grossesse": "Test fitondrana vohoka",
     "Autre examen": "Fitiliana hafa",
     "Pourrez-vous venir à jeun (sans manger depuis le soir) si c’est nécessaire ?": "Afaka tonga tsy mbola nisakafo (hatramin'ny hariva) ve ianao raha ilaina ?",
+
+    // ---- prise de RDV : choix entre « moi-même » et « par l’IA »
+    "Comment voulez-vous prendre rendez-vous ?": "Ahoana no tianao haka fotoana ?",
+    "Choisissez la façon la plus simple pour vous.": "Safidio ny fomba mora indrindra ho anao.",
+    "Prendre RDV moi-même": "Haka fotoana amin'ny tenako",
+    "Vous remplissez vous-même le formulaire : service, motif, date et heure.": "Ianao mihitsy no mametraka ny serivisy, ny antony, ny daty ary ny ora.",
+    "Remplir le formulaire": "Hamenoa ny takelaka",
+    "Par l’IA": "Amin'ny IA",
+    "Décrivez ce qui vous amène : l’assistant vous pose quelques questions, propose le service adapté et prépare le motif. Vous choisissez ensuite la date et l’heure.": "Lazao ny antony mahatonga anao : hanontany fanontaniana vitsivitsy ny mpanampy, hanolotra ny serivisy mety ary hanomana ny antony. Avy eo ianao no misafidy ny daty sy ny ora.",
+    "Commencer avec l’assistant": "Manomboka amin'ny mpanampy",
+    "Dans les deux cas, vous pouvez modifier le motif avant de confirmer.": "Na amin'ny fomba roa, azonao ovaina ny antony alohan'ny hamafisana.",
+    "Décrivez brièvement la raison de votre visite. En cas d’urgence, appelez le cabinet ou les urgences.": "Lazao fohy ny antony nitondrana anao. Raha misy toe-javatra maika, antsoy ny foibe na ny vonjy maika.",
+    "Revoir avec l’assistant": "Jereo indray amin'ny mpanampy",
+    "Motif préparé par l’assistant. Vérifiez-le et modifiez-le si besoin.": "Voaomana tamin'ny mpanampy ny antony. Jereo azy ary ovaino raha ilaina.",
+    "Retour au choix": "Miverina amin'ny safidy",
 };
