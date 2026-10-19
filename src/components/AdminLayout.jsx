@@ -11,7 +11,7 @@ import MessagerieBouton from './MessagerieBouton';
 import useNouveautes, { sectionDePage } from '../hooks/useNouveautes';
 import { useTheme } from '../context/ThemeContext';
 import { APP_NAME, getRoleLabel } from '../constants/app';
-import { convertirImage } from '../utils/image';
+import { convertirPhoto } from '../utils/image';
 import { apiErrorMessage, clearSession, getEmail, getRole, homeForRole, majPermissions, peut } from '../utils/auth';
 import ChampMotDePasse from './ChampMotDePasse';
 
@@ -30,6 +30,7 @@ export default function AdminLayout({ title, subtitle, actions, children }) {
     const [profile, setProfile] = useState(null);
     const [uploading, setUploading] = useState(false);
     const [photoError, setPhotoError] = useState('');
+    const [photoInfo, setPhotoInfo] = useState('');
     const fileInput = useRef(null);
     const [passwordOpen, setPasswordOpen] = useState(false);
 
@@ -49,14 +50,17 @@ export default function AdminLayout({ title, subtitle, actions, children }) {
         const file = event.target.files?.[0];
         event.target.value = '';
         if (!file) return;
-        setUploading(true); setPhotoError('');
-        const body = new FormData();
+        setUploading(true); setPhotoError(''); setPhotoInfo('Conversion de la photo en JPEG…');
         try {
-            const { fichier } = await convertirImage(file);   // photo adaptée au site avant l'envoi
-            body.append('photo', fichier);
+            const photo = await convertirPhoto(file);   // convention : JPEG, 1600 px au plus, avant tout envoi
+            setPhotoInfo('Envoi de la photo…');
+            const body = new FormData();
+            body.append('photo', photo.fichier);
             const { data } = await axiosClient.put('/profile/photo', body, { headers: { 'Content-Type': 'multipart/form-data' } });
             setProfile(data);
+            setPhotoInfo(`${photo.resume} Photo enregistrée.`);
         } catch (err) {
+            setPhotoInfo('');
             setPhotoError(err.response ? apiErrorMessage(err, 'La photo n’a pas pu être enregistrée.') : err.message);
         } finally { setUploading(false); }
     };
@@ -151,7 +155,7 @@ export default function AdminLayout({ title, subtitle, actions, children }) {
                     <div className="flex items-center gap-3">
                         <input ref={fileInput} type="file" accept="image/*" className="hidden" onChange={uploadPhoto} />
                         <button type="button" onClick={() => fileInput.current?.click()} disabled={uploading}
-                            title="Changer ma photo de profil" aria-label="Changer ma photo de profil"
+                            title="Changer ma photo de profil (convertie automatiquement en JPEG)" aria-label="Changer ma photo de profil"
                             className="group relative flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full bg-teal-500/20 text-teal-200 ring-2 ring-white/10 disabled:opacity-60">
                             {profile?.photoUrl ? <img src={assetUrl(profile.photoUrl)} alt="" className="h-full w-full object-cover" /> : <UserRound size={20} />}
                             <span className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 transition group-hover:opacity-100"><Camera size={15} /></span>
@@ -164,6 +168,7 @@ export default function AdminLayout({ title, subtitle, actions, children }) {
                         <button onClick={logout} title="Déconnexion" aria-label="Déconnexion" className="rounded-lg p-2 text-slate-400 transition hover:bg-white/10 hover:text-white"><LogOut size={18} /></button>
                     </div>
                     {photoError && <p role="alert" className="mt-2 text-xs text-rose-300">{photoError}</p>}
+                    {photoInfo && !photoError && <p role="status" className="mt-2 text-xs leading-snug text-emerald-200">{photoInfo}</p>}
                 </div>
             </aside>
             {menuOpen && <button className="fixed inset-0 z-30 bg-black/50 lg:hidden" aria-label="Fermer le menu" onClick={() => setMenuOpen(false)} />}

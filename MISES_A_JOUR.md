@@ -1,5 +1,13 @@
 # Mises à jour — CASAFAMI (site)
 
+## Photos du personnel : conversion automatique dès le choix
+
+- **Convention unique** : toute image choisie par le personnel (service, profil, modification) est convertie dans le navigateur, dès son choix et avant l'envoi, en **JPEG** (qualité 85 %), 1600 px au plus sur le grand côté, fond blanc à la place de la transparence. Le serveur stocke déjà en JPEG : les deux côtés suivent la même règle (JPEG et non PNG, plus léger ; la transparence est perdue, remplacée par du blanc).
+- **Formats acceptés** : tout ce que le navigateur sait afficher (JPEG, PNG, WebP, GIF, BMP, SVG, AVIF), et les **photos HEIC des iPhone**, décodées par la bibliothèque `heic-to` (libheif en WebAssembly). Cette bibliothèque (3 Mo) n’est téléchargée qu’au moment où l’on choisit une photo HEIC ; le reste du site n’en est pas alourdi. Le message « enregistrez en JPEG » ne reste qu’en secours, si une photo HEIC est vraiment illisible.
+- **Recadrage et rotation du HEIC** : `heic-to` décode les pixels bruts sans appliquer les transformations du fichier. Le site lit donc lui-même, dans l’en-tête HEIC, le recadrage (`clap`), la rotation (`irot`, sens antihoraire, comme libheif) et le miroir (`imir`), et les applique avant la conversion. Vérifié sur des échantillons de test : une image stockée en 1280 × 720 avec rotation de 90° sort en 720 × 1280, et un recadrage de 300 × 300 centré sort en 300 × 300. Une vraie photo d’iPhone reste à vérifier sur le terrain.
+- **Résultat visible juste après le choix** : une vignette et une ligne « Photo convertie : JPEG · 1600 × 1200 px · 23 Ko (avant : PNG · 6000 × 4500 px · 568 Ko) ». L’envoi est bloqué tant que la conversion n’est pas finie ; une photo refusée n’est jamais envoyée à la place de la précédente.
+- Un composant commun (`ChampPhoto`) sert à la création et à la modification d’un service ; la photo de profil affiche le même résultat sous l’avatar.
+
 ## Nouveau design du site public (branche `design-montagne`)
 
 - Le site public (accueil, services, prendre RDV, mes RDV, connexion, menu, pied de page) reprend le design du modèle « Mountain hotel » : bandeau bleu (couleur du bâtiment), titres Montserrat en majuscules avec un mot en italique, sections image / texte pleine largeur, boutons carrés, bandeaux ardoise, galerie, mode sombre conservé.

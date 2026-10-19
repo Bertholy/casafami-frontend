@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { ImagePlus, Loader2, Pencil, Plus, Trash2, X } from 'lucide-react';
 import axiosClient, { assetUrl } from '../api/axiosClient';
 import AdminLayout from '../components/AdminLayout';
-import { convertirImage } from '../utils/image';
+import ChampPhoto from '../components/ChampPhoto';
 import { apiErrorMessage, getRole, hasSession, homeForRole, LOGIN_PATH, peut } from '../utils/auth';
 
 const EMPTY = { nom: '', description: '', duree: '', photo: null };
@@ -32,22 +32,10 @@ export default function AdminServices() {
     const [edition, setEdition] = useState(null); // { id, nom, description, duree, photo, imageUrl }
     const [editionSaving, setEditionSaving] = useState(false);
     const [editionError, setEditionError] = useState('');
-    const [conversion, setConversion] = useState({ en_cours: false, resume: '', erreur: '' });
-
-    /** Prépare la photo choisie (redimensionnement + JPEG) puis la confie au formulaire ; rien n'est refusé pour sa taille. */
-    const preparerPhoto = async (event, appliquer) => {
-        const choisi = event.target.files?.[0];
-        event.target.value = '';
-        if (!choisi) return;
-        setConversion({ en_cours: true, resume: '', erreur: '' });
-        try {
-            const { fichier, resume } = await convertirImage(choisi);
-            appliquer(fichier);
-            setConversion({ en_cours: false, resume, erreur: '' });
-        } catch (err) {
-            setConversion({ en_cours: false, resume: '', erreur: err.message });
-        }
-    };
+    // La photo est convertie dès son choix (voir ChampPhoto) ; photoEnCours bloque l'envoi tant que la conversion n'est pas finie.
+    const [photoEnCours, setPhotoEnCours] = useState(false);
+    // Changer cette version remonte le champ photo : son aperçu et son message repartent de zéro après un ajout.
+    const [versionFormulaire, setVersionFormulaire] = useState(0);
 
     const load = useCallback(async () => {
         setLoading(true);
@@ -75,7 +63,7 @@ export default function AdminServices() {
         payload.append('photo', form.photo);
         try {
             await axiosClient.post('/services', payload, { headers: { 'Content-Type': 'multipart/form-data' } });
-            setForm(EMPTY); setNotice('Service ajouté au catalogue.'); await load();
+            setForm(EMPTY); setVersionFormulaire(v => v + 1); setNotice('Service ajouté au catalogue.'); await load();
         } catch (err) { setError(apiErrorMessage(err, 'L’ajout du service a échoué. Vérifiez les informations.')); }
         finally { setSaving(false); }
     };
@@ -115,13 +103,15 @@ export default function AdminServices() {
                     <label className="text-sm font-medium">Nom du service *<input required maxLength={100} value={form.nom} onChange={e => setForm(c => ({ ...c, nom: e.target.value }))} placeholder="Ex. Consultation générale" className={field} /></label>
                     <label className="text-sm font-medium">Durée<input maxLength={50} value={form.duree} onChange={e => setForm(c => ({ ...c, duree: e.target.value }))} placeholder="Ex. 30 minutes" className={field} /></label>
                     <label className="text-sm font-medium md:col-span-2">Description *<textarea required maxLength={500} rows={3} value={form.description} onChange={e => setForm(c => ({ ...c, description: e.target.value }))} placeholder="Décrivez ce service médical…" className={`${field} resize-y`} /><span className="mt-1 block text-right text-xs text-slate-400">{form.description.length}/500</span></label>
-                    <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-dashed border-slate-300 p-4 text-sm transition hover:border-teal-600 dark:border-gray-700 md:col-span-2">
-                        <ImagePlus className="shrink-0 text-teal-700" size={22} />
-                        <span className="min-w-0 flex-1"><span className="block font-medium">Photo du service *</span><span className="block truncate text-xs text-slate-500">{conversion.en_cours ? 'Conversion de la photo…' : form.photo ? form.photo.name : 'Toutes les photos sont acceptées : elles sont adaptées automatiquement'}</span></span>
-                        <input type="file" accept="image/*" onChange={e => preparerPhoto(e, fichier => setForm(c => ({ ...c, photo: fichier })))} className="w-56 text-xs" />
-                    </label>
-                    {(conversion.resume || conversion.erreur) && <p role={conversion.erreur ? 'alert' : 'status'} className={`text-xs md:col-span-2 ${conversion.erreur ? 'text-rose-700 dark:text-rose-300' : 'text-emerald-700 dark:text-emerald-300'}`}>{conversion.erreur || conversion.resume}</p>}
-                    <div className="flex justify-end md:col-span-2"><button disabled={saving || conversion.en_cours} className="inline-flex items-center gap-2 rounded-xl bg-teal-700 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-teal-800 disabled:opacity-60">{saving ? <Loader2 size={17} className="animate-spin" /> : <Plus size={17} />}Ajouter au catalogue</button></div>
+                    <div className="rounded-xl border border-dashed border-slate-300 p-4 md:col-span-2 dark:border-gray-700">
+                        <div className="mb-3 flex items-center gap-3">
+                            <ImagePlus className="shrink-0 text-teal-700" size={22} aria-hidden="true" />
+                            <label htmlFor="photo-service" className="text-sm font-medium">Photo du service *</label>
+                        </div>
+                        <ChampPhoto key={versionFormulaire} id="photo-service" disabled={saving}
+                            onConvertie={fichier => setForm(c => ({ ...c, photo: fichier }))} onEnCours={setPhotoEnCours} />
+                    </div>
+                    <div className="flex justify-end md:col-span-2"><button disabled={saving || photoEnCours} className="inline-flex items-center gap-2 rounded-xl bg-teal-700 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-teal-800 disabled:opacity-60">{saving ? <Loader2 size={17} className="animate-spin" /> : <Plus size={17} />}Ajouter au catalogue</button></div>
                 </form>
             </section>
 
@@ -147,15 +137,16 @@ export default function AdminServices() {
                         <label className="block text-sm font-medium">Nom *<input required maxLength={100} value={edition.nom} onChange={e => setEdition({ ...edition, nom: e.target.value })} className={field} /></label>
                         <label className="block text-sm font-medium">Durée<input maxLength={50} value={edition.duree} onChange={e => setEdition({ ...edition, duree: e.target.value })} className={field} /></label>
                         <label className="block text-sm font-medium">Description *<textarea required maxLength={500} rows={3} value={edition.description} onChange={e => setEdition({ ...edition, description: e.target.value })} className={field + ' resize-y'} /></label>
-                        <div className="flex items-center gap-3 rounded-xl border border-dashed border-slate-300 p-3 text-sm dark:border-gray-700">
-                            <img src={edition.photo ? URL.createObjectURL(edition.photo) : edition.imageUrl} alt="" className="h-14 w-20 rounded-lg object-cover" />
-                            <label className="min-w-0 flex-1 cursor-pointer"><span className="block font-medium">Changer la photo (facultatif)</span><span className="block truncate text-xs text-slate-500">{conversion.en_cours ? 'Conversion de la photo…' : edition.photo ? edition.photo.name : 'Toutes les photos sont acceptées : elles sont adaptées automatiquement'}</span>
-                                <input type="file" accept="image/*" onChange={e => preparerPhoto(e, fichier => setEdition(c => ({ ...c, photo: fichier })))} className="mt-1 w-full text-xs" /></label>
+                        <div className="rounded-xl border border-dashed border-slate-300 p-3 text-sm dark:border-gray-700">
+                            <div className="mb-3 flex items-center gap-3">
+                                <img src={edition.imageUrl} alt="Photo actuelle du service" className="h-14 w-20 shrink-0 rounded-lg object-cover" />
+                                <label htmlFor="photo-service-edition" className="font-medium">Changer la photo (facultatif)</label>
+                            </div>
+                            <ChampPhoto id="photo-service-edition" disabled={editionSaving}
+                                onConvertie={fichier => setEdition(c => ({ ...c, photo: fichier }))} onEnCours={setPhotoEnCours} />
                         </div>
-                        {conversion.resume && <p role="status" className="text-xs text-emerald-700 dark:text-emerald-300">{conversion.resume}</p>}
-                        {conversion.erreur && <p role="alert" className="text-xs text-rose-700 dark:text-rose-300">{conversion.erreur}</p>}
                         {editionError && <p role="alert" className="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700 dark:bg-rose-500/10 dark:text-rose-300">{editionError}</p>}
-                        <div className="flex justify-end gap-2"><button type="button" onClick={() => setEdition(null)} className="rounded-xl border border-slate-200 px-4 py-2 text-sm dark:border-gray-700">Annuler</button><button disabled={editionSaving} className="inline-flex items-center gap-2 rounded-xl bg-teal-700 px-4 py-2 text-sm font-semibold text-white hover:bg-teal-800 disabled:opacity-50">{editionSaving && <Loader2 size={15} className="animate-spin" />}Enregistrer</button></div>
+                        <div className="flex justify-end gap-2"><button type="button" onClick={() => setEdition(null)} className="rounded-xl border border-slate-200 px-4 py-2 text-sm dark:border-gray-700">Annuler</button><button disabled={editionSaving || photoEnCours} className="inline-flex items-center gap-2 rounded-xl bg-teal-700 px-4 py-2 text-sm font-semibold text-white hover:bg-teal-800 disabled:opacity-50">{editionSaving && <Loader2 size={15} className="animate-spin" />}Enregistrer</button></div>
                     </form>
                 </div>
             )}
