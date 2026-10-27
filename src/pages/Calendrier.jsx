@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { CalendarPlus, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
+import { CalendarPlus, CircleChevronLeft, CircleChevronRight, Loader2 } from 'lucide-react';
 import axiosClient from '../api/axiosClient';
 import AdminLayout from '../components/AdminLayout';
 import Notice from '../components/Notice';
@@ -74,8 +74,8 @@ export default function Calendrier() {
                         <div className="flex items-center gap-2">
                             {loading && <Loader2 size={16} className="animate-spin text-slate-400" />}
                             <button onClick={() => { setMois(new Date(`${today.slice(0, 7)}-01T12:00:00`)); setSelection(today); }} className={btnSecondary}>Aujourd’hui</button>
-                            <button onClick={() => changerMois(-1)} aria-label="Mois précédent" className="rounded-xl border border-slate-200 p-2.5 hover:bg-slate-50 dark:border-gray-700 dark:hover:bg-gray-800"><ChevronLeft size={16} /></button>
-                            <button onClick={() => changerMois(1)} aria-label="Mois suivant" className="rounded-xl border border-slate-200 p-2.5 hover:bg-slate-50 dark:border-gray-700 dark:hover:bg-gray-800"><ChevronRight size={16} /></button>
+                            <button onClick={() => changerMois(-1)} aria-label="Mois précédent" className="rounded-full text-slate-500 transition hover:text-(--mt-main) disabled:opacity-30 disabled:hover:text-slate-500 dark:text-gray-300"><CircleChevronLeft size={30} /></button>
+                            <button onClick={() => changerMois(1)} aria-label="Mois suivant" className="rounded-full text-slate-500 transition hover:text-(--mt-main) disabled:opacity-30 disabled:hover:text-slate-500 dark:text-gray-300"><CircleChevronRight size={30} /></button>
                         </div>
                     </div>
                     <div className="grid grid-cols-7 gap-1 text-center text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-gray-400">

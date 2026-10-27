@@ -2,8 +2,8 @@ import { lazy, useCallback, useEffect, useMemo, useState } from 'react';
 import { SkeletonTable } from '../components/ui/skeleton';
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import {
-    BadgeCheck, Ban, UserCheck, CalendarCheck, CalendarClock, CalendarDays, Check, CheckCheck, ChevronLeft, ChevronRight, Clock3,
-    ChevronDown, Download, Eye, FileSpreadsheet, FileText, FolderOpen, Pencil, Plus, RefreshCw, Search, Trash2,
+    BadgeCheck, Ban, UserCheck, CalendarCheck, CalendarClock, CalendarDays, Check, CheckCheck, Clock3,
+    ChevronDown, CircleChevronLeft, CircleChevronRight, Download, Eye, FileSpreadsheet, FileText, FolderOpen, Pencil, Plus, RotateCw, Search, Trash2,
 } from 'lucide-react';
 import axiosClient from '../api/axiosClient';
 import BoutonTelecharger from '../components/BoutonTelecharger';
@@ -317,7 +317,7 @@ function Dashboard() {
                                 <button onClick={event => { event.currentTarget.closest('details')?.removeAttribute('open'); exportList('pdf'); }} className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left transition hover:bg-slate-100 dark:hover:bg-gray-800"><span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-rose-500/15 text-rose-600 dark:text-rose-400"><FileText size={16} /></span><span><span className="block font-semibold">PDF</span><span className="block text-xs text-slate-500 dark:text-gray-400">Liste prête à imprimer</span></span></button>
                             </div>
                         </details>}
-                        <button onClick={() => load()} className="group inline-flex items-center gap-2 rounded-xl border border-(--st-line) bg-(--st-panel) py-1.5 pl-2 pr-3.5 text-sm font-semibold shadow-sm transition duration-150 hover:-translate-y-0.5 hover:border-(--mt-main) hover:shadow-md active:translate-y-0"><span className="flex h-7 w-7 items-center justify-center rounded-lg bg-(--mt-main)/15 text-(--mt-main-fort) transition group-hover:bg-(--mt-main) group-hover:text-(--mt-sur-main) dark:text-(--mt-main)"><RefreshCw size={15} className={loading ? 'animate-spin' : 'transition-transform duration-500 group-hover:rotate-180'} /></span>Actualiser</button>
+                        <button onClick={() => load()} className="group inline-flex items-center gap-2 rounded-xl border border-(--st-line) bg-(--st-panel) py-1.5 pl-2 pr-3.5 text-sm font-semibold shadow-sm transition duration-150 hover:-translate-y-0.5 hover:border-(--mt-main) hover:shadow-md active:translate-y-0"><span className="flex h-7 w-7 items-center justify-center rounded-lg bg-(--mt-main)/15 text-(--mt-main-fort) transition group-hover:bg-(--mt-main) group-hover:text-(--mt-sur-main) dark:text-(--mt-main)"><RotateCw size={15} className={loading ? 'animate-spin' : 'transition-transform duration-500 group-hover:rotate-180'} /></span>Actualiser</button>
                         </div>
                     </div>
                 </section>
@@ -463,9 +463,9 @@ function Dashboard() {
                             <span>par page · {filtered.length ? (currentPage - 1) * pageSize + 1 : 0} à {Math.min(currentPage * pageSize, filtered.length)} sur {filtered.length}</span>
                         </div>
                         <div className="flex items-center gap-2">
-                            <button disabled={currentPage <= 1} onClick={() => setPage(currentPage - 1)} className="rounded-lg border border-slate-200 p-1.5 disabled:opacity-40 dark:border-gray-700" aria-label="Page précédente"><ChevronLeft size={16} /></button>
+                            <button disabled={currentPage <= 1} onClick={() => setPage(currentPage - 1)} className="rounded-full text-slate-500 transition hover:text-(--mt-main) disabled:opacity-30 disabled:hover:text-slate-500 dark:text-gray-300" aria-label="Page précédente"><CircleChevronLeft size={26} /></button>
                             <span>Page {currentPage} / {pages}</span>
-                            <button disabled={currentPage >= pages} onClick={() => setPage(currentPage + 1)} className="rounded-lg border border-slate-200 p-1.5 disabled:opacity-40 dark:border-gray-700" aria-label="Page suivante"><ChevronRight size={16} /></button>
+                            <button disabled={currentPage >= pages} onClick={() => setPage(currentPage + 1)} className="rounded-full text-slate-500 transition hover:text-(--mt-main) disabled:opacity-30 disabled:hover:text-slate-500 dark:text-gray-300" aria-label="Page suivante"><CircleChevronRight size={26} /></button>
                         </div>
                     </div>
                 </section>

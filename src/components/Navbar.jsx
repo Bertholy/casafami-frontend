@@ -1,7 +1,7 @@
 import { Link, useLocation } from 'react-router-dom';
 import { useState } from 'react';
 import { useTheme } from '../context/ThemeContext';
-import { Moon, Sun, Menu, X, Calendar } from 'lucide-react';
+import { Calendar, CircleChevronRight, House, Menu, Moon, Search, Sun, X } from 'lucide-react';
 import Editable from './site/Editable';
 import LangSwitch from './LangSwitch';
 import Movable from './site/Movable';
@@ -19,7 +19,7 @@ function Navbar() {
     };
 
     const liens = [
-        { path: '/', label: t("Accueil") },
+        { path: '/', label: t("Accueil"), Icone: House },
         { path: '/services', label: t("Nos services") },
         { path: '/mes-rdv', label: t("Mes rendez-vous") },
     ];
@@ -41,12 +41,13 @@ function Navbar() {
                 {/* Liens (ordinateur) */}
                 <div className="hidden items-center gap-8 md:flex">
                     {liens.map(lien => (
-                        <Link key={lien.path} to={lien.path} className="mt-lien-nav" aria-current={location.pathname === lien.path ? 'page' : undefined}>{lien.label}</Link>
+                        <Link key={lien.path} to={lien.path} className="mt-lien-nav inline-flex items-center gap-1.5" aria-current={location.pathname === lien.path ? 'page' : undefined}>{lien.Icone && <lien.Icone className="h-[18px] w-[18px]" aria-hidden="true" />}{lien.label}</Link>
                     ))}
                 </div>
 
                 {/* Actions */}
                 <div className="flex items-center gap-2 sm:gap-3">
+                    <Link to="/mes-rdv" className={bouton} aria-label={t("Retrouver mon rendez-vous")} title={t("Retrouver mon rendez-vous")}><Search className="h-5 w-5" /></Link>
                     <LangSwitch variante="sombre" className="[&_svg]:hidden sm:[&_svg]:block" />
                     <button onClick={toggleTheme} className={bouton} aria-label={t("Changer de thème")}>
                         {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
@@ -66,8 +67,9 @@ function Navbar() {
                 <div className="border-t border-white/15 bg-black/20 px-4 py-3 md:hidden">
                     {liens.map(lien => (
                         <Link key={lien.path} to={lien.path} onClick={() => setMenuOpen(false)} aria-current={location.pathname === lien.path ? 'page' : undefined}
-                            className={`block border-l-4 px-4 py-3 text-sm font-extrabold uppercase tracking-wide text-white ${location.pathname === lien.path ? 'border-white bg-white/10' : 'border-transparent hover:bg-white/5'}`}>
+                            className={`flex items-center justify-between border-l-4 px-4 py-3 text-sm font-extrabold uppercase tracking-wide text-white ${location.pathname === lien.path ? 'border-white bg-white/10' : 'border-transparent hover:bg-white/5'}`}>
                             {lien.label}
+                            <CircleChevronRight className="h-5 w-5 text-white/80" aria-hidden="true" />
                         </Link>
                     ))}
                     <Link to="/prendre-rdv" onClick={() => setMenuOpen(false)} className="mt-btn-blanc-plein mt-3 w-full">

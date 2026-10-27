@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { SkeletonPage } from '../components/ui/skeleton';
+import { Checkbox } from '../components/ui/checkbox';
 import { useNavigate } from 'react-router-dom';
 import { BellRing, CalendarOff, Loader2, Plus, Save, Trash2 } from 'lucide-react';
 import axiosClient from '../api/axiosClient';
@@ -110,7 +111,7 @@ export default function AdminPlanning() {
                             {planning.horaires.map((h, i) => (
                                 <tr key={h.jourSemaine} className={h.ouvert ? '' : 'bg-slate-50/60 text-slate-400 dark:bg-gray-800/30'}>
                                     <td className="px-4 py-3 font-medium">{JOURS[h.jourSemaine - 1]}</td>
-                                    <td className="px-4 py-3"><input type="checkbox" checked={h.ouvert} onChange={e => setJour(i, { ouvert: e.target.checked })} aria-label={`${JOURS[h.jourSemaine - 1]} ouvert`} className="h-4 w-4 accent-teal-700" /></td>
+                                    <td className="px-4 py-3"><Checkbox checked={h.ouvert} onCheckedChange={valeur => setJour(i, { ouvert: valeur === true })} aria-label={`${JOURS[h.jourSemaine - 1]} ouvert`} /></td>
                                     <td className="px-4 py-3"><div className="flex items-center gap-2"><input type="time" disabled={!h.ouvert} value={h.matinDebut} onChange={e => setJour(i, { matinDebut: e.target.value })} aria-label={`${JOURS[h.jourSemaine - 1]} début du matin`} className={`${inputClass} w-28`} />→<input type="time" disabled={!h.ouvert} value={h.matinFin} onChange={e => setJour(i, { matinFin: e.target.value })} aria-label={`${JOURS[h.jourSemaine - 1]} fin du matin`} className={`${inputClass} w-28`} /></div></td>
                                     <td className="px-4 py-3"><div className="flex items-center gap-2"><input type="time" disabled={!h.ouvert} value={h.apresMidiDebut} onChange={e => setJour(i, { apresMidiDebut: e.target.value })} aria-label={`${JOURS[h.jourSemaine - 1]} début de l’après-midi`} className={`${inputClass} w-28`} />→<input type="time" disabled={!h.ouvert} value={h.apresMidiFin} onChange={e => setJour(i, { apresMidiFin: e.target.value })} aria-label={`${JOURS[h.jourSemaine - 1]} fin de l’après-midi`} className={`${inputClass} w-28`} /></div></td>
                                 </tr>

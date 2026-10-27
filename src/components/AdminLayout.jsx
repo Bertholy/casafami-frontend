@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import {
-    Activity, BarChart3, Baby, ShieldCheck, ClipboardCheck, DatabaseBackup, CalendarDays, CalendarPlus, Camera, CalendarClock, ChevronsLeft, ChevronsRight, ChevronUp, ExternalLink, FileSignature, KeyRound, LayoutDashboard, Loader2, LogOut, Menu, Moon, Palette,
+    Activity, BarChart3, Baby, Bolt, House, ShieldCheck, ClipboardCheck, DatabaseBackup, CalendarDays, CalendarPlus, Camera, CalendarClock, ChevronsLeft, ChevronsRight, ChevronUp, ExternalLink, FileSignature, KeyRound, Loader2, LogOut, Menu, Moon,
     Pencil, ScrollText, UsersRound, Stethoscope, Sun, Trash2, UserCog, UserRound, Users, X, HeartPulse,
 } from 'lucide-react';
 import axiosClient, { assetUrl } from '../api/axiosClient';
@@ -105,7 +105,7 @@ export default function AdminLayout({ title, subtitle, actions, children }) {
         {
             heading: 'Activité',
             items: [
-                { to: home, label: ['MEDECIN', 'SAGE_FEMME', 'INFIRMIERE'].includes(role) && !peut('RDV_ATTRIBUER') && !peut('RDV_CONFIRMER') ? 'Mon espace' : 'Tableau de bord', icon: LayoutDashboard, end: true, badge: 'rdv' },
+                { to: home, label: ['MEDECIN', 'SAGE_FEMME', 'INFIRMIERE'].includes(role) && !peut('RDV_ATTRIBUER') && !peut('RDV_CONFIRMER') ? 'Mon espace' : 'Tableau de bord', icon: House, end: true, badge: 'rdv' },
                 ...(['MEDECIN', 'SAGE_FEMME', 'INFIRMIERE'].includes(role) ? si('RDV_VOIR', { to: '/espace/mes-patients', label: 'Mes patients', icon: ClipboardCheck, badge: 'aAccepter' }) : []),
                 ...si('RDV_CREER', { to: home, state: { create: true }, label: 'Nouveau rendez-vous', icon: CalendarPlus, key: 'new' }),
                 ...si('RDV_VOIR', { to: '/calendrier', label: 'Calendrier', icon: CalendarDays, badge: 'calendrier' }),
@@ -139,7 +139,7 @@ export default function AdminLayout({ title, subtitle, actions, children }) {
                 ...si('PLANNING_GERER', { to: '/admin/planning', label: 'Horaires et congés', icon: CalendarClock }),
                 ...si('JOURNAL_VOIR', { to: '/admin/journal', label: 'Journal d’audit', icon: ScrollText, badge: 'journal' }),
                 ...si('SAUVEGARDES_GERER', { to: '/admin/sauvegardes', label: 'Sauvegardes', icon: DatabaseBackup }),
-                ...si('SITE_MODIFIER', { to: '/admin/personnalisation', label: 'Couleurs du site', icon: Palette }),
+                ...si('SITE_MODIFIER', { to: '/admin/personnalisation', label: 'Couleurs du site', icon: Bolt }),
                 ...si('SITE_MODIFIER', { to: '/?edition=1', label: 'Modifier le site', icon: Pencil, key: 'edit-site' }),
             ],
         },

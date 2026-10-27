@@ -101,6 +101,9 @@
 }
 .theme-montagne .mt-lien-nav:hover::after, .theme-montagne .mt-lien-nav[aria-current='page']::after { transform: scaleX(1); }
 
+/* ---- icônes au trait fin (maison, loupe, flèches cerclées, croix, menu…) : le même jeu sur tout le site public ---- */
+.theme-montagne svg.lucide { stroke-width: 1.25; }
+
 /* ---- ligne « libellé ........ valeur » (horaires) ---- */
 .theme-montagne .mt-ligne { display: flex; align-items: baseline; gap: .75rem; }
 .theme-montagne .mt-ligne > .mt-points { flex: 1; border-bottom: 1px solid #cfcfd4; transform: translateY(-.3rem); min-width: 1rem; }

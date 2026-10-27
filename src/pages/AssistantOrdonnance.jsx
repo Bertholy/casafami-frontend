@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { SkeletonPage } from '../components/ui/skeleton';
+import { Checkbox } from '../components/ui/checkbox';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { AlertOctagon, AlertTriangle, ClipboardCheck, Copy, Info, Loader2, Plus, Printer, Save, Sparkles, Trash2, UserRound } from 'lucide-react';
 import axiosClient from '../api/axiosClient';
@@ -180,7 +181,7 @@ export default function AssistantOrdonnance() {
                                 {lignes.map(l => (
                                     <li key={l.id} className={`rounded-2xl border p-3 transition ${l.actif ? 'border-slate-200 dark:border-gray-700' : 'border-dashed border-slate-300 opacity-60 dark:border-gray-700'}`}>
                                         <div className="flex items-start gap-3">
-                                            <input type="checkbox" checked={l.actif} onChange={e => setLigne(l.id, { actif: e.target.checked })} aria-label={`Inclure ${l.medicament || 'cette ligne'} dans l’ordonnance`} className="mt-3 h-4 w-4 accent-teal-700" />
+                                            <Checkbox checked={l.actif} onCheckedChange={valeur => setLigne(l.id, { actif: valeur === true })} aria-label={`Inclure ${l.medicament || 'cette ligne'} dans l’ordonnance`} className="mt-3" />
                                             <div className="grid flex-1 gap-2 sm:grid-cols-6">
                                                 <input value={l.medicament} onChange={e => setLigne(l.id, { medicament: e.target.value })} placeholder="Médicament" aria-label="Médicament" maxLength={150} className={`${inputClass} sm:col-span-6 font-medium`} />
                                                 <input value={l.posologie} onChange={e => setLigne(l.id, { posologie: e.target.value })} placeholder="Posologie (ex. 1 cp matin et soir)" aria-label="Posologie" maxLength={200} className={`${inputClass} sm:col-span-4`} />

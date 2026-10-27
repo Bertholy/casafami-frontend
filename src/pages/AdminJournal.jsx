@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { SkeletonTable } from '../components/ui/skeleton';
 import { useNavigate } from 'react-router-dom';
-import { ChevronLeft, ChevronRight, ScrollText } from 'lucide-react';
+import { CircleChevronLeft, CircleChevronRight, ScrollText } from 'lucide-react';
 import axiosClient from '../api/axiosClient';
 import AdminLayout from '../components/AdminLayout';
 import Notice from '../components/Notice';
@@ -77,9 +77,9 @@ export default function AdminJournal() {
                     {!loading && data.contenu.length === 0 && <div className="p-10 text-center text-sm text-slate-500">Aucun événement ne correspond à ces filtres.</div>}
                 </div>
                 <div className="flex items-center justify-end gap-2 border-t border-slate-200 px-4 py-3 text-xs text-slate-500 dark:border-gray-800">
-                    <button disabled={page <= 0} onClick={() => setPage(page - 1)} aria-label="Page précédente" className="rounded-lg border border-slate-200 p-1.5 disabled:opacity-40 dark:border-gray-700"><ChevronLeft size={16} /></button>
+                    <button disabled={page <= 0} onClick={() => setPage(page - 1)} aria-label="Page précédente" className="rounded-full text-slate-500 transition hover:text-(--mt-main) disabled:opacity-30 disabled:hover:text-slate-500 dark:text-gray-300"><CircleChevronLeft size={26} /></button>
                     <span>Page {page + 1} / {Math.max(1, data.totalPages)}</span>
-                    <button disabled={page + 1 >= data.totalPages} onClick={() => setPage(page + 1)} aria-label="Page suivante" className="rounded-lg border border-slate-200 p-1.5 disabled:opacity-40 dark:border-gray-700"><ChevronRight size={16} /></button>
+                    <button disabled={page + 1 >= data.totalPages} onClick={() => setPage(page + 1)} aria-label="Page suivante" className="rounded-full text-slate-500 transition hover:text-(--mt-main) disabled:opacity-30 disabled:hover:text-slate-500 dark:text-gray-300"><CircleChevronRight size={26} /></button>
                 </div>
             </section>
         </AdminLayout>

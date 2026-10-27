@@ -1,3 +1,4 @@
+import { useRef } from 'react';
 import { Link } from 'react-router-dom';
 import {
     Users,
@@ -12,6 +13,8 @@ import {
     Calendar,
     CheckSquare,
     Sparkles,
+    CircleChevronLeft,
+    CircleChevronRight,
 } from 'lucide-react';
 import Editable from '../components/site/Editable';
 import Movable from '../components/site/Movable';
@@ -45,6 +48,12 @@ function Accueil() {
     const planning = usePlanning();
     const horaires = summarizeHours(planning?.horaires);
     const numeroAppel = (content['accueil.tel.numero1']?.texte ?? '034 06 759 28').replace(/[^\d+]/g, '');
+    const galerie = useRef(null);
+    // fait défiler la galerie d'environ une photo vers la gauche (-1) ou vers la droite (1)
+    const defiler = sens => {
+        const zone = galerie.current;
+        if (zone) zone.scrollBy({ left: sens * Math.max(280, zone.clientWidth * 0.6), behavior: 'smooth' });
+    };
 
     return (
         <div className="overflow-hidden transition-colors">
@@ -222,10 +231,16 @@ function Accueil() {
             {/* ========== GALERIE ========== */}
             <section className="pb-20 transition-colors">
                 <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-                    <h2 className="mt-titre mt-regle mb-10 text-3xl md:text-4xl">{t("Le cabinet en images")}</h2>
-                    <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+                    <div className="mb-10 flex items-end justify-between gap-6">
+                        <h2 className="mt-titre mt-regle text-3xl md:text-4xl">{t("Le cabinet en images")}</h2>
+                        <div className="flex gap-1 text-teal-600 dark:text-teal-300">
+                            <button type="button" onClick={() => defiler(-1)} aria-label={t("Photo précédente")} className="rounded-full transition hover:opacity-70"><CircleChevronLeft className="h-10 w-10" /></button>
+                            <button type="button" onClick={() => defiler(1)} aria-label={t("Photo suivante")} className="rounded-full transition hover:opacity-70"><CircleChevronRight className="h-10 w-10" /></button>
+                        </div>
+                    </div>
+                    <div ref={galerie} className="-mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto scroll-smooth px-4 pb-2 [scrollbar-width:none] sm:mx-0 sm:px-0">
                         {GALERIE.map(src => (
-                            <img key={src} loading="lazy" decoding="async" src={src} alt="" className="aspect-[3/2] w-full object-cover" />
+                            <img key={src} loading="lazy" decoding="async" src={src} alt="" className="aspect-[3/2] w-[80%] shrink-0 snap-start object-cover sm:w-[45%] lg:w-[32%]" />
                         ))}
                     </div>
                 </div>

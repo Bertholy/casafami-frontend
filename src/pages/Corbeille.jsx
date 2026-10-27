@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { CalendarDays, RefreshCw, Trash2 } from 'lucide-react';
+import { CalendarDays, RotateCw, Trash2 } from 'lucide-react';
 import axiosClient from '../api/axiosClient';
 import AdminLayout from '../components/AdminLayout';
 import { getRoleLabel } from '../constants/app';
@@ -69,7 +69,7 @@ export default function Corbeille() {
                                         {superAdmin && <td className="px-4 py-3">{item.deletedBy ? `${item.deletedBy.nom} · ${getRoleLabel(item.deletedBy.role)}` : '—'}</td>}
                                         <td className="px-4 py-3">
                                             <div className="flex gap-1">
-                                                <button onClick={() => run({ type: 'restore', id: rdv.id })} title="Restaurer" aria-label="Restaurer" className="rounded-lg p-2 text-teal-700 transition hover:bg-teal-50 dark:text-teal-300 dark:hover:bg-teal-500/10"><RefreshCw size={16} /></button>
+                                                <button onClick={() => run({ type: 'restore', id: rdv.id })} title="Restaurer" aria-label="Restaurer" className="rounded-lg p-2 text-teal-700 transition hover:bg-teal-50 dark:text-teal-300 dark:hover:bg-teal-500/10"><RotateCw size={16} /></button>
                                                 {peutVider && <button onClick={() => setDialog({ type: 'delete', id: rdv.id })} title="Supprimer définitivement" aria-label="Supprimer définitivement" className="rounded-lg p-2 text-rose-700 transition hover:bg-rose-50 dark:text-rose-300 dark:hover:bg-rose-500/10"><Trash2 size={16} /></button>}
                                             </div>
                                         </td>

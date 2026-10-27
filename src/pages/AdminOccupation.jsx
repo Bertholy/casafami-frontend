@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
+import { CircleChevronLeft, CircleChevronRight, Loader2 } from 'lucide-react';
 import axiosClient from '../api/axiosClient';
 import AdminLayout from '../components/AdminLayout';
 import Notice from '../components/Notice';
@@ -44,9 +44,9 @@ export default function AdminOccupation() {
                     <div className="flex items-center gap-2">
                         {loading && <Loader2 size={16} className="animate-spin text-slate-400" />}
                         <button onClick={() => setDate(todayISO())} className={btnSecondary}>Aujourd’hui</button>
-                        <button onClick={() => setDate(decaler(date, -1))} aria-label="Jour précédent" className="rounded-xl border border-slate-200 p-2.5 hover:bg-slate-50 dark:border-gray-700 dark:hover:bg-gray-800"><ChevronLeft size={16} /></button>
+                        <button onClick={() => setDate(decaler(date, -1))} aria-label="Jour précédent" className="rounded-full text-slate-500 transition hover:text-(--mt-main) disabled:opacity-30 disabled:hover:text-slate-500 dark:text-gray-300"><CircleChevronLeft size={30} /></button>
                         <input type="date" value={date} onChange={e => e.target.value && setDate(e.target.value)} aria-label="Choisir le jour" className={`${inputClass} w-44`} />
-                        <button onClick={() => setDate(decaler(date, 1))} aria-label="Jour suivant" className="rounded-xl border border-slate-200 p-2.5 hover:bg-slate-50 dark:border-gray-700 dark:hover:bg-gray-800"><ChevronRight size={16} /></button>
+                        <button onClick={() => setDate(decaler(date, 1))} aria-label="Jour suivant" className="rounded-full text-slate-500 transition hover:text-(--mt-main) disabled:opacity-30 disabled:hover:text-slate-500 dark:text-gray-300"><CircleChevronRight size={30} /></button>
                     </div>
                 </div>
                 <OccupationGrid data={data} />

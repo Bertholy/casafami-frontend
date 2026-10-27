@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { AlertTriangle, ArrowLeft, Bot, Check, RotateCcw, SendHorizonal, Sparkles, Search, X } from 'lucide-react';
+import { AlertTriangle, ArrowLeft, Bot, Check, RotateCw, SendHorizonal, Sparkles, Search, X } from 'lucide-react';
 import { CATEGORIES, buildMotif, findRedFlags, getCategory, nextQuestion } from '../constants/motifFlows';
 import { AIDE, analyserDemande, normaliser, propositions } from '../constants/motifRecherche';
 import { useLang } from '../i18n/LangContext';
@@ -268,7 +268,7 @@ export default function MotifAssistant({ services = [], onApply, onClose }) {
                             {suggestedService && <p className="flex items-center gap-2 text-sm text-teal-800 dark:text-teal-300"><Sparkles size={16} />{t("Service suggéré :")} <strong>{suggestedService.nom}</strong></p>}
                             <div className="flex flex-wrap gap-2">
                                 <button onClick={() => onApply({ motif, serviceId: suggestedService?.id ?? null })} className="inline-flex items-center gap-2 rounded-xl bg-teal-700 px-5 py-2.5 text-sm font-bold text-white transition hover:bg-teal-800"><Check size={17} />{t("Utiliser ce motif")}</button>
-                                <button onClick={restart} className="inline-flex items-center gap-2 rounded-xl border border-slate-300 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800"><RotateCcw size={16} />{t("Recommencer")}</button>
+                                <button onClick={restart} className="inline-flex items-center gap-2 rounded-xl border border-slate-300 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800"><RotateCw size={16} />{t("Recommencer")}</button>
                             </div>
                         </div>
                     )}

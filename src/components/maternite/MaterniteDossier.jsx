@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { SkeletonList } from '../ui/skeleton';
+import { Checkbox } from '../ui/checkbox';
 import { AlertTriangle, Baby, CalendarClock, CheckCircle2, ClipboardPlus, HeartPulse, Loader2, Plus, Syringe, Trash2, X } from 'lucide-react';
 import axiosClient from '../../api/axiosClient';
 import Notice from '../Notice';
@@ -136,7 +137,7 @@ export default function MaterniteDossier({ telephone, peutSupprimer }) {
                                 <label className={label}>Cœur du bébé (bpm)<input type="number" min="60" max="220" value={formulaire.bcf} onChange={e => champ('bcf', e.target.value)} placeholder="ex. 140" className={petit} /></label>
                                 <label className={label}>Albuminurie<select value={formulaire.albuminurie} onChange={e => champ('albuminurie', e.target.value)} className={petit}><option value="">Non faite</option>{['NEG', '+', '++', '+++'].map(a => <option key={a}>{a}</option>)}</select></label>
                                 <label className={label}>Présentation<select value={formulaire.presentation} onChange={e => champ('presentation', e.target.value)} className={petit}><option value="">Non précisée</option>{['Céphalique', 'Siège', 'Transverse'].map(p => <option key={p}>{p}</option>)}</select></label>
-                                <label className="flex items-center gap-2 pt-6 text-sm font-medium"><input type="checkbox" checked={formulaire.oedemes} onChange={e => champ('oedemes', e.target.checked)} className="h-4 w-4 accent-teal-700" />Œdèmes</label>
+                                <label className="flex items-center gap-2 pt-6 text-sm font-medium"><Checkbox checked={formulaire.oedemes} onCheckedChange={valeur => champ('oedemes', valeur === true)} />Œdèmes</label>
                             </div>
                             <fieldset><legend className="mb-1 text-sm font-medium">Actes réalisés</legend>
                                 <div className="flex flex-wrap gap-2">{ACTES.map(([code, nom]) => (

@@ -574,4 +574,7 @@ export const MG = {
     "Nom trop court": "Fohy loatra ny anarana",
     "Âge invalide": "Taona tsy mety",
     "Texte trop court": "Fohy loatra ny lahatsoratra",
+    "Retrouver mon rendez-vous": "Hitady ny fotoanako",
+    "Photo précédente": "Sary teo aloha",
+    "Photo suivante": "Sary manaraka",
 };

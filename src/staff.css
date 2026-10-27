@@ -37,8 +37,7 @@
 .theme-staff {
     --radius-lg: .5rem; --radius-xl: .65rem; --radius-2xl: .85rem; --radius-3xl: 1rem;
     --shadow-sm: none; --shadow-md: 0 8px 24px rgba(2, 8, 20, .12); --shadow-lg: 0 16px 40px rgba(2, 8, 20, .18);
-    /* Police à empattements (Lora) ; les titres sont en gras italique, comme le modèle choisi. Pour revenir à l'ancienne police : 'Plus Jakarta Sans', 'Segoe UI', system-ui, sans-serif */
-    font-family: 'Lora', Georgia, 'Times New Roman', serif;
+    font-family: 'Plus Jakarta Sans', 'Segoe UI', system-ui, sans-serif;
 
     --st-page: #f4f7fa; --st-panel: #ffffff; --st-line: #e3e8ef;
     --st-side: #ffffff; --st-side-fg: #475569; --st-side-strong: #0f172a; --st-side-muted: #64748b; --st-side-hover: rgba(15, 23, 42, .05); --st-side-line: #e3e8ef;
@@ -70,8 +69,9 @@
     --color-slate-950: #070a0f; --color-slate-900: #0e131a; --color-slate-800: #18202b; --color-slate-700: #273140;
     --color-slate-500: #7a8698; --color-slate-400: #9ea9b8; --color-slate-300: #c5cdd8;
 }
-.theme-staff h1, .theme-staff h2, .theme-staff h3 { letter-spacing: -.01em; font-style: italic; }
-.theme-staff :is(h1, h2, h3):not([class*="font-"]) { font-weight: 700; }   /* les titres qui règlent déjà leur graisse (font-light, font-bold…) la gardent */
+.theme-staff h1, .theme-staff h2, .theme-staff h3 { letter-spacing: -.01em; }
+/* icônes au trait fin (maison, loupe, flèches cerclées, croix, menu, actualiser, réglages) : le même jeu que sur le site public */
+.theme-staff svg.lucide { stroke-width: 1.5; }
 .theme-staff .border-slate-200\/80, .theme-staff .border-slate-200 { border-color: var(--st-line); }
 .dark .theme-staff .border-gray-800, .dark .theme-staff .border-gray-700 { border-color: var(--st-line); }
 /* boutons pleins du personnel : le cyan de la marque, texte bleu nuit */

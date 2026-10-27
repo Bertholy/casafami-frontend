@@ -1,9 +1,12 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
+import { fileURLToPath } from 'node:url'
 
 export default defineConfig({
   plugins: [react(), tailwindcss()],
+  // « @/ » désigne le dossier src : c'est l'alias attendu par shadcn/ui (npx shadcn add …)
+  resolve: { alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) } },
   build: {
     rolldownOptions: {
       output: {

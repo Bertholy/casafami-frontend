@@ -1,9 +1,11 @@
 import { cva } from 'class-variance-authority';
 import { cn } from '../../lib/utils';
 
-// Carte shadcn/ui : bordure fine, pas d'ombre.
+// Carte shadcn/ui : bordure fine, pas d'ombre. Les classes sont exportées pour les blocs écrits à la main (constants/ui.js).
+export const carteClasses = 'rounded-xl border border-border bg-card text-card-foreground';
+
 export function Card({ className, ...props }) {
-    return <div className={cn('rounded-xl border border-border bg-card text-card-foreground', className)} {...props} />;
+    return <div className={cn(carteClasses, className)} {...props} />;
 }
 
 export function CardHeader({ className, ...props }) {

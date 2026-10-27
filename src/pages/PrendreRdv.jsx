@@ -29,7 +29,6 @@ import {
     Loader2,
     CheckCircle,
     AlertCircle,
-    ChevronRight,
     Home,
     MessageSquare,
     ShieldCheck,
@@ -295,12 +294,6 @@ function PrendreRdv() {
             {/* ========== HERO ========== */}
             <section className="px-4 pb-6 pt-10 sm:px-6 lg:px-8">
                 <div className="mx-auto max-w-7xl">
-                    <div className="mb-6 flex items-center gap-2 text-sm text-slate-500 dark:text-gray-400">
-                        <Link to="/" className="transition hover:text-teal-700">{t("Accueil")}</Link>
-                        <ChevronRight className="h-4 w-4" />
-                        <span className="font-medium text-slate-800 dark:text-white">{t("Prendre rendez-vous")}</span>
-                    </div>
-
                     <div className="text-center">
                         <span className="mb-4 inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-semibold text-teal-700 shadow-[0_0_0_1px_#dce9f0] dark:bg-gray-800 dark:text-teal-300 dark:shadow-none">
                             <Calendar className="h-4 w-4" />

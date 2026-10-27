@@ -5,6 +5,7 @@ import { CheckCircle2, Lock, RotateCcw, ShieldCheck, UserRound, UsersRound } fro
 import axiosClient from '../api/axiosClient';
 import AdminLayout from '../components/AdminLayout';
 import { Switch } from '../components/ui/switch';
+import { Checkbox } from '../components/ui/checkbox';
 import Notice from '../components/Notice';
 import { btnSecondary, card } from '../constants/ui';
 import { getRoleLabel } from '../constants/app';
@@ -233,8 +234,8 @@ function GroupeRoles({ groupe, roles, occupe, onBasculer }) {
                         <td key={role.role} className="px-2 py-3 text-center">
                             {permission.verrouille
                                 ? <span title="Réservé au super administrateur" className="inline-flex text-slate-400"><Lock size={15} aria-label="Réservé au super administrateur" /></span>
-                                : <input type="checkbox" className="h-4 w-4 accent-teal-700" checked={role.permissions.includes(permission.code)} disabled={Boolean(occupe)}
-                                    onChange={() => onBasculer(role, permission.code)} aria-label={`${permission.libelle} — ${getRoleLabel(role.role)}`} />}
+                                : <Checkbox checked={role.permissions.includes(permission.code)} disabled={Boolean(occupe)}
+                                    onCheckedChange={() => onBasculer(role, permission.code)} aria-label={`${permission.libelle} — ${getRoleLabel(role.role)}`} />}
                         </td>
                     ))}
                 </tr>
