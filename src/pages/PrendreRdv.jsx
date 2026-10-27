@@ -1,15 +1,20 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import axiosClient from '../api/axiosClient';
 import { apiErrorMessage } from '../utils/auth';
 import Editable from '../components/site/Editable';
-import MotifAssistant from '../components/MotifAssistant';
+import AssistantRdv from '../components/AssistantRdv';
+import ChoixParcours from '../components/ChoixParcours';
+import { Button } from '../components/ui/button';
+import { Input, Label, Textarea } from '../components/ui/input';
+import AutreDate from '../components/AutreDate';
+import { sonTransition } from '../utils/son';
+import { ajouterJours, formaterJour } from '../utils/jours';
 import { useAvailableSlots } from '../hooks/useAvailableSlots';
 import { explainNoSlots, libelleOuverture, usePlanning } from '../utils/horaires';
 import { formatPhoneInput, isPlausiblePhone } from '../utils/phone';
 import { todayISO } from '../constants/app';
-import { downloadReceiptImage } from '../utils/receipt';
-import { downloadRendezVousPdf } from '../api/rendezVousPdf';
+import BoutonTelecharger from '../components/BoutonTelecharger';
 import QrCode from '../components/QrCode';
 import ServiceSelect from '../components/ServiceSelect';
 import { lienSuivi } from '../utils/suivi';
@@ -26,18 +31,13 @@ import {
     AlertCircle,
     ChevronRight,
     Home,
-    Bot,
     MessageSquare,
     ShieldCheck,
-    Sparkles,
     Sunrise,
     Sunset,
 } from 'lucide-react';
 import { useLang } from '../i18n/LangContext';
 
-// Jours affichés en raccourcis : aujourd'hui et les cinq suivants (calcul sur des dates ISO, sans décalage d'heure d'été).
-const ajouterJours = (iso, n) => { const d = new Date(`${iso}T12:00:00Z`); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };
-const formaterJour = (iso, lang, options) => iso ? new Date(`${iso}T12:00:00Z`).toLocaleDateString(lang === 'mg' ? 'mg' : 'fr-FR', { timeZone: 'UTC', ...options }) : '';
 const heureCourte = heure => String(heure || '').slice(0, 5);
 
 function PrendreRdv() {
@@ -58,8 +58,13 @@ function PrendreRdv() {
     const [loading, setLoading] = useState(false);
     const [erreur, setErreur] = useState(null);
     const [succes, setSucces] = useState(null);
-    const [methode, setMethode] = useState(null);   // null : choix du parcours ; 'moi' : formulaire seul ; 'ia' : assistant puis formulaire
-    const [assistantOuvert, setAssistantOuvert] = useState(false);
+    // Trois pages, un seul composant (les réponses déjà données restent d'une page à l'autre) :
+    // /prendre-rdv (choix), /prendre-rdv/assistant (l'assistant pose les questions), /prendre-rdv/formulaire (formulaire déjà rempli avec les réponses).
+    const navigate = useNavigate();
+    const { pathname } = useLocation();
+    const mode = pathname.endsWith('/assistant') ? 'ia' : pathname.endsWith('/formulaire') ? 'moi' : 'choix';
+    const assistantOuvert = mode === 'ia';
+    const [autreDate, setAutreDate] = useState(false);               // « Une autre date ? » : Oui affiche les cases jour / mois / année
     const [erreurPdf, setErreurPdf] = useState('');
     const [cleCopiee, setCleCopiee] = useState(false);
     const [telephoneTouche, setTelephoneTouche] = useState(false);
@@ -74,22 +79,6 @@ function PrendreRdv() {
     useEffect(() => {
         if (succes) window.scrollTo({ top: 0, behavior: 'smooth' });
     }, [succes]);
-
-    // Changer de méthode, ou passer de l'assistant au formulaire : on repart du haut de la réservation.
-    useEffect(() => {
-        if (methode) document.getElementById('reservation')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }, [methode, assistantOuvert]);
-
-    // Le reçu n'est jamais téléchargé tout seul : le patient le demande lui-même (bouton ci-dessous, ou QR code dans « Mes RDV »).
-    const telechargerPdf = async () => {
-        try { await downloadRendezVousPdf(succes); setErreurPdf(''); }
-        catch (err) { console.error('Téléchargement du PDF impossible', err); setErreurPdf(err.message || t("Le téléchargement du PDF a échoué.")); }
-    };
-
-    const telechargerImage = async () => {
-        try { await downloadReceiptImage(succes); setErreurPdf(''); }
-        catch (err) { console.error('Création de l’image impossible', err); setErreurPdf(t("Le téléchargement de l’image a échoué.")); }
-    };
 
     const copierCle = async () => {
         try { await navigator.clipboard.writeText(succes.cleSuivi); setCleCopiee(true); window.setTimeout(() => setCleCopiee(false), 2000); }
@@ -126,27 +115,30 @@ function PrendreRdv() {
         { label: t("Heure"), fait: Boolean(heureChoisie) },
     ];
     const etapeCourante = etapes.findIndex(etape => !etape.fait);
-    // Le formulaire n'apparaît qu'après le choix du parcours, et pas pendant que l'assistant prépare le motif.
-    const formulaireVisible = Boolean(methode) && !assistantOuvert;
+    const formulaireVisible = mode === 'moi';
 
     const onChange = (e) => {
         const { name } = e.target;
         const value = name === 'telephoneClient' ? formatPhoneInput(e.target.value) : e.target.value;
-        setForm({ ...form, [name]: value, ...(name === 'dateRdv' ? { heureRdv: '' } : {}) });
+        setForm({ ...form, [name]: value });
     };
 
-    const appliquerMotif = ({ motif, serviceId }) => {
-        setForm(current => ({ ...current, motif, serviceId: serviceId && !current.serviceId ? String(serviceId) : current.serviceId }));
-        setAssistantOuvert(false);
+    // Passage du choix à l'assistant ou au formulaire, et de l'un à l'autre : tout ce qui a été saisi est dans `form`, rien n'est perdu.
+    const changerMode = nouveau => {
+        sonTransition();
+        navigate(nouveau === 'ia' ? '/prendre-rdv/assistant' : '/prendre-rdv/formulaire');
     };
 
-    // Le parcours se choisit ici : seul (formulaire) ou avec l'assistant, qui prépare le motif avant le formulaire.
-    const choisirMethode = nouvelle => { setMethode(nouvelle); setAssistantOuvert(nouvelle === 'ia'); };
-    const revenirAuChoix = () => { setMethode(null); setAssistantOuvert(false); };
+    // « Une autre date ? » : Oui efface la date choisie (les cases la remplacent) ; Non garde un des six jours proposés, sinon l'efface.
+    const choisirAutreDate = oui => {
+        setAutreDate(oui);
+        setForm(current => ((oui || !jours.includes(current.dateRdv)) ? { ...current, dateRdv: '', heureRdv: '' } : current));
+    };
 
-    const onSubmit = async (e) => {
-        e.preventDefault();
+    // Envoie la demande : depuis le bouton du formulaire, ou depuis la dernière réponse de l'assistant.
+    const envoyer = async () => {
         setErreur(null);
+        if (form.nomClient.trim().length < 2 || form.ageClient === '') { setErreur(t("Renseignez votre nom et votre âge pour continuer.")); return; }
         if (!heureChoisie) { setErreur(t("Choisissez un créneau encore disponible.")); return; }
         if (!isPlausiblePhone(form.telephoneClient)) { setErreur(t("Saisissez un numéro de téléphone valide, par exemple 034 12 345 67.")); return; }
         setLoading(true);
@@ -167,8 +159,8 @@ function PrendreRdv() {
                 // Même nom ou même numéro déjà réservé il y a moins de 7 jours : on indique le rendez-vous existant et la date de la prochaine réservation possible.
                 const jourFr = iso => String(iso).slice(0, 10).split('-').reverse().join('/');
                 setErreur(t(reponse.critere === 'TELEPHONE'
-                    ? "Une réservation existe déjà avec ce numéro de téléphone (rendez-vous du {date} à {heure}). Une nouvelle réservation sera possible à partir du {dispo}, ou dès que la première est annulée dans « Mes RDV »."
-                    : "Une réservation existe déjà à ce nom (rendez-vous du {date} à {heure}). Une nouvelle réservation sera possible à partir du {dispo}, ou dès que la première est annulée dans « Mes RDV ».",
+                    ? "Une réservation existe déjà avec ce numéro de téléphone (rendez-vous du {date} à {heure}). Une nouvelle réservation sera possible à partir du {dispo}, ou dès que la première est annulée dans « Mes rendez-vous »."
+                    : "Une réservation existe déjà à ce nom (rendez-vous du {date} à {heure}). Une nouvelle réservation sera possible à partir du {dispo}, ou dès que la première est annulée dans « Mes rendez-vous ».",
                     { date: jourFr(reponse.dateRdvExistant), heure: String(reponse.heureRdvExistant).slice(0, 5), dispo: `${jourFr(reponse.disponibleLe)} ${t('à')} ${String(reponse.disponibleLe).slice(11, 16)}` }));
             } else if (err.response?.status === 409) {
                 // Le créneau vient d'être pris : on le retire et on réaffiche ce qui reste libre ce jour-là.
@@ -180,13 +172,14 @@ function PrendreRdv() {
             setLoading(false);
         }
     };
+    const onSubmit = e => { e.preventDefault(); envoyer(); };
 
     // ========== PAGE DE SUCCÈS ==========
     if (succes) {
         return (
-            <div className="min-h-screen bg-linear-to-br from-teal-50 via-white to-teal-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 py-16 px-4">
+            <div className="min-h-screen py-16 px-4">
                 <div className="max-w-lg mx-auto">
-                    <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl p-8 md:p-10 text-center border border-teal-100 dark:border-gray-700">
+                    <div className="rounded-xl border border-border bg-card p-8 text-center text-card-foreground md:p-10">
                         <div className="w-20 h-20 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-6">
                             <CheckCircle className="w-12 h-12 text-green-600 dark:text-green-400" />
                         </div>
@@ -194,7 +187,7 @@ function PrendreRdv() {
                             {t("Demande enregistrée !")}
                         </h2>
                         <p className="text-gray-600 dark:text-gray-400 mb-8">
-                            {t("Votre rendez-vous est en attente de confirmation par le cabinet. Vous serez prévenu par SMS.")}
+                            {t("Votre rendez-vous est en cours de confirmation par le cabinet. Vous serez prévenu par message.")}
                         </p>
 
                         <div className="bg-linear-to-br from-teal-50 to-teal-100 dark:from-gray-700 dark:to-gray-700 rounded-2xl p-6 text-left space-y-3 mb-8">
@@ -219,14 +212,14 @@ function PrendreRdv() {
                                     <span className="select-all font-mono text-2xl font-bold tracking-widest text-gray-800 dark:text-white">{succes.cleSuivi}</span>
                                     <button type="button" onClick={copierCle} aria-label={t("Copier la clé")} className="rounded-lg border border-teal-200 p-2 text-teal-700 hover:bg-teal-50 dark:border-gray-600 dark:text-teal-300 dark:hover:bg-gray-700">{cleCopiee ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}</button>
                                 </div>
-                                <div className="mt-4 flex justify-center"><QrCode value={lienSuivi(succes.cleSuivi)} size={150} label={t("QR code de votre rendez-vous")} className="border border-slate-200" /></div>
-                                <p className="mt-3 text-sm text-gray-600 dark:text-gray-400">{t("Conservez cette clé ou photographiez le QR code : c’est le seul moyen de retrouver, annuler ou télécharger le reçu de ce rendez-vous dans « Mes RDV ».")}</p>
+                                <div className="mt-4 flex justify-center"><QrCode value={lienSuivi(succes.cleSuivi)} size={150} label={t("Code à scanner de votre rendez-vous")} className="border border-slate-200" /></div>
+                                <p className="mt-3 text-sm text-gray-600 dark:text-gray-400">{t("Conservez cette clé ou photographiez le code à scanner : c’est le seul moyen de retrouver, annuler ou télécharger le reçu de ce rendez-vous dans « Mes rendez-vous ».")}</p>
                             </div>
                         )}
 
                         <div className="grid gap-3 sm:grid-cols-2">
-                            <button onClick={telechargerPdf} className="rounded-xl bg-teal-700 px-3 py-3 font-semibold text-white hover:bg-teal-800">{t("Télécharger en PDF")}</button>
-                            <button onClick={telechargerImage} className="rounded-xl border border-teal-200 px-3 py-3 font-semibold text-teal-800 hover:bg-teal-50">{t("Télécharger en image")}</button>
+                            {/* le reçu n'est jamais téléchargé tout seul : le patient le demande, en PDF ou en image */}
+                            <BoutonTelecharger rdv={succes} onDebut={() => setErreurPdf('')} onErreur={setErreurPdf} className="rounded-xl bg-teal-700 px-3 py-3 font-semibold text-white hover:bg-teal-800 sm:col-span-2" />
                             <Link
                                 to="/"
                                 className="flex-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 py-3 rounded-xl font-semibold hover:bg-gray-200 dark:hover:bg-gray-600 transition flex items-center justify-center gap-2"
@@ -237,13 +230,13 @@ function PrendreRdv() {
                             <button
                                 onClick={() => {
                                     setSucces(null);
-                                    setMethode(null);
-                                    setAssistantOuvert(false);
+                                    setAutreDate(false);
+                                    navigate('/prendre-rdv');
                                     setForm({ nomClient: '', ageClient: '', telephoneClient: '', motif: '', dateRdv: '', heureRdv: '', serviceId: '' });
                                 }}
                                 className="flex-1 bg-teal-600 text-white py-3 rounded-xl font-semibold hover:bg-teal-700 transition"
                             >
-                                {t("Autre RDV")}
+                                {t("Autre rendez-vous")}
                             </button>
                         </div>
                         {erreurPdf && <p role="alert" className="mt-4 rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700">{t(erreurPdf)}</p>}
@@ -253,7 +246,49 @@ function PrendreRdv() {
         );
     }
 
-    // ========== FORMULAIRE ==========
+    // L'assistant : page principale (mode « ia »), ou simple bouton « Continuer avec l'assistant » à côté du formulaire (mode « moi »).
+    const assistant = (
+        <AssistantRdv
+            ouvert={assistantOuvert}
+            onOuvrir={() => changerMode('ia')}
+            form={form}
+            setForm={setForm}
+            services={services}
+            jours={jours}
+            aujourdhui={aujourdhui}
+            planning={planning}
+            creneaux={creneaux}
+            heureChoisie={heureChoisie}
+            slotsLoading={slotsLoading}
+            slotsError={slotsError}
+            onRafraichir={refreshSlots}
+            envoiEnCours={loading}
+            onConfirmer={envoyer}
+        />
+    );
+
+    // Récapitulatif de ce qui a déjà été renseigné : en carte à côté du formulaire, en panneau coloré sur la page de l'assistant.
+    const lignesResume = [
+        [t("Patient"), form.nomClient.trim()],
+        [t("Service"), serviceChoisi ? t(serviceChoisi.nom) : t("Je ne sais pas encore")],
+        [t("Date"), form.dateRdv ? formaterJour(form.dateRdv, lang, { weekday: 'long', day: 'numeric', month: 'long' }) : ''],
+        [t("Heure"), heureChoisie],
+    ];
+    const resume = (
+        <div className="rounded-xl border border-border bg-card p-6 text-card-foreground">
+            <h2 className="mb-4 flex items-center gap-2 text-lg font-bold text-gray-800 dark:text-white"><CheckCircle className="h-5 w-5 text-teal-600" />{t("Votre rendez-vous")}</h2>
+            <dl className="space-y-3 text-sm">
+                {lignesResume.map(([libelle, valeur]) => (
+                    <div key={libelle} className="flex items-baseline justify-between gap-4 border-b border-gray-100 pb-2 last:border-0 last:pb-0 dark:border-gray-700">
+                        <dt className="text-gray-500 dark:text-gray-400">{libelle}</dt>
+                        <dd className={`text-right font-semibold first-letter:uppercase ${valeur ? 'text-gray-800 dark:text-white' : 'text-gray-300 dark:text-gray-600'}`}>{valeur || '—'}</dd>
+                    </div>
+                ))}
+            </dl>
+        </div>
+    );
+
+    // ========== PAGE : ASSISTANT, PUIS FORMULAIRE SI LA PERSONNE CONTINUE ELLE-MÊME ==========
     return (
         <div className="transition-colors">
 
@@ -263,7 +298,7 @@ function PrendreRdv() {
                     <div className="mb-6 flex items-center gap-2 text-sm text-slate-500 dark:text-gray-400">
                         <Link to="/" className="transition hover:text-teal-700">{t("Accueil")}</Link>
                         <ChevronRight className="h-4 w-4" />
-                        <span className="font-medium text-slate-800 dark:text-white">{t("Prendre RDV")}</span>
+                        <span className="font-medium text-slate-800 dark:text-white">{t("Prendre rendez-vous")}</span>
                     </div>
 
                     <div className="text-center">
@@ -272,48 +307,48 @@ function PrendreRdv() {
                             {t("Réservation en ligne")}
                         </span>
                         <Editable id="rdv.hero.titre" as="h1" className="mb-3 text-4xl font-extrabold md:text-5xl">Prenez votre rendez-vous</Editable>
-                        <Editable id="rdv.hero.texte" as="p" className="mx-auto max-w-2xl text-lg text-slate-600 dark:text-gray-300">Remplissez le formulaire en 2 minutes. Confirmation par SMS.</Editable>
+                        <Editable id="rdv.hero.texte" as="p" className="mx-auto max-w-2xl text-lg text-slate-600 dark:text-gray-300">Réservez en quelques minutes. Confirmation par message.</Editable>
                     </div>
                 </div>
             </section>
 
-            {/* ========== CHOIX DU PARCOURS : SOI-MÊME OU PAR L'IA ========== */}
-            {!methode && (
-                <section id="reservation" className="pb-16 pt-4">
-                    <div className="mx-auto max-w-4xl px-4">
-                        <div className="mb-10 text-center">
-                            <Editable id="rdv.choix.titre" as="h2" className="mb-3 text-3xl font-extrabold md:text-4xl">Comment voulez-vous prendre rendez-vous ?</Editable>
-                            <Editable id="rdv.choix.texte" as="p" className="text-lg text-slate-600 dark:text-gray-300">Choisissez la façon la plus simple pour vous.</Editable>
-                        </div>
+            {/* ========== PAGE DE CHOIX : avec l'assistant ou moi-même ========== */}
+            {mode === 'choix' && <ChoixParcours onChoisir={changerMode} />}
 
-                        <div className="grid gap-6 md:grid-cols-2">
-                            <article className="mt-carte flex flex-col p-8">
-                                <span className="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-teal-100 text-teal-700 dark:bg-teal-500/15 dark:text-teal-300"><User className="h-7 w-7" /></span>
-                                <h3 className="mb-2 text-xl font-bold text-gray-800 dark:text-white">{t("Prendre RDV moi-même")}</h3>
-                                <p className="mb-8 flex-1 text-gray-600 dark:text-gray-300">{t("Vous remplissez vous-même le formulaire : service, motif, date et heure.")}</p>
-                                <button type="button" onClick={() => choisirMethode('moi')} className="mt-btn-ligne w-full py-3">{t("Remplir le formulaire")}</button>
-                            </article>
-
-                            <article className="mt-carte flex flex-col p-8">
-                                <span className="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-teal-600 text-white"><Bot className="h-7 w-7" /></span>
-                                <h3 className="mb-2 text-xl font-bold text-gray-800 dark:text-white">{t("Par l’IA")}</h3>
-                                <p className="mb-8 flex-1 text-gray-600 dark:text-gray-300">{t("Décrivez ce qui vous amène : l’assistant vous pose quelques questions, propose le service adapté et prépare le motif. Vous choisissez ensuite la date et l’heure.")}</p>
-                                <button type="button" onClick={() => choisirMethode('ia')} className="mt-btn w-full py-3">{t("Commencer avec l’assistant")}</button>
-                            </article>
-                        </div>
-
-                        <p className="mt-6 text-center text-sm text-slate-500 dark:text-gray-400">{t("Dans les deux cas, vous pouvez modifier le motif avant de confirmer.")}</p>
-                    </div>
-                </section>
-            )}
-
-            {/* ========== ASSISTANT IA, INTÉGRÉ À LA PAGE ========== */}
+            {/* ========== PAGE DE L'ASSISTANT : il pose les questions, la personne répond ========== */}
             {assistantOuvert && (
-                <section id="reservation" className="pb-16 pt-4">
-                    <div className="mx-auto max-w-2xl px-4">
-                        <MotifAssistant embarque services={services} onApply={appliquerMotif} onClose={revenirAuChoix} />
+            <section id="reservation" className="px-4 pb-24 pt-4">
+                {/* même présentation que le choix de parcours d'origine : une carte à deux panneaux, blanc (l'assistant) et coloré (le récapitulatif) */}
+                <div className="mx-auto max-w-4xl space-y-4">
+                    {erreur && (
+                        <div ref={erreurRef} role="alert" className="flex items-start gap-3 rounded-xl border-l-4 border-red-500 bg-red-50 p-4 dark:bg-red-900/20">
+                            <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-red-500" />
+                            <div>
+                                <p className="font-semibold text-red-700 dark:text-red-400">{t("Erreur")}</p>
+                                <p className="text-sm text-red-600 dark:text-red-300">{t(erreur)}</p>
+                            </div>
+                        </div>
+                    )}
+                    <div className="grid overflow-hidden rounded-[2rem] bg-white md:grid-cols-2 md:rounded-[3.5rem] dark:bg-gray-800">
+                        {assistant}
+
+                        <article className="flex flex-col items-center px-8 py-12 text-center text-white sm:px-12 md:py-14" style={{ background: 'var(--mt-main-fort)' }}>
+                            <span className="mb-5 flex h-11 w-11 items-center justify-center rounded-full border-2 border-white/80"><CheckCircle className="h-5 w-5" /></span>
+                            <h3 className="font-titre mb-6 text-balance text-3xl font-extrabold">{t("Votre rendez-vous")}</h3>
+                            <dl className="mb-8 w-full max-w-xs flex-1 space-y-3 text-sm">
+                                {lignesResume.map(([libelle, valeur]) => (
+                                    <div key={libelle} className="flex items-baseline justify-between gap-4 border-b border-white/25 pb-2 last:border-0">
+                                        <dt className="text-white/80">{libelle}</dt>
+                                        <dd className={`text-right font-semibold first-letter:uppercase ${valeur ? '' : 'text-white/40'}`}>{valeur || '—'}</dd>
+                                    </div>
+                                ))}
+                            </dl>
+                            <p className="mb-4 max-w-xs text-sm leading-relaxed text-white/90">{t("Ce que vous avez déjà répondu sera conservé.")}</p>
+                            <button type="button" onClick={() => changerMode('moi')} className="rounded-full border-2 border-white px-7 py-3 text-xs font-extrabold uppercase tracking-[0.14em] text-white transition hover:bg-white hover:text-(--mt-main-fort) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white">{t("Continuer moi-même")}</button>
+                        </article>
                     </div>
-                </section>
+                </div>
+            </section>
             )}
 
             {/* ========== ÉTAPES ========== */}
@@ -354,20 +389,11 @@ function PrendreRdv() {
                     <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-start">
                     <form onSubmit={onSubmit} className="mt-carte overflow-hidden">
 
-                        {/* ========== PARCOURS CHOISI ========== */}
-                        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-gray-100 px-6 py-4 dark:border-gray-700 md:px-8">
-                            <span className="inline-flex items-center gap-2 text-sm font-semibold text-teal-800 dark:text-teal-300">
-                                {methode === 'ia' ? <Bot className="h-4 w-4" /> : <User className="h-4 w-4" />}
-                                {methode === 'ia' ? t("Par l’IA") : t("Prendre RDV moi-même")}
-                            </span>
-                            <button type="button" onClick={revenirAuChoix} className="text-sm font-semibold text-teal-700 underline-offset-2 hover:underline dark:text-teal-300">{t("Changer de méthode")}</button>
-                        </div>
-
                         {/* ========== SECTION 1 : INFORMATIONS ========== */}
-                        <div className="p-6 md:p-8 border-b border-gray-100 dark:border-gray-700">
+                        <div className="p-6 md:p-8 border-b border-border">
                             <div className="flex items-center gap-3 mb-6">
-                                <div className="w-12 h-12 bg-linear-to-br from-teal-500 to-teal-700 rounded-xl flex items-center justify-center shadow-lg">
-                                    <User className="w-6 h-6 text-white" />
+                                <div className="flex size-11 items-center justify-center rounded-md bg-primary text-primary-foreground">
+                                    <User className="size-5" />
                                 </div>
                                 <div>
                                     <h2 className="text-xl font-bold text-gray-800 dark:text-white">
@@ -381,10 +407,8 @@ function PrendreRdv() {
 
                             <div className="space-y-4">
                                 <div>
-                                    <label htmlFor="nomClient" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                                        {t("Nom complet *")}
-                                    </label>
-                                    <input
+                                    <Label htmlFor="nomClient" className="mb-2 block">{t("Nom complet *")}</Label>
+                                    <Input
                                         id="nomClient"
                                         type="text"
                                         name="nomClient"
@@ -394,16 +418,13 @@ function PrendreRdv() {
                                         onChange={onChange}
                                         required
                                         placeholder={t("Ex: Ahmed Benali")}
-                                        className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-800 dark:text-white focus:border-teal-500 focus:outline-none transition"
                                     />
                                 </div>
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div>
-                                        <label htmlFor="ageClient" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                                            {t("Âge *")}
-                                        </label>
-                                        <input
+                                        <Label htmlFor="ageClient" className="mb-2 block">{t("Âge *")}</Label>
+                                        <Input
                                             id="ageClient"
                                             type="number"
                                             inputMode="numeric"
@@ -414,17 +435,14 @@ function PrendreRdv() {
                                             min="0"
                                             max="120"
                                             placeholder="30"
-                                            className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-800 dark:text-white focus:border-teal-500 focus:outline-none transition"
                                         />
                                     </div>
 
                                     <div>
-                                        <label htmlFor="telephoneClient" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                                            {t("Téléphone *")}
-                                        </label>
+                                        <Label htmlFor="telephoneClient" className="mb-2 block">{t("Téléphone *")}</Label>
                                         <div className="relative">
                                             <Phone className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                                            <input
+                                            <Input
                                                 id="telephoneClient"
                                                 type="tel"
                                                 name="telephoneClient"
@@ -438,7 +456,7 @@ function PrendreRdv() {
                                                 inputMode="tel"
                                                 autoComplete="tel"
                                                 maxLength={20}
-                                                className="w-full pl-10 pr-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-800 dark:text-white focus:border-teal-500 focus:outline-none transition"
+                                                className="pl-10"
                                             />
                                         </div>
                                         {telephoneTouche && form.telephoneClient !== '' && !isPlausiblePhone(form.telephoneClient)
@@ -448,28 +466,24 @@ function PrendreRdv() {
                                 </div>
 
                                 <div>
-                                    <label htmlFor="serviceId" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">{t("Service souhaité (facultatif)")}</label>
+                                    <Label htmlFor="serviceId" className="mb-2 block">{t("Service souhaité (facultatif)")}</Label>
                                     <ServiceSelect services={services} statut={servicesStatut} value={form.serviceId} onChange={serviceId => setForm(current => ({ ...current, serviceId }))} onRetry={chargerServices} />
                                 </div>
 
                                 <div>
-                                    <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-                                        <label htmlFor="motif" className="block text-sm font-semibold text-gray-700 dark:text-gray-300">{t("Motif du rendez-vous")}</label>
-                                        {methode === 'ia' && <button type="button" onClick={() => setAssistantOuvert(true)} className="inline-flex items-center gap-2 rounded-xl border border-teal-300 px-3 py-1.5 text-sm font-semibold text-teal-800 transition hover:bg-teal-50 dark:border-teal-700 dark:text-teal-200 dark:hover:bg-gray-800"><Bot className="h-4 w-4" />{t("Revoir avec l’assistant")}</button>}
-                                    </div>
-                                    {methode === 'moi' && <p className="mb-2 text-sm text-gray-500">{t("Décrivez brièvement la raison de votre visite. En cas d’urgence, appelez le cabinet ou les urgences.")}</p>}
-                                    {methode === 'ia' && form.motif && <p className="mb-2 flex items-start gap-2 rounded-xl bg-teal-50 px-3 py-2 text-sm text-teal-900 dark:bg-teal-500/10 dark:text-teal-100"><Sparkles className="mt-0.5 h-4 w-4 shrink-0" />{t("Motif préparé par l’assistant. Vérifiez-le et modifiez-le si besoin.")}</p>}
-                                    <textarea id="motif" name="motif" value={form.motif} onChange={onChange} maxLength={2000} rows={4} placeholder={t("Expliquez brièvement la raison de votre rendez-vous : suivi de grossesse, consultation prénatale, échographie, douleurs ou autre demande.")} className="w-full resize-y rounded-xl border-2 border-gray-200 bg-white px-4 py-3 text-gray-800 focus:border-teal-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white" />
+                                    <Label htmlFor="motif" className="mb-2 block">{t("Motif du rendez-vous")}</Label>
+                                    <p className="mb-2 text-sm text-gray-500">{t("En cas d’urgence, appelez le cabinet.")}</p>
+                                    <Textarea id="motif" name="motif" value={form.motif} onChange={onChange} maxLength={2000} rows={4} placeholder={t("Expliquez brièvement la raison de votre rendez-vous : suivi de grossesse, consultation prénatale, échographie, douleurs ou autre demande.")} className="resize-y" />
                                     <p className="mt-1 text-right text-xs text-gray-500">{form.motif.length}/2000</p>
                                 </div>
                             </div>
                         </div>
 
                         {/* ========== SECTION 2 : DATE ========== */}
-                        <div className="p-6 md:p-8 border-b border-gray-100 dark:border-gray-700">
+                        <div className="p-6 md:p-8 border-b border-border">
                             <div className="flex items-center gap-3 mb-6">
-                                <div className="w-12 h-12 bg-linear-to-br from-teal-500 to-teal-700 rounded-xl flex items-center justify-center shadow-lg">
-                                    <Calendar className="w-6 h-6 text-white" />
+                                <div className="flex size-11 items-center justify-center rounded-md bg-primary text-primary-foreground">
+                                    <Calendar className="size-5" />
                                 </div>
                                 <div>
                                     <h2 className="text-xl font-bold text-gray-800 dark:text-white">
@@ -489,8 +503,8 @@ function PrendreRdv() {
                                             key={iso}
                                             type="button"
                                             aria-pressed={choisi}
-                                            onClick={() => setForm(current => ({ ...current, dateRdv: iso, heureRdv: '' }))}
-                                            className={`rounded-xl border-2 px-2 py-2.5 text-center transition ${choisi ? 'border-teal-600 bg-teal-600 text-white shadow-md' : 'border-gray-200 bg-white text-gray-700 hover:border-teal-300 hover:bg-teal-50 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:hover:bg-gray-800'}`}
+                                            onClick={() => { setAutreDate(false); setForm(current => ({ ...current, dateRdv: iso, heureRdv: '' })); }}
+                                            className={`rounded-md border px-2 py-2.5 text-center transition-colors ${choisi ? 'border-primary bg-primary text-primary-foreground' : 'border-input bg-background text-foreground hover:bg-accent'}`}
                                         >
                                             <span className="block text-[11px] font-semibold uppercase tracking-wide opacity-80">{i === 0 ? t("Aujourd’hui") : i === 1 ? t("Demain") : formaterJour(iso, lang, { weekday: 'short' })}</span>
                                             <span className="block text-xl font-bold leading-tight">{formaterJour(iso, lang, { day: 'numeric' })}</span>
@@ -499,25 +513,15 @@ function PrendreRdv() {
                                     );
                                 })}
                             </div>
-                            <label htmlFor="dateRdv" className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">{t("Ou une autre date")}</label>
-                            <input
-                                id="dateRdv"
-                                type="date"
-                                name="dateRdv"
-                                value={form.dateRdv}
-                                onChange={onChange}
-                                required
-                                min={todayISO()}
-                                className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-800 dark:text-white focus:border-teal-500 focus:outline-none transition"
-                            />
+                            <AutreDate ouvert={autreDate || (Boolean(form.dateRdv) && !jours.includes(form.dateRdv))} onBascule={choisirAutreDate} valeur={form.dateRdv} min={aujourdhui} onChange={iso => setForm(current => ({ ...current, dateRdv: iso, heureRdv: '' }))} />
                         </div>
 
                         {/* ========== SECTION 3 : HEURE ========== */}
                         {form.dateRdv && (
-                            <div className="p-6 md:p-8 border-b border-gray-100 dark:border-gray-700">
+                            <div className="p-6 md:p-8 border-b border-border">
                                 <div className="flex items-center gap-3 mb-6">
-                                    <div className="w-12 h-12 bg-linear-to-br from-teal-500 to-teal-700 rounded-xl flex items-center justify-center shadow-lg">
-                                        <Clock className="w-6 h-6 text-white" />
+                                    <div className="flex size-11 items-center justify-center rounded-md bg-primary text-primary-foreground">
+                                        <Clock className="size-5" />
                                     </div>
                                     <div>
                                         <h2 className="text-xl font-bold text-gray-800 dark:text-white">
@@ -538,11 +542,11 @@ function PrendreRdv() {
                                         </p>
                                     </div>
                                 ) : slotsError ? (
-                                    <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-4 text-center">
+                                    <div className="border-l-2 border-red-500 py-1 pl-3">
                                         <p className="text-red-700 dark:text-red-300 text-sm">{t("Impossible de charger les créneaux.")} <button type="button" onClick={refreshSlots} className="font-semibold underline">{t("Réessayer")}</button></p>
                                     </div>
                                 ) : creneaux.length === 0 ? (
-                                    <div className="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-xl p-4 text-center">
+                                    <div className="border-l-2 border-amber-500 py-1 pl-3">
                                         <p className="text-orange-700 dark:text-orange-300 text-sm">
                                             {explainNoSlots(form.dateRdv, planning, todayISO(), t)} {t("Choisissez une autre date.")}
                                         </p>
@@ -562,10 +566,10 @@ function PrendreRdv() {
                                                             type="button"
                                                             aria-pressed={heureChoisie === h}
                                                             onClick={() => setForm({ ...form, heureRdv: h })}
-                                                            className={`py-3 rounded-xl text-sm font-bold transition-all ${
+                                                            className={`h-11 rounded-md border text-sm font-medium transition-colors ${
                                                                 heureChoisie === h
-                                                                    ? 'bg-teal-600 text-white shadow-lg scale-105'
-                                                                    : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-teal-100 dark:hover:bg-gray-600 hover:scale-105'
+                                                                    ? 'border-primary bg-primary text-primary-foreground'
+                                                                    : 'border-input bg-background text-foreground hover:bg-accent'
                                                             }`}
                                                         >
                                                             {h}
@@ -581,10 +585,11 @@ function PrendreRdv() {
 
                         {/* ========== BOUTON ========== */}
                         <div className="p-6 md:p-8 bg-gray-50 dark:bg-gray-800/50">
-                            <button
+                            <Button
                                 type="submit"
+                                size="lg"
                                 disabled={loading}
-                                className="mt-btn w-full py-4 text-lg disabled:cursor-wait disabled:opacity-60"
+                                className="w-full"
                             >
                                 {loading ? (
                                     <>
@@ -597,38 +602,28 @@ function PrendreRdv() {
                                         {t("Confirmer le rendez-vous")}
                                     </>
                                 )}
-                            </button>
+                            </Button>
+                            <p className="mt-3 text-center text-xs text-gray-500 dark:text-gray-400">
+                                {t("En confirmant, vous acceptez que le cabinet utilise ces informations pour gérer votre rendez-vous.")}{' '}
+                                <Link to="/confidentialite" className="font-semibold text-teal-700 underline dark:text-teal-300">{t("Politique de confidentialité")}</Link>
+                            </p>
                             <p aria-live="polite" className={`mt-3 text-center text-sm ${heureChoisie ? 'font-medium text-teal-700 dark:text-teal-300' : 'text-gray-500 dark:text-gray-400'}`}>
                                 {heureChoisie
                                     ? t("Rendez-vous le {date} à {heure}", { date: formaterJour(form.dateRdv, lang, { weekday: 'long', day: 'numeric', month: 'long' }), heure: heureChoisie })
                                     : form.dateRdv ? t("Choisissez un créneau pour continuer.") : t("Choisissez une date et un créneau pour continuer.")}
                             </p>
                             <p className="text-center text-xs text-gray-400 dark:text-gray-500 mt-2">
-                                {t("Sans inscription · Confirmation par SMS · Annulation gratuite")}
+                                {t("Sans inscription · Confirmation par message · Annulation gratuite")}
                             </p>
                         </div>
                     </form>
 
-                    <aside className="space-y-4 lg:sticky lg:top-28">
-                        <div className="rounded-3xl border border-teal-100 bg-white p-6 shadow-lg dark:border-gray-700 dark:bg-gray-800">
-                            <h2 className="mb-4 flex items-center gap-2 text-lg font-bold text-gray-800 dark:text-white"><CheckCircle className="h-5 w-5 text-teal-600" />{t("Votre rendez-vous")}</h2>
-                            <dl className="space-y-3 text-sm">
-                                {[
-                                    [t("Patient"), form.nomClient.trim()],
-                                    [t("Service"), serviceChoisi ? t(serviceChoisi.nom) : t("Je ne sais pas encore")],
-                                    [t("Date"), form.dateRdv ? formaterJour(form.dateRdv, lang, { weekday: 'long', day: 'numeric', month: 'long' }) : ''],
-                                    [t("Heure"), heureChoisie],
-                                ].map(([libelle, valeur]) => (
-                                    <div key={libelle} className="flex items-baseline justify-between gap-4 border-b border-gray-100 pb-2 last:border-0 last:pb-0 dark:border-gray-700">
-                                        <dt className="text-gray-500 dark:text-gray-400">{libelle}</dt>
-                                        <dd className={`text-right font-semibold first-letter:uppercase ${valeur ? 'text-gray-800 dark:text-white' : 'text-gray-300 dark:text-gray-600'}`}>{valeur || '—'}</dd>
-                                    </div>
-                                ))}
-                            </dl>
-                        </div>
-                        <ul className="space-y-3 rounded-3xl bg-teal-50 p-6 text-sm text-gray-700 dark:bg-gray-800 dark:text-gray-300">
+                    <aside className="space-y-4 lg:sticky lg:top-24 lg:max-h-[calc(100vh-7rem)] lg:overflow-y-auto">
+                        {assistant}
+                        {resume}
+                        <ul className="space-y-3 rounded-xl bg-muted p-6 text-sm text-muted-foreground">
                             <li className="flex items-start gap-3"><Clock className="mt-0.5 h-4 w-4 shrink-0 text-teal-600" />{libelleOuverture(planning?.horaires, t)}</li>
-                            <li className="flex items-start gap-3"><MessageSquare className="mt-0.5 h-4 w-4 shrink-0 text-teal-600" />{t("Confirmation par SMS")}</li>
+                            <li className="flex items-start gap-3"><MessageSquare className="mt-0.5 h-4 w-4 shrink-0 text-teal-600" />{t("Confirmation par message")}</li>
                             <li className="flex items-start gap-3"><ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-teal-600" />{t("Annulation possible jusqu’à 2 heures avant le rendez-vous")}</li>
                         </ul>
                     </aside>

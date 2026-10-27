@@ -11,7 +11,7 @@ export default function AgendaToday({ items, peutConfirmer, libelle, onConfirm, 
 
     if (!items.length) {
         return (
-            <div className="flex flex-col items-center justify-center gap-2 py-10 text-center text-sm text-slate-500 dark:text-gray-400">
+            <div className="flex flex-col items-center justify-center gap-2 py-6 text-center text-sm text-slate-500 dark:text-gray-400">
                 <CalendarCheck size={26} className="text-slate-300" />
                 Aucun rendez-vous aujourd’hui.
             </div>

@@ -21,7 +21,7 @@ const display = (question, value, t, lang) => {
  * Assistant qui pose des questions adaptées au motif de la visite et prépare un motif précis (modifiable).
  * Fonctionne sans connexion à un service externe : les parcours sont définis dans constants/motifFlows.js.
  */
-export default function MotifAssistant({ services = [], onApply, onClose, embarque = false }) {
+export default function MotifAssistant({ services = [], onApply, onClose }) {
     const { t, lang } = useLang();
     const [categoryId, setCategoryId] = useState(null);
     const [answers, setAnswers] = useState({});
@@ -57,21 +57,12 @@ export default function MotifAssistant({ services = [], onApply, onClose, embarq
     };
     const choisir = id => { setCategoryId(id); setAnswers({}); setOrder([]); setDraft(''); setMulti([]); };
 
-    // Défilement vers la dernière bulle à chaque nouvelle étape. Intégré à la page, l'assistant ne fait pas défiler la page à son ouverture.
-    const etatVu = useRef(null);
+    useEffect(() => { bottom.current?.scrollIntoView({ behavior: 'smooth', block: 'end' }); }, [order.length, categoryId, finished]);
     useEffect(() => {
-        const etat = `${order.length}|${categoryId}|${finished}|${analyse?.texte ?? ''}`;
-        const precedent = etatVu.current;
-        etatVu.current = etat;
-        if (precedent === etat || (precedent === null && embarque)) return;
-        bottom.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
-    }, [order.length, categoryId, finished, analyse, embarque]);
-    useEffect(() => {
-        if (embarque) return undefined;   // intégré à la page : Échap ne le ferme pas
         const onKey = event => { if (event.key === 'Escape') onClose(); };
         window.addEventListener('keydown', onKey);
         return () => window.removeEventListener('keydown', onKey);
-    }, [onClose, embarque]);
+    }, [onClose]);
 
     const answer = value => {
         setAnswers(current => ({ ...current, [question.id]: value }));
@@ -99,27 +90,15 @@ export default function MotifAssistant({ services = [], onApply, onClose, embarq
         : null;
 
     return (
-        <div
-            className={embarque ? 'w-full' : 'fixed inset-0 z-[90] flex items-end justify-center bg-slate-950/60 p-0 backdrop-blur-sm sm:items-center sm:p-4'}
-            onMouseDown={embarque ? undefined : e => { if (e.target === e.currentTarget) onClose(); }}
-        >
-            <section
-                role={embarque ? undefined : 'dialog'}
-                aria-modal={embarque ? undefined : 'true'}
-                aria-label={t("Assistant pour préciser votre motif")}
-                className={embarque
-                    ? 'flex w-full flex-col overflow-hidden rounded-3xl bg-white shadow-lg ring-1 ring-slate-200 dark:bg-gray-900 dark:ring-gray-800'
-                    : 'flex max-h-[92vh] w-full max-w-xl flex-col overflow-hidden rounded-t-3xl bg-white shadow-2xl dark:bg-gray-900 sm:rounded-3xl'}
-            >
+        <div className="fixed inset-0 z-[90] flex items-end justify-center bg-slate-950/60 p-0 backdrop-blur-sm sm:items-center sm:p-4" onMouseDown={e => { if (e.target === e.currentTarget) onClose(); }}>
+            <section role="dialog" aria-modal="true" aria-label={t("Assistant pour préciser votre motif")} className="flex max-h-[92vh] w-full max-w-xl flex-col overflow-hidden rounded-t-3xl bg-white shadow-2xl dark:bg-gray-900 sm:rounded-3xl">
                 <header className="flex items-center gap-3 border-b border-slate-200 bg-linear-to-r from-teal-600 to-teal-700 px-5 py-4 text-white dark:border-gray-800">
                     <span className="flex h-10 w-10 items-center justify-center rounded-full bg-white/20"><Bot size={22} /></span>
                     <div className="min-w-0 flex-1">
                         <h2 className="font-bold leading-tight">{t("Assistant de rendez-vous")}</h2>
                         <p className="text-xs text-teal-100">{t("Quelques questions pour préparer votre consultation")}</p>
                     </div>
-                    {embarque
-                        ? <button type="button" onClick={onClose} className="inline-flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-semibold hover:bg-white/15"><ArrowLeft size={16} />{t("Retour au choix")}</button>
-                        : <button onClick={onClose} aria-label={t("Fermer l’assistant")} className="rounded-lg p-2 hover:bg-white/15"><X size={20} /></button>}
+                    <button onClick={onClose} aria-label={t("Fermer l’assistant")} className="rounded-lg p-2 hover:bg-white/15"><X size={20} /></button>
                 </header>
 
                 <div className="flex-1 space-y-3 overflow-y-auto px-4 py-4" aria-live="polite">

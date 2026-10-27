@@ -52,7 +52,7 @@ export default function AdminOccupation() {
                 <OccupationGrid data={data} />
                 <ul className="mt-4 flex flex-wrap gap-x-5 gap-y-1 text-xs text-slate-500 dark:text-gray-400">
                     <li><span className="mr-1 inline-block rounded border border-dashed border-emerald-300 px-1.5 text-emerald-700 dark:text-emerald-300">libre</span>créneau disponible</li>
-                    <li><span className="mr-1 inline-block rounded bg-amber-100 px-1.5 text-amber-800 dark:bg-amber-500/15 dark:text-amber-300">patient</span>en attente</li>
+                    <li><span className="mr-1 inline-block rounded bg-amber-100 px-1.5 text-amber-800 dark:bg-amber-500/15 dark:text-amber-300">patient</span>en cours</li>
                     <li><span className="mr-1 inline-block rounded bg-emerald-100 px-1.5 text-emerald-800 dark:bg-emerald-500/15 dark:text-emerald-300">patient</span>confirmé</li>
                     <li><span className="mr-1 inline-block rounded bg-sky-100 px-1.5 text-sky-800 dark:bg-sky-500/15 dark:text-sky-300">patient</span>terminé</li>
                     <li>Ligne « À répartir » : rendez-vous à confier à quelqu’un — attribuez-les depuis le tableau de bord.</li>

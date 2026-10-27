@@ -1,0 +1,34 @@
+/*
+ * Thème « marine » de l'espace du personnel (nouveau design) : en sombre, bleu marine profond avec une lueur en haut à droite,
+ * panneaux à peine plus clairs que le fond et à fine bordure (pas de gros cadres) ; en clair, un blanc légèrement bleuté.
+ * Seules les couleurs changent : aucun composant ni aucune fonction n'est touché. Ce fichier redéfinit les jetons de staff.css.
+ *
+ * POUR REVENIR À L'ANCIEN ASPECT : supprimer la ligne « import './staff-marine.css'; » dans main.jsx (staff.css reste intact).
+ */
+
+/* ---- clair ---- */
+.theme-staff {
+    --st-page: #f1f3fb; --st-panel: #ffffff; --st-line: #e2e6f4;
+    --st-side: #ffffff; --st-side-hover: rgba(40, 50, 120, .06); --st-side-line: #e2e6f4;
+}
+
+/* ---- sombre : bleu marine ---- */
+.dark .theme-staff {
+    --st-page: #0e1130; --st-panel: #141842; --st-line: #242a63;
+    --st-side: #0a0d29; --st-side-fg: #b4b9e6; --st-side-strong: #ffffff; --st-side-muted: #8f95c9; --st-side-hover: rgba(255, 255, 255, .06); --st-side-line: #1b2058;
+
+    --sc-foreground: #eef0ff; --sc-card-foreground: #eef0ff;
+    --sc-popover: #161a44; --sc-popover-foreground: #eef0ff;
+    --sc-secondary: #1c2152; --sc-secondary-foreground: #eef0ff;
+    --sc-muted: #1c2152; --sc-muted-foreground: #959bd0;
+    --sc-accent: color-mix(in srgb, var(--mt-main) 16%, #141842); --sc-accent-foreground: #eef0ff;
+    --sc-input: #323a82;
+
+    /* gris du mode sombre : neutres bleu marine */
+    --color-gray-950: #0a0d29; --color-gray-900: #121640; --color-gray-800: #1c2152; --color-gray-700: #2b3170; --color-gray-600: #444b92;
+    --color-gray-500: #8289c0; --color-gray-400: #a2a8d8; --color-gray-300: #c7cbea; --color-gray-200: #e1e3f6;
+    --color-slate-950: #0a0d29; --color-slate-900: #121640; --color-slate-800: #1c2152; --color-slate-700: #2b3170;
+    --color-slate-500: #868dc3; --color-slate-400: #a4aad9; --color-slate-300: #c7cbea;
+}
+/* lueur du fond, en haut à droite (la page garde sa couleur unie, seule une image de fond s'ajoute) */
+.dark .theme-staff.min-h-screen { background-image: radial-gradient(1100px 560px at 85% -12%, #262c75 0%, transparent 62%); background-attachment: fixed; }

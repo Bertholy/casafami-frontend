@@ -6,3 +6,6 @@ export const estEspacePersonnel = pathname => pathname.startsWith('/medecin') ||
 
 /** Pages du site public qui acceptent des textes ajoutés, et leur identifiant. */
 export const PAGES_EDITABLES = { '/': 'accueil', '/services': 'services', '/prendre-rdv': 'rdv', '/mes-rdv': 'mesrdv' };
+
+/** Les pages de réservation (/prendre-rdv, /prendre-rdv/assistant, /prendre-rdv/formulaire) forment une seule page pour les titres et les textes modifiables. */
+export const pagePublique = pathname => (pathname.startsWith('/prendre-rdv') ? '/prendre-rdv' : pathname);

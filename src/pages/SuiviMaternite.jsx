@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
+import { SkeletonList } from '../components/ui/skeleton';
 import { Link, useNavigate } from 'react-router-dom';
-import { AlertTriangle, Baby, CalendarClock, HeartPulse, Loader2, Syringe } from 'lucide-react';
+import { AlertTriangle, Baby, CalendarClock, HeartPulse, Syringe } from 'lucide-react';
 import axiosClient from '../api/axiosClient';
 import AdminLayout from '../components/AdminLayout';
 import Notice from '../components/Notice';
@@ -39,14 +40,14 @@ export default function SuiviMaternite() {
     return (
         <AdminLayout title="Suivi maternité" subtitle="Grossesses en cours, consultations prénatales et vaccinations des enfants">
             <Notice tone="error" onClose={() => setError('')}>{error}</Notice>
-            {loading && <div className="flex justify-center p-10"><Loader2 className="animate-spin text-slate-400" size={20} /></div>}
+            {loading && <SkeletonList rows={4} />}
 
             <section className={`${card} p-5`}>
                 <h2 className="mb-4 flex items-center gap-2 font-semibold"><HeartPulse size={18} className="text-rose-600" />Grossesses en cours <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs dark:bg-gray-800">{grossesses.length}</span></h2>
                 {!loading && grossesses.length === 0 && <p className="py-6 text-center text-sm text-slate-500">Aucune grossesse en cours. Ouvrez-en une depuis le dossier d’une patiente.</p>}
                 <ul className="grid gap-3 lg:grid-cols-2">
                     {grossesses.map(g => (
-                        <li key={g.grossesseId} className={`rounded-2xl border p-4 ${g.rappels.length ? 'border-amber-300 bg-amber-50/40 dark:border-amber-500/30 dark:bg-amber-500/5' : 'border-slate-200 dark:border-gray-800'}`}>
+                        <li key={g.grossesseId} className={`rounded-2xl border p-4 ${g.rappels.length ? 'border-amber-300 dark:border-amber-500/30' : 'border-slate-200 dark:border-gray-800'}`}>
                             <div className="flex flex-wrap items-start justify-between gap-2">
                                 <div>
                                     <Link to={dossier(g.telephone)} className="font-semibold text-teal-800 hover:underline dark:text-teal-300">{g.nom || 'Patiente'}</Link>

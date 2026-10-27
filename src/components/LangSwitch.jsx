@@ -16,7 +16,7 @@ export default function LangSwitch({ className = '', variante = 'clair' }) {
             <div className="flex items-center">
                 {OPTIONS.map(([code, court, nom]) => {
                     const actif = lang === code;
-                    const styleActif = clair ? 'bg-teal-600 text-white shadow-sm' : 'bg-white text-(--mt-main) shadow-sm';
+                    const styleActif = clair ? 'bg-teal-600 text-white' : 'bg-white text-(--mt-main)';
                     const styleInactif = clair ? 'text-slate-500 hover:bg-slate-100 dark:text-gray-300 dark:hover:bg-gray-700' : 'text-white/90 hover:bg-white/20 hover:text-white';
                     return (
                         <button key={code} type="button" onClick={() => setLang(code)} aria-pressed={actif} lang={code} title={nom}

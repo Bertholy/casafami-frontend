@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { BadgeCheck, Bell, BellRing, CalendarCheck, CalendarClock, CalendarOff, CalendarPlus, CalendarX, CheckCheck, KeyRound, ShieldAlert, Trash2, UserCheck, UserMinus } from 'lucide-react';
+import { BadgeCheck, Bell, BellRing, CalendarCheck, CalendarClock, CalendarOff, CalendarPlus, CalendarX, CheckCheck, KeyRound, ShieldAlert, ShieldCheck, Trash2, UserCheck, UserMinus } from 'lucide-react';
 import axiosClient from '../api/axiosClient';
 
 const REFRESH_MS = 30000;
@@ -12,6 +12,9 @@ const ICONES = {
     RDV_ACCEPTE: { Icone: UserCheck, classe: 'bg-teal-100 text-teal-700 dark:bg-teal-500/15 dark:text-teal-300' },
     RDV_CONFIRME: { Icone: BadgeCheck, classe: 'bg-sky-100 text-sky-700 dark:bg-sky-500/15 dark:text-sky-300' },
     MOT_DE_PASSE: { Icone: KeyRound, classe: 'bg-sky-100 text-sky-700 dark:bg-sky-500/15 dark:text-sky-300' },
+    ROLE_ATTRIBUE: { Icone: ShieldCheck, classe: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300' },
+    ROLE_MODIFIE: { Icone: ShieldCheck, classe: 'bg-violet-100 text-violet-700 dark:bg-violet-500/15 dark:text-violet-300' },
+    ACCES_MODIFIE: { Icone: KeyRound, classe: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300' },
     SAUVEGARDE_ECHEC: { Icone: ShieldAlert, classe: 'bg-rose-100 text-rose-700 dark:bg-rose-500/15 dark:text-rose-300' },
     RDV_RETIRE: { Icone: UserMinus, classe: 'bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300' },
     RDV_ANNULE: { Icone: CalendarX, classe: 'bg-rose-100 text-rose-700 dark:bg-rose-500/15 dark:text-rose-300' },
@@ -75,13 +78,13 @@ export default function NotificationBell({ onOpenRdv }) {
     return (
         <div ref={conteneur} className="relative">
             <button onClick={() => { setOuvert(courant => !courant); charger(); }} aria-label={nb ? `${nb} notification${nb > 1 ? 's' : ''} non lue${nb > 1 ? 's' : ''}` : 'Notifications'} aria-expanded={ouvert} title="Notifications"
-                className={`relative rounded-xl border p-2.5 transition hover:bg-slate-100 dark:hover:bg-gray-800 ${nb ? 'border-teal-300 text-teal-700 dark:border-teal-500/40 dark:text-teal-300' : 'border-slate-200 text-slate-600 dark:border-gray-700 dark:text-gray-300'}`}>
-                {nb ? <BellRing size={17} /> : <Bell size={17} />}
+                className={`relative inline-flex h-9 w-9 items-center justify-center rounded-lg border bg-(--st-panel) transition hover:bg-slate-100 dark:hover:bg-gray-800 ${nb ? 'border-teal-300 text-teal-700 dark:border-teal-500/40 dark:text-teal-300' : 'border-(--st-line) text-slate-600 dark:text-gray-300'}`}>
+                {nb ? <BellRing size={16} /> : <Bell size={16} />}
                 {nb > 0 && <span className="absolute -right-1.5 -top-1.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-rose-600 px-1 text-[11px] font-bold text-white ring-2 ring-white dark:ring-gray-900">{nb > 9 ? '9+' : nb}</span>}
             </button>
 
             {ouvert && (
-                <div role="dialog" aria-label="Notifications" className="absolute right-0 top-full z-50 mt-2 w-[min(24rem,calc(100vw-2rem))] overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl dark:border-gray-700 dark:bg-gray-900">
+                <div role="dialog" aria-label="Notifications" className="absolute right-0 top-full z-50 mt-2 w-[min(24rem,calc(100vw-2rem))] overflow-hidden rounded-xl border border-slate-200 bg-white shadow-lg dark:border-gray-800 dark:bg-gray-900">
                     <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3 dark:border-gray-800">
                         <h2 className="text-sm font-semibold">Notifications{nb > 0 ? ` (${nb} non lue${nb > 1 ? 's' : ''})` : ''}</h2>
                         {nb > 0 && <button onClick={toutLire} className="inline-flex items-center gap-1 text-xs font-medium text-teal-700 hover:underline dark:text-teal-300"><CheckCheck size={14} />Tout marquer comme lu</button>}

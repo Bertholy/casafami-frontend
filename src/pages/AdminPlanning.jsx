@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { SkeletonPage } from '../components/ui/skeleton';
 import { useNavigate } from 'react-router-dom';
 import { BellRing, CalendarOff, Loader2, Plus, Save, Trash2 } from 'lucide-react';
 import axiosClient from '../api/axiosClient';
@@ -82,7 +83,7 @@ export default function AdminPlanning() {
         } catch (err) { setError(apiErrorMessage(err, 'Envoi des rappels impossible.')); }
     };
 
-    if (!planning) return <AdminLayout title="Horaires et congés"><Notice tone="error">{error}</Notice>{!error && <div className="flex items-center justify-center gap-2 p-12 text-sm text-slate-500"><Loader2 className="animate-spin" size={18} />Chargement…</div>}</AdminLayout>;
+    if (!planning) return <AdminLayout title="Horaires et congés"><Notice tone="error">{error}</Notice>{!error && <SkeletonPage />}</AdminLayout>;
 
     return (
         <AdminLayout title="Horaires et congés" subtitle="Les créneaux proposés aux patients sont calculés à partir de ces réglages">

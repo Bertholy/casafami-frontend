@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import {
-    Activity, BarChart3, Baby, ShieldCheck, ClipboardCheck, DatabaseBackup, CalendarDays, CalendarPlus, Camera, CalendarClock, ExternalLink, FileSignature, KeyRound, LayoutDashboard, Loader2, LogOut, Menu, Moon, Palette,
+    Activity, BarChart3, Baby, ShieldCheck, ClipboardCheck, DatabaseBackup, CalendarDays, CalendarPlus, Camera, CalendarClock, ChevronsLeft, ChevronsRight, ChevronUp, ExternalLink, FileSignature, KeyRound, LayoutDashboard, Loader2, LogOut, Menu, Moon, Palette,
     Pencil, ScrollText, UsersRound, Stethoscope, Sun, Trash2, UserCog, UserRound, Users, X, HeartPulse,
 } from 'lucide-react';
 import axiosClient, { assetUrl } from '../api/axiosClient';
@@ -14,6 +14,12 @@ import { APP_NAME, getRoleLabel } from '../constants/app';
 import { convertirPhoto } from '../utils/image';
 import { apiErrorMessage, clearSession, getEmail, getRole, homeForRole, majPermissions, peut } from '../utils/auth';
 import ChampMotDePasse from './ChampMotDePasse';
+import CommandPalette from './CommandPalette';
+import NiveauDefilement from './NiveauDefilement';
+import Toaster from './ui/toaster';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from './ui/dropdown-menu';
+import { Tooltip, TooltipProvider } from './ui/tooltip';
+import { toast } from '../lib/toast';
 
 /**
  * Coquille commune de tous les espaces du personnel : barre latérale, en-tête, recherche patient,
@@ -29,10 +35,31 @@ export default function AdminLayout({ title, subtitle, actions, children }) {
     const [menuOpen, setMenuOpen] = useState(false);
     const [profile, setProfile] = useState(null);
     const [uploading, setUploading] = useState(false);
-    const [photoError, setPhotoError] = useState('');
-    const [photoInfo, setPhotoInfo] = useState('');
+    const [paletteOpen, setPaletteOpen] = useState(false);
     const fileInput = useRef(null);
     const [passwordOpen, setPasswordOpen] = useState(false);
+    // Par défaut le menu se réduit tout seul à ses icônes (un peu plus grandes) et s'élargit avec les noms dès que la souris est dessus.
+    // Le bouton du bas permet de le garder ouvert en permanence ; ce choix est gardé sur cet appareil (« menu-ouvert-fixe »).
+    const [reduit, setReduit] = useState(() => { try { return localStorage.getItem('menu-ouvert-fixe') !== '1'; } catch { return true; } });
+    // Sections du menu repliables (petite flèche à droite du titre) : celles qui sont fermées sont gardées sur cet appareil.
+    const [fermees, setFermees] = useState(() => {
+        try { const liste = JSON.parse(localStorage.getItem('menu-sections-fermees') || '[]'); return Array.isArray(liste) ? liste : []; } catch { return []; }
+    });
+    const basculerSection = titre => setFermees(liste => {
+        const suivante = liste.includes(titre) ? liste.filter(autre => autre !== titre) : [...liste, titre];
+        try { localStorage.setItem('menu-sections-fermees', JSON.stringify(suivante)); } catch { /* stockage indisponible : le choix n'est pas gardé */ }
+        return suivante;
+    });
+    // Menu réduit : il s'élargit tant que la souris (ou le clavier) est dessus, et redevient une barre d'icônes quand elle s'en va.
+    // Il reste élargi tant que le menu du compte est ouvert (ce menu s'affiche hors de la barre).
+    const [survol, setSurvol] = useState(false);
+    const [compteOuvert, setCompteOuvert] = useState(false);
+    const compact = reduit && !survol && !compteOuvert;
+    const basculerMenu = () => setReduit(valeur => {
+        const suivant = !valeur;
+        try { localStorage.setItem('menu-ouvert-fixe', suivant ? '0' : '1'); } catch { /* stockage indisponible : le choix n'est pas gardé */ }
+        return suivant;
+    });
 
     useEffect(() => {
         let cancelled = false;
@@ -44,24 +71,31 @@ export default function AdminLayout({ title, subtitle, actions, children }) {
         return () => { cancelled = true; };
     }, []);
 
+    // Ctrl K (ou Cmd K) ouvre la recherche de page, comme dans les consoles d'administration modernes.
+    useEffect(() => {
+        const touche = event => {
+            if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') { event.preventDefault(); setPaletteOpen(ouvert => !ouvert); }
+        };
+        window.addEventListener('keydown', touche);
+        return () => window.removeEventListener('keydown', touche);
+    }, []);
+
     const logout = () => { clearSession(); navigate('/medecin/login'); };
 
     const uploadPhoto = async event => {
         const file = event.target.files?.[0];
         event.target.value = '';
         if (!file) return;
-        setUploading(true); setPhotoError(''); setPhotoInfo('Conversion de la photo en JPEG…');
+        setUploading(true);
         try {
             const photo = await convertirPhoto(file);   // convention : JPEG, 1600 px au plus, avant tout envoi
-            setPhotoInfo('Envoi de la photo…');
             const body = new FormData();
             body.append('photo', photo.fichier);
             const { data } = await axiosClient.put('/profile/photo', body, { headers: { 'Content-Type': 'multipart/form-data' } });
             setProfile(data);
-            setPhotoInfo(`${photo.resume} Photo enregistrée.`);
+            toast.success(`${photo.resume} Photo enregistrée.`);
         } catch (err) {
-            setPhotoInfo('');
-            setPhotoError(err.response ? apiErrorMessage(err, 'La photo n’a pas pu être enregistrée.') : err.message);
+            toast.error(err.response ? apiErrorMessage(err, 'La photo n’a pas pu être enregistrée.') : err.message);
         } finally { setUploading(false); }
     };
 
@@ -111,92 +145,153 @@ export default function AdminLayout({ title, subtitle, actions, children }) {
         },
     ].filter(section => section.items.length > 0);
 
-    const linkClass = ({ isActive }) => `group flex items-center gap-3 rounded-2xl px-3.5 py-2.5 text-sm transition ${
-        isActive ? 'bg-(--mt-main) font-bold text-(--mt-sur-main) shadow-[0_10px_24px_rgba(3,204,230,.28)]' : 'font-medium text-slate-300 hover:bg-white/8 hover:text-white'} focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-teal-300`;
+    // L'action principale sort de la liste : un bouton plein en haut du menu. Les autres pages gardent leur ordre.
+    const nouveau = sections.flatMap(section => section.items).find(item => item.key === 'new');
+    const sectionsMenu = sections.map(section => ({ ...section, items: section.items.filter(item => item.key !== 'new') })).filter(section => section.items.length > 0);
+
+    // Menu compact : la hauteur des lignes s'adapte à la hauteur de l'écran pour que tout tienne sans défiler.
+    const linkClass = ({ isActive }) => `group relative flex items-center gap-2.5 rounded-md px-2.5 transition-transform duration-150 ${compact ? 'origin-center lg:justify-center lg:px-0 hover:scale-110' : 'origin-left hover:scale-[1.04]'} py-[clamp(3px,0.75vh,8px)] text-[13px] leading-tight transition ${
+        isActive ? 'bg-(--mt-main)/15 font-bold text-(--st-side-strong) before:absolute before:inset-y-1.5 before:left-0 before:w-[3px] before:rounded-full before:bg-(--mt-main)' : 'font-medium text-(--st-side-fg) hover:bg-(--st-side-hover) hover:text-(--st-side-strong)'} focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-(--mt-main)`;
+
+    const nomAffiche = profile?.nom || getEmail();
+    const avatar = (taille = 'h-8 w-8') => (
+        <span className={`flex ${taille} shrink-0 items-center justify-center overflow-hidden rounded-full bg-(--mt-main)/20 text-(--mt-main-fort) ring-1 ring-(--st-line) dark:text-(--mt-main-clair)`}>
+            {profile?.photoUrl ? <img src={assetUrl(profile.photoUrl)} alt="" className="h-full w-full object-cover" /> : <UserRound size={16} />}
+        </span>
+    );
+    const boutonEntete = 'relative h-9 w-9 items-center justify-center rounded-lg border border-(--st-line) bg-(--st-panel) text-slate-600 transition hover:bg-slate-100 dark:text-gray-300 dark:hover:bg-gray-800';
+
+    // Pages proposées par la recherche (Ctrl K) : celles du menu, plus le site public et le changement de thème.
+    const pages = [
+        ...sections.flatMap(section => section.items.map(item => ({ id: `${item.to}-${item.label}`, label: item.label, groupe: section.heading, icon: item.icon, onSelect: () => navigate(item.to, { state: item.state }) }))),
+        { id: 'site', label: 'Voir le site public', groupe: 'Site', icon: ExternalLink, onSelect: () => navigate('/') },
+        { id: 'theme', label: theme === 'dark' ? 'Passer au thème clair' : 'Passer au thème sombre', groupe: 'Affichage', icon: theme === 'dark' ? Sun : Moon, onSelect: toggleTheme },
+    ];
 
     return (
-        <div className="theme-staff min-h-screen bg-[#f1f7fa] text-slate-800 dark:bg-gray-950 dark:text-gray-100">
-            <aside className={`${menuOpen ? 'translate-x-0' : '-translate-x-full'} fixed inset-y-0 left-0 z-40 flex w-72 flex-col bg-[#0e2a38] text-slate-200 transition-transform duration-200 lg:inset-y-3 lg:left-3 lg:translate-x-0 lg:rounded-[2rem] lg:shadow-[0_24px_60px_rgba(14,42,56,.35)]`}>
-                <div className="flex h-20 items-center gap-3 px-6">
-                    <img src="/logo_casafami.png" alt="" className="h-11 w-11 rounded-2xl bg-white object-contain p-1" />
-                    <div>
-                        <div className="font-bold tracking-wide text-white">{APP_NAME}</div>
-                        <div className="flex items-center gap-1 text-xs text-teal-300"><HeartPulse size={12} />Gestion du cabinet</div>
+        <TooltipProvider delayDuration={250}>
+            <div className="theme-staff min-h-screen bg-(--st-page) text-slate-800 dark:text-gray-100">
+                <aside onMouseEnter={() => setSurvol(true)} onMouseLeave={() => setSurvol(false)} onFocus={() => setSurvol(true)} onBlur={event => { if (!event.currentTarget.contains(event.relatedTarget)) setSurvol(false); }}
+                    className={`${menuOpen ? 'translate-x-0' : '-translate-x-full'} fixed inset-y-0 left-0 z-40 flex w-60 ${compact ? 'lg:w-[4.5rem]' : ''} ${reduit && !compact ? 'lg:shadow-2xl' : ''} flex-col border-r border-(--st-side-line) bg-(--st-side) text-(--st-side-fg) transition-[transform,width] duration-200 lg:translate-x-0`}>
+                    <div className={`flex h-14 shrink-0 items-center gap-2.5 border-b border-(--st-side-line) px-4 ${compact ? 'lg:justify-center lg:px-0' : ''}`}>
+                        <img src="/logo_casafami.png" alt="" className="h-9 w-9 rounded-md bg-white object-contain p-0.5 ring-1 ring-(--st-side-line)" />
+                        <div className={`min-w-0 ${compact ? 'lg:hidden' : ''}`}>
+                            <div className="text-sm font-bold leading-tight tracking-wide text-(--st-side-strong)">{APP_NAME}</div>
+                            <div className="flex items-center gap-1 text-[11px] leading-tight text-(--mt-main-fort) dark:text-(--mt-main)"><HeartPulse size={11} />Gestion du cabinet</div>
+                        </div>
+                        <button onClick={() => setMenuOpen(false)} className="ml-auto rounded-lg p-1 hover:bg-(--st-side-hover) lg:hidden" aria-label="Fermer le menu"><X size={19} /></button>
                     </div>
-                    <button onClick={() => setMenuOpen(false)} className="ml-auto rounded-lg p-1 hover:bg-white/10 lg:hidden" aria-label="Fermer le menu"><X size={19} /></button>
-                </div>
 
-                <nav className="flex-1 space-y-6 overflow-y-auto px-4 py-4" aria-label="Navigation principale">
-                    {sections.map(section => (
-                        <div key={section.heading}>
-                            <div className="mb-2 px-3 text-[11px] font-semibold uppercase tracking-widest text-slate-500">{section.heading}</div>
-                            <div className="space-y-1">
-                                {section.items.map(item => {
-                                    const Icon = item.icon;
-                                    const n = item.badge ? nombre(item.badge) : 0;
-                                    return (
-                                        <NavLink key={item.key || item.label} to={item.to} state={item.state} end={item.end}
-                                            onClick={() => setMenuOpen(false)}
-                                            className={item.key ? () => linkClass({ isActive: false }) : linkClass}>
-                                            <Icon size={18} className="shrink-0" />{item.label}
-                                            {n > 0 && <span aria-label={`${n} nouveau${n > 1 ? 'x' : ''}`} className="ml-auto inline-flex min-w-[1.5rem] items-center justify-center rounded-full bg-sky-500 px-1.5 py-0.5 text-[11px] font-bold leading-none tabular-nums text-white shadow-sm">{n > 99 ? '99+' : n}</span>}
-                                        </NavLink>
-                                    );
-                                })}
+                    {nouveau && (
+                        <div className="shrink-0 px-2.5 pt-3">
+                            <Tooltip label={compact ? nouveau.label : undefined} side="right">
+                                <NavLink to={nouveau.to} state={nouveau.state} aria-label={compact ? nouveau.label : undefined} onClick={() => setMenuOpen(false)}
+                                    className={`flex items-center justify-center gap-2 rounded-lg bg-(--mt-bouton) px-3 py-2 text-[13px] font-bold text-(--mt-sur-bouton) transition hover:brightness-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--mt-main) ${compact ? 'lg:px-0' : ''}`}>
+                                    <nouveau.icon size={16} className={`shrink-0 ${compact ? 'lg:h-5 lg:w-5' : ''}`} /><span className={compact ? 'lg:hidden' : ''}>{nouveau.label}</span>
+                                </NavLink>
+                            </Tooltip>
+                        </div>
+                    )}
+                    <nav className="flex min-h-0 flex-1 flex-col justify-evenly overflow-y-auto px-2.5 py-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" aria-label="Navigation principale">
+                        {sectionsMenu.map(section => (
+                            <div key={section.heading} className="border-t border-(--st-side-line) pt-1 first:border-t-0 first:pt-0">
+                                {/* titre de la section : un clic replie ou déplie ses pages (inactif quand le menu est réduit aux icônes ou que l'écran est trop bas pour afficher les titres) */}
+                                <button type="button" onClick={() => basculerSection(section.heading)} aria-expanded={!fermees.includes(section.heading)}
+                                    className={`flex w-full items-center justify-between rounded-md px-2.5 pb-0.5 pt-0.5 text-[11px] font-semibold uppercase tracking-widest text-(--st-side-muted) transition hover:text-(--st-side-strong) [@media(max-height:700px)]:hidden ${compact ? 'lg:hidden' : ''}`}>
+                                    {section.heading}
+                                    <span className="flex items-center gap-1.5">
+                                        {fermees.includes(section.heading) && (() => {
+                                            const caches = section.items.reduce((total, item) => total + (item.badge ? nombre(item.badge) : 0), 0);
+                                            return caches > 0 ? <span aria-label={`${caches} nouveauté${caches > 1 ? 's' : ''} dans cette section`} className="rounded-full bg-sky-500 px-1.5 py-0.5 text-[10px] font-bold leading-none tabular-nums text-white">{caches > 99 ? '99+' : caches}</span> : null;
+                                        })()}
+                                        <ChevronUp size={14} aria-hidden="true" className={`transition-transform duration-200 ${fermees.includes(section.heading) ? 'rotate-180' : ''}`} />
+                                    </span>
+                                </button>
+                                <div className={`${fermees.includes(section.heading) ? 'hidden [@media(max-height:700px)]:block' : ''} ${compact && fermees.includes(section.heading) ? 'lg:block' : ''}`}>
+                                    {section.items.map(item => {
+                                        const Icon = item.icon;
+                                        const n = item.badge ? nombre(item.badge) : 0;
+                                        return (
+                                            <Tooltip key={item.key || item.label} label={compact ? item.label : undefined} side="right">
+                                            <NavLink to={item.to} state={item.state} end={item.end}
+                                                aria-label={compact ? item.label : undefined}
+                                                onClick={() => setMenuOpen(false)}
+                                                className={item.key ? () => linkClass({ isActive: false }) : linkClass}>
+                                                <Icon size={16} className={`shrink-0 ${compact ? 'lg:h-[22px] lg:w-[22px]' : ''} transition group-aria-[current=page]:text-(--mt-main-fort) group-hover:scale-110 dark:group-aria-[current=page]:text-(--mt-main)`} /><span className={compact ? 'lg:hidden' : ''}>{item.label}</span>
+                                                {n > 0 && <span aria-label={`${n} nouveau${n > 1 ? 'x' : ''}`} className={`${compact ? 'lg:absolute lg:right-1 lg:top-0 lg:min-w-4 lg:px-1 lg:text-[9px]' : ''} ml-auto inline-flex min-w-[1.5rem] items-center justify-center rounded-full bg-sky-500 px-1.5 py-0.5 text-[11px] font-bold leading-none tabular-nums text-white`}>{n > 99 ? '99+' : n}</span>}
+                                            </NavLink>
+                                            </Tooltip>
+                                        );
+                                    })}
+                                </div>
                             </div>
-                        </div>
-                    ))}
-                    <Link to="/" className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-slate-400 transition hover:bg-white/5 hover:text-white">
-                        <ExternalLink size={18} />Voir le site public
-                    </Link>
-                </nav>
+                        ))}
+                    </nav>
 
-                <div className="m-3 rounded-3xl bg-white/[0.06] p-3">
-                    <div className="flex items-center gap-3">
+                    <div className="shrink-0 border-t border-(--st-side-line) px-3 py-2">
+                        {/* réduire ou agrandir le menu (ordinateur) */}
+                        <Tooltip label={compact ? 'Garder le menu ouvert' : undefined} side="right">
+                            <button type="button" onClick={basculerMenu} aria-label={reduit ? 'Garder le menu ouvert' : 'Réduire le menu'} aria-pressed={reduit}
+                                className={`mb-2 hidden w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-[13px] font-medium text-(--st-side-muted) transition hover:bg-(--st-side-hover) hover:text-(--st-side-strong) lg:flex ${compact ? 'justify-center px-0' : ''}`}>
+                                {reduit ? <ChevronsRight size={16} className={compact ? 'lg:h-5 lg:w-5' : ''} /> : <ChevronsLeft size={16} />}<span className={compact ? 'hidden' : ''}>{reduit ? 'Garder le menu ouvert' : 'Réduire le menu'}</span>
+                            </button>
+                        </Tooltip>
                         <input ref={fileInput} type="file" accept="image/*" className="hidden" onChange={uploadPhoto} />
-                        <button type="button" onClick={() => fileInput.current?.click()} disabled={uploading}
-                            title="Changer ma photo de profil (convertie automatiquement en JPEG)" aria-label="Changer ma photo de profil"
-                            className="group relative flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full bg-teal-500/20 text-teal-200 ring-2 ring-white/10 disabled:opacity-60">
-                            {profile?.photoUrl ? <img src={assetUrl(profile.photoUrl)} alt="" className="h-full w-full object-cover" /> : <UserRound size={20} />}
-                            <span className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 transition group-hover:opacity-100"><Camera size={15} /></span>
-                        </button>
-                        <div className="min-w-0 flex-1">
-                            <div className="line-clamp-2 break-words text-sm font-semibold leading-tight text-white" title={profile?.nom || getEmail()}>{profile?.nom || getEmail()}</div>
-                            {(profile?.nom || getEmail()) !== getRoleLabel(role) && <div className="mt-1 inline-block max-w-full truncate rounded-full bg-teal-500/15 px-2 py-0.5 text-[11px] font-medium text-teal-200">{getRoleLabel(role)}</div>}
-                        </div>
-                        <button onClick={() => setPasswordOpen(true)} title="Changer mon mot de passe" aria-label="Changer mon mot de passe" className="rounded-lg p-2 text-slate-400 transition hover:bg-white/10 hover:text-white"><KeyRound size={18} /></button>
-                        <button onClick={logout} title="Déconnexion" aria-label="Déconnexion" className="rounded-lg p-2 text-slate-400 transition hover:bg-white/10 hover:text-white"><LogOut size={18} /></button>
+                        <DropdownMenu onOpenChange={setCompteOuvert}>
+                            <Tooltip label={compact ? nomAffiche : undefined} side="right">
+                                <DropdownMenuTrigger aria-label="Mon compte"
+                                    className={`flex w-full items-center gap-2.5 rounded-lg p-1.5 text-left outline-none transition hover:bg-(--st-side-hover) focus-visible:ring-2 focus-visible:ring-(--mt-main) data-[state=open]:bg-(--st-side-hover) ${compact ? 'lg:justify-center lg:p-1' : ''}`}>
+                                    {uploading ? <span className="flex h-9 w-9 items-center justify-center"><Loader2 size={16} className="animate-spin" /></span> : avatar('h-9 w-9')}
+                                    <span className={`min-w-0 flex-1 ${compact ? 'lg:hidden' : ''}`}>
+                                        <span className="block truncate text-[13px] font-semibold leading-tight text-(--st-side-strong)">{nomAffiche}</span>
+                                        <span className="block truncate text-[11px] leading-tight text-(--st-side-muted)">{getRoleLabel(role)}</span>
+                                    </span>
+                                    <ChevronUp size={15} className={`shrink-0 text-(--st-side-muted) ${compact ? 'lg:hidden' : ''}`} />
+                                </DropdownMenuTrigger>
+                            </Tooltip>
+                            <DropdownMenuContent side="top" align="start" sideOffset={8}>
+                                <DropdownMenuLabel><span className="block truncate text-sm font-semibold text-foreground">{nomAffiche}</span>{getRoleLabel(role)}</DropdownMenuLabel>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem onSelect={() => fileInput.current?.click()}><Camera size={15} />Changer ma photo</DropdownMenuItem>
+                                    <DropdownMenuItem onSelect={() => setPasswordOpen(true)}><KeyRound size={15} />Changer mon mot de passe</DropdownMenuItem>
+                                    <DropdownMenuItem onSelect={toggleTheme}>{theme === 'dark' ? <Sun size={15} /> : <Moon size={15} />}{theme === 'dark' ? 'Thème clair' : 'Thème sombre'}</DropdownMenuItem>
+                                    <DropdownMenuItem onSelect={() => navigate('/')}><ExternalLink size={15} />Voir le site public</DropdownMenuItem>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem danger onSelect={logout}><LogOut size={15} />Se déconnecter</DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
                     </div>
-                    {photoError && <p role="alert" className="mt-2 text-xs text-rose-300">{photoError}</p>}
-                    {photoInfo && !photoError && <p role="status" className="mt-2 text-xs leading-snug text-emerald-200">{photoInfo}</p>}
-                </div>
-            </aside>
-            {menuOpen && <button className="fixed inset-0 z-30 bg-black/50 lg:hidden" aria-label="Fermer le menu" onClick={() => setMenuOpen(false)} />}
+                </aside>
+                {menuOpen && <button className="fixed inset-0 z-30 bg-black/50 lg:hidden" aria-label="Fermer le menu" onClick={() => setMenuOpen(false)} />}
 
-            <div className="lg:pl-[19rem]">
-                <header className="sticky top-0 z-20 flex h-20 items-center gap-3 bg-[#f1f7fa]/85 px-4 backdrop-blur-md dark:bg-gray-950/85 sm:px-8">
-                    <button onClick={() => setMenuOpen(true)} className="rounded-lg p-2 hover:bg-slate-100 dark:hover:bg-gray-800 lg:hidden" aria-label="Ouvrir le menu"><Menu size={20} /></button>
-                    <div className="min-w-0">
-                        <h1 className="truncate text-base font-bold leading-tight sm:text-xl">{title}</h1>
-                        {subtitle && <p className="hidden truncate text-xs text-slate-500 dark:text-gray-400 sm:block">{subtitle}</p>}
-                    </div>
-                    <div className="ml-auto flex items-center gap-2">
-                        {peut('PATIENTS_RECHERCHER') && <PatientSearch className="relative hidden w-56 md:block xl:w-72" />}
-                        <MessagerieBouton />
-                        <NotificationBell onOpenRdv={notification => navigate(notification?.lien || (notification?.rendezVousId ? (role === 'SUPER_ADMIN' ? `${home}?rdv=${notification.rendezVousId}` : `/espace/mes-patients?rdv=${notification.rendezVousId}`) : home))} />
-                        <button onClick={toggleTheme} aria-label="Changer de thème" title="Changer de thème"
-                            className="rounded-xl border border-slate-200 p-2.5 text-slate-600 transition hover:bg-slate-100 dark:border-gray-700 dark:text-yellow-300 dark:hover:bg-gray-800">
-                            {theme === 'dark' ? <Sun size={17} /> : <Moon size={17} />}
-                        </button>
-                        {actions}
-                    </div>
-                </header>
-                <main className="mx-auto max-w-[1500px] space-y-6 p-4 sm:p-8">
-                    {typeof children === 'function' ? children(profile) : children}
-                </main>
+                <div className={`${reduit ? 'lg:pl-[4.5rem]' : 'lg:pl-60'} transition-[padding] duration-200`}>
+                    <header className="sticky top-0 z-20 flex h-14 items-center gap-3 border-b border-(--st-line) bg-(--st-page)/90 px-4 backdrop-blur-md sm:px-6">
+                        <button onClick={() => setMenuOpen(true)} className="rounded-lg p-2 hover:bg-slate-100 dark:hover:bg-gray-800 lg:hidden" aria-label="Ouvrir le menu"><Menu size={20} /></button>
+                        <div className="min-w-0">
+                            <h1 className="truncate text-base font-bold leading-tight sm:text-lg">{title}</h1>
+                            {subtitle && <p className="hidden truncate text-xs text-slate-500 dark:text-gray-400 sm:block">{subtitle}</p>}
+                        </div>
+                        <div className="ml-auto flex shrink-0 items-center gap-1.5 sm:gap-2">
+                            {peut('PATIENTS_RECHERCHER') && <PatientSearch className="relative hidden w-44 md:block 2xl:w-60" />}
+                            <Tooltip label="Voir le site public"><Link to="/" aria-label="Voir le site public" className={`${boutonEntete} hidden 2xl:inline-flex`}><ExternalLink size={16} /></Link></Tooltip>
+                            <Tooltip label={theme === 'dark' ? 'Thème clair' : 'Thème sombre'}>
+                                <button onClick={toggleTheme} aria-label="Changer de thème" className={`${boutonEntete} hidden sm:inline-flex`}>{theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}</button>
+                            </Tooltip>
+                            <MessagerieBouton />
+                            <NotificationBell onOpenRdv={notification => navigate(notification?.lien || (notification?.rendezVousId ? (role === 'SUPER_ADMIN' ? `${home}?rdv=${notification.rendezVousId}` : `/espace/mes-patients?rdv=${notification.rendezVousId}`) : home))} />
+                            {actions}
+                        </div>
+                    </header>
+                    <main className="mx-auto max-w-[1500px] space-y-4 p-4 sm:p-6">
+                        {typeof children === 'function' ? children(profile) : children}
+                    </main>
+                </div>
+                {passwordOpen && <PasswordDialog onClose={() => setPasswordOpen(false)} />}
+                <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} items={pages} />
+                <NiveauDefilement decalageGauche />
+                <Toaster />
             </div>
-            {passwordOpen && <PasswordDialog onClose={() => setPasswordOpen(false)} />}
-        </div>
+        </TooltipProvider>
     );
 }
 
@@ -214,7 +309,7 @@ function PasswordDialog({ onClose }) {
         setSaving(true);
         try {
             await axiosClient.put('/profile/password', { ancienMotDePasse: form.ancienMotDePasse, nouveauMotDePasse: form.nouveauMotDePasse });
-            setDone(true);
+            setDone(true); toast.success('Mot de passe modifié.');
         } catch (err) { setError(apiErrorMessage(err, 'Changement impossible.')); }
         finally { setSaving(false); }
     };

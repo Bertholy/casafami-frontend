@@ -72,13 +72,22 @@
 .theme-montagne .mt-btn-blanc-plein:hover { background: transparent; color: #fff; }
 
 /* ---- surfaces ---- */
-.theme-montagne .mt-gris { background: var(--mt-gris); }
+.theme-montagne .mt-gris { background: rgba(255, 255, 255, .7); }
 .dark .theme-montagne .mt-gris { background: #1f2937; }
 .theme-montagne .mt-ardoise { background: var(--mt-ardoise); color: #fff; }
 .dark .theme-montagne .mt-ardoise { background: #23242e; }
 .theme-montagne .mt-marine { background: var(--mt-main); color: #fff; }
-.theme-montagne .mt-relief { background-color: #fff; background-image: url('/relief.svg'); background-size: 720px auto; }
-.dark .theme-montagne .mt-relief { background-color: #111827; background-image: none; }
+.theme-montagne .mt-relief { background-color: transparent; background-image: url('/relief.svg'); background-size: 720px auto; }
+.dark .theme-montagne .mt-relief { background-image: none; }
+
+/* Fond de toutes les pages du site public : dégradé menthe vers bleu clair, avec des vagues en bas (comme le choix du parcours de rendez-vous).
+ * Les sections sont transparentes pour le laisser voir ; les blocs de couleur (bandeau, photos, pied de page) restent pleins. */
+.theme-montagne .mt-fond-doux {
+    background:
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 200' preserveAspectRatio='none'%3E%3Cpath fill='%237dd3fc' fill-opacity='.4' d='M0 120 C240 40 480 200 720 120 C960 40 1200 180 1440 100 L1440 200 L0 200 Z'/%3E%3Cpath fill='%23fff' fill-opacity='.6' d='M0 150 C300 90 520 200 800 140 C1040 90 1250 190 1440 130 L1440 200 L0 200 Z'/%3E%3C/svg%3E") bottom / 100% 11rem no-repeat,
+        linear-gradient(to bottom, #ecfdf5, #ecfeff 45%, #bae6fd);
+}
+.dark .theme-montagne .mt-fond-doux { background: linear-gradient(to bottom, #111827, #111827 55%, #1e293b); }
 /* Photos sans cadre ni bordure : l'image occupe toute la place. */
 .theme-montagne .mt-cadre { background: none; padding: 0; }
 

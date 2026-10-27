@@ -65,7 +65,7 @@ export default function Carrousel({ children, label }) {
 
     const piste = [...cartes, ...cartes.slice(0, v)];
     const largeurCarte = 100 / v;
-    const fleche = 'absolute top-[28%] z-10 flex h-11 w-11 items-center justify-center rounded-full bg-white/95 text-teal-700 shadow-lg transition hover:bg-teal-600 hover:text-white dark:bg-gray-800/95 dark:text-teal-300 dark:hover:bg-teal-600 dark:hover:text-white';
+    const fleche = 'absolute top-[28%] z-10 flex h-11 w-11 items-center justify-center rounded-full bg-white/95 text-teal-700 ring-1 ring-slate-200 transition hover:bg-teal-600 hover:text-white dark:bg-gray-800/95 dark:ring-gray-700 dark:text-teal-300 dark:hover:bg-teal-600 dark:hover:text-white';
 
     return (
         <div ref={conteneur} className="relative" role="region" aria-roledescription="carrousel" aria-label={label}

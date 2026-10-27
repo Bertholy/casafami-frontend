@@ -3,7 +3,7 @@ import { useLocation } from 'react-router-dom';
 import { CheckCircle2, CircleHelp, Pencil, Plus, RotateCcw, TriangleAlert, Undo2, X } from 'lucide-react';
 import { useSiteContent } from '../../context/SiteContentContext';
 import { useLang } from '../../i18n/LangContext';
-import { PAGES_EDITABLES } from '../../constants/routes';
+import { PAGES_EDITABLES, pagePublique } from '../../constants/routes';
 import EditeurTexte from './EditeurTexte';
 
 // Préfixe des clés d'éléments de chaque page (voir les composants Editable / Movable).
@@ -23,8 +23,8 @@ export default function SiteEditorBar() {
     const [aide, setAide] = useState(false);
     const [menu, setMenu] = useState(false);
     if (!canEdit) return null;
-    const prefix = PAGE_PREFIX[pathname];
-    const page = PAGES_EDITABLES[pathname];
+    const prefix = PAGE_PREFIX[pagePublique(pathname)];
+    const page = PAGES_EDITABLES[pagePublique(pathname)];
 
     return (
         <>

@@ -1,28 +1,14 @@
 import { useCallback, useEffect, useState } from 'react';
+import { SkeletonTable } from '../components/ui/skeleton';
 import { useNavigate } from 'react-router-dom';
-import { ChevronLeft, ChevronRight, Loader2, ScrollText } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ScrollText } from 'lucide-react';
 import axiosClient from '../api/axiosClient';
 import AdminLayout from '../components/AdminLayout';
 import Notice from '../components/Notice';
 import { getRoleLabel } from '../constants/app';
+import { ACTIONS, GRAVES } from '../constants/journal';
 import { card, inputClass } from '../constants/ui';
 import { apiErrorMessage, getRole, hasSession, homeForRole, LOGIN_PATH, peut } from '../utils/auth';
-
-// Libellés lisibles des actions enregistrées par le serveur.
-const ACTIONS = {
-    CONNEXION: 'Connexion', CONNEXION_ECHEC: 'Échec de connexion', RDV_CREE: 'Rendez-vous créé', RDV_MODIFIE: 'Rendez-vous modifié',
-    RDV_CONFIRME: 'Rendez-vous confirmé', RDV_TERMINE: 'Rendez-vous terminé', RDV_ANNULE: 'Rendez-vous annulé', RDV_CORBEILLE: 'Mis en corbeille',
-    RDV_RESTAURE: 'Restauré de la corbeille', RDV_SUPPRIME_DEFINITIVEMENT: 'Supprimé définitivement', CORBEILLE_VIDEE: 'Corbeille vidée',
-    COMPTE_CREE: 'Compte créé', COMPTE_MODIFIE: 'Compte modifié', COMPTE_SUPPRIME: 'Compte supprimé', ROLE_MODIFIE: 'Rôle modifié',
-    MOT_DE_PASSE_REINITIALISE: 'Mot de passe réinitialisé', MOT_DE_PASSE_CHANGE: 'Mot de passe changé',
-    SERVICE_CREE: 'Service ajouté', SERVICE_SUPPRIME: 'Service supprimé', THEME_MODIFIE: 'Thème modifié',
-    SITE_MODIFIE: 'Site modifié', SITE_REINITIALISE: 'Site réinitialisé', PLANNING_MODIFIE: 'Planning modifié', JOUR_FERME: 'Jour fermé', JOUR_ROUVERT: 'Jour rouvert',
-    DOSSIER_MODIFIE: 'Dossier patient modifié', CONSULTATION_CREEE: 'Consultation enregistrée', CONSULTATION_MODIFIEE: 'Consultation modifiée', CONSULTATION_SUPPRIMEE: 'Consultation supprimée',
-    MALADIE_CREEE: 'Maladie ajoutée', MALADIE_MODIFIEE: 'Maladie modifiée', MALADIE_SUPPRIMEE: 'Maladie supprimée',
-    TRAITEMENT_AJOUTE: 'Traitement ajouté', TRAITEMENT_MODIFIE: 'Traitement modifié', TRAITEMENT_SUPPRIME: 'Traitement supprimé',
-    EXPORT: 'Export', ENCODAGE_REPARE: 'Textes cassés réparés', RAPPELS_ENVOYES: 'Rappels envoyés', RAPPELS_MANUELS: 'Rappels envoyés (manuel)',
-};
-const GRAVES = ['CONNEXION_ECHEC', 'RDV_SUPPRIME_DEFINITIVEMENT', 'CORBEILLE_VIDEE', 'COMPTE_SUPPRIME', 'ROLE_MODIFIE', 'MOT_DE_PASSE_REINITIALISE', 'CONSULTATION_SUPPRIMEE'];
 
 export default function AdminJournal() {
     const navigate = useNavigate();
@@ -87,7 +73,7 @@ export default function AdminJournal() {
                             ))}
                         </tbody>
                     </table>
-                    {loading && <div className="flex items-center justify-center gap-2 p-10 text-sm text-slate-500"><Loader2 size={18} className="animate-spin" />Chargement…</div>}
+                    {loading && <SkeletonTable rows={6} cols={4} />}
                     {!loading && data.contenu.length === 0 && <div className="p-10 text-center text-sm text-slate-500">Aucun événement ne correspond à ces filtres.</div>}
                 </div>
                 <div className="flex items-center justify-end gap-2 border-t border-slate-200 px-4 py-3 text-xs text-slate-500 dark:border-gray-800">

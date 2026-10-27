@@ -1,21 +1,31 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { lazy, useCallback, useEffect, useMemo, useState } from 'react';
+import { SkeletonTable } from '../components/ui/skeleton';
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import {
     BadgeCheck, Ban, UserCheck, CalendarCheck, CalendarClock, CalendarDays, Check, CheckCheck, ChevronLeft, ChevronRight, Clock3,
-    Download, Eye, FileDown, FolderOpen, Loader2, Pencil, Image as ImageIcon, Plus, RefreshCw, Search, Trash2, X,
+    ChevronDown, Download, Eye, FileSpreadsheet, FileText, FolderOpen, Pencil, Plus, RefreshCw, Search, Trash2,
 } from 'lucide-react';
 import axiosClient from '../api/axiosClient';
-import { downloadRendezVousPdf } from '../api/rendezVousPdf';
-import { downloadReceiptImage } from '../utils/receipt';
+import BoutonTelecharger from '../components/BoutonTelecharger';
 import AdminLayout from '../components/AdminLayout';
-import WeekChart from '../components/dashboard/WeekChart';
+import GrapheDiffere from '../components/dashboard/GrapheDiffere';
+import BoutonScanQr from '../components/BoutonScanQr';
+import ActivityLog from '../components/dashboard/ActivityLog';
+import Notice from '../components/Notice';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
+import { toast } from '../lib/toast';
 import AgendaToday from '../components/dashboard/AgendaToday';
+import ApercuSemaine from '../components/dashboard/ApercuSemaine';
 import RdvFormModal from '../components/dashboard/RdvFormModal';
 import AttributionDialog from '../components/dashboard/AttributionDialog';
 import CarteDemande from '../components/dashboard/CarteDemande';
 import { STATUS, formatDateFr, hhmm, todayISO } from '../constants/app';
 import { apiErrorMessage, getRole, hasSession, homeForRole, LOGIN_PATH, peut } from '../utils/auth';
 import { formatPhone } from '../utils/phone';
+
+// Les graphiques (Recharts) se chargent après le reste de la page.
+const WeekChart = lazy(() => import('../components/dashboard/WeekChart'));
+const ColumnChart = lazy(() => import('../components/dashboard/ColumnChart'));
 
 const PERIODS = [
     ['a_venir', 'À venir'],
@@ -24,7 +34,7 @@ const PERIODS = [
     ['ce_mois', 'Ce mois'],
 ];
 const EMPTY_STATS = { total: 0, pending: 0, confirmed: 0, cancelled: 0, done: 0 };
-const FILTERS = [['TOUS', 'Tous'], ['EN_ATTENTE', 'En attente'], ['CONFIRME', 'Confirmés'], ['TERMINE', 'Terminés'], ['ANNULE', 'Annulés']];
+const FILTERS = [['TOUS', 'Tous'], ['EN_ATTENTE', 'En cours'], ['CONFIRME', 'Confirmés'], ['TERMINE', 'Terminés'], ['ANNULE', 'Annulés']];
 
 /** Les 7 jours (lundi → dimanche) de la semaine en cours, avec le détail par statut. */
 function buildWeek(weekRdvs) {
@@ -56,6 +66,26 @@ function periodDates(period) {
     return [iso(today), iso(today)];
 }
 
+/** Date courte et heure, mises à jour toutes les 15 secondes (comme dans la maquette de la console). */
+function Horloge() {
+    const [maintenant, setMaintenant] = useState(() => new Date());
+    useEffect(() => {
+        const minuteur = window.setInterval(() => setMaintenant(new Date()), 15000);
+        return () => window.clearInterval(minuteur);
+    }, []);
+    const heure = maintenant.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+    const [heures, minutes] = heure.split(':');
+    return (
+        <div className="hidden items-baseline gap-3 sm:flex" aria-hidden="true">
+            <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500 dark:text-gray-400">{maintenant.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}</div>
+            <div className="text-3xl font-extrabold leading-none tabular-nums">{heures}<span className="mx-0.5 animate-pulse text-(--mt-main)">:</span>{minutes}</div>
+        </div>
+    );
+}
+
+/** Couleurs des statuts dans le graphique « par statut ». */
+const COULEURS_STATUT = { EN_ATTENTE: '#f59e0b', CONFIRME: '#10b981', TERMINE: '#0ea5e9', ANNULE: '#f43f5e' };
+
 function Dashboard() {
     const navigate = useNavigate();
     const location = useLocation();
@@ -85,7 +115,6 @@ function Dashboard() {
     const [page, setPage] = useState(1);
     const [pageSize, setPageSize] = useState(10);
     const [modal, setModal] = useState(null);
-    const [toast, setToast] = useState(null);
     const [confirmDialog, setConfirmDialog] = useState(null);
     const [attribution, setAttribution] = useState(null); // { rdv }
     const [cible, setCible] = useState({ id: null, rdv: null, absent: false });
@@ -144,12 +173,6 @@ function Dashboard() {
         return () => window.clearTimeout(timer);
     }, [location.state, location.pathname, navigate, droitCreer]);
 
-    useEffect(() => {
-        if (!toast) return undefined;
-        const timer = window.setTimeout(() => setToast(null), 6000);
-        return () => window.clearTimeout(timer);
-    }, [toast]);
-
     const week = useMemo(() => buildWeek(weekRdvs), [weekRdvs]);
     const today = todayISO();
     const todayItems = useMemo(
@@ -160,7 +183,7 @@ function Dashboard() {
 
     const filtered = useMemo(() => rdvs.filter(rdv => {
         const q = query.trim().toLocaleLowerCase('fr');
-        const matchesQuery = !q || [rdv.id, rdv.nomClient, rdv.telephoneClient, rdv.dateRdv, rdv.heureRdv, rdv.serviceNom, rdv.praticienNom, STATUS[rdv.statut]?.label]
+        const matchesQuery = !q || [rdv.id, rdv.nomClient, rdv.telephoneClient, rdv.dateRdv, rdv.heureRdv, rdv.serviceNom, rdv.praticienNom, rdv.cleSuivi, STATUS[rdv.statut]?.label]
             .some(value => String(value ?? '').toLocaleLowerCase('fr').includes(q));
         return matchesQuery && (status === 'TOUS' || rdv.statut === status) && (!date || rdv.dateRdv === date);
     }), [rdvs, query, status, date]);
@@ -198,7 +221,16 @@ function Dashboard() {
     });
     const trashRdv = rdv => run(async () => {
         await axiosClient.delete(`/rdv/${rdv.id}`);
-        setToast({ message: 'Rendez-vous placé dans la corbeille.', undo: async () => { await axiosClient.put(`/rdv/${rdv.id}/annuler-suppression`); await load(); } });
+        toast.info('Rendez-vous placé dans la corbeille.', {
+            duration: 8000,
+            action: {
+                label: 'Annuler',
+                onClick: async () => {
+                    try { await axiosClient.put(`/rdv/${rdv.id}/annuler-suppression`); await load(); toast.success('Rendez-vous restauré.'); }
+                    catch { toast.error('Impossible de restaurer ce rendez-vous (le créneau a peut-être été repris).'); }
+                },
+            },
+        });
     }, 'La suppression a échoué. Réessayez.');
 
     const exportList = async format => {
@@ -219,16 +251,6 @@ function Dashboard() {
         }
     };
 
-    const downloadPdf = async rdv => {
-        try { await downloadRendezVousPdf(rdv); }
-        catch (pdfError) { setError(pdfError.message || 'Le reçu PDF n’a pas pu être téléchargé.'); }
-    };
-
-    const downloadImage = async rdv => {
-        try { await downloadReceiptImage(rdv); }
-        catch { setError('Le reçu en image n’a pas pu être créé.'); }
-    };
-
     const onSaved = async (saved, editing) => {
         setModal(null);
         setNotice(editing ? 'Rendez-vous modifié.' : 'Rendez-vous enregistré.');
@@ -237,17 +259,24 @@ function Dashboard() {
 
     const kpis = [
         { key: 'TOUS', label: 'Total', value: stats.total, icon: CalendarDays, tone: 'text-teal-700 bg-teal-100 dark:bg-teal-500/15 dark:text-teal-300' },
-        { key: 'EN_ATTENTE', label: 'En attente', value: stats.pending, icon: Clock3, tone: 'text-amber-700 bg-amber-100 dark:bg-amber-500/15 dark:text-amber-300' },
+        { key: 'EN_ATTENTE', label: 'En cours', value: stats.pending, icon: Clock3, tone: 'text-amber-700 bg-amber-100 dark:bg-amber-500/15 dark:text-amber-300' },
         { key: 'CONFIRME', label: 'Confirmés', value: stats.confirmed, icon: CalendarCheck, tone: 'text-emerald-700 bg-emerald-100 dark:bg-emerald-500/15 dark:text-emerald-300' },
         { key: 'TERMINE', label: 'Terminés', value: stats.done, icon: CheckCheck, tone: 'text-sky-700 bg-sky-100 dark:bg-sky-500/15 dark:text-sky-300' },
         { key: 'ANNULE', label: 'Annulés', value: stats.cancelled, icon: Ban, tone: 'text-rose-700 bg-rose-100 dark:bg-rose-500/15 dark:text-rose-300' },
     ];
     const periodLabel = PERIODS.find(([key]) => key === period)?.[1];
-    const card = 'rounded-2xl border border-slate-200/80 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900';
+    const salutation = new Date().getHours() < 18 ? 'Bonjour' : 'Bonsoir';
+    const phraseJour = todayItems.length
+        ? (vuePraticien ? `${todayItems.length} patient${todayItems.length > 1 ? 's' : ''} aujourd’hui` : `${todayItems.length} rendez-vous aujourd’hui`)
+        : (vuePraticien ? 'Aucun patient aujourd’hui' : 'Aucun rendez-vous aujourd’hui');
+    const parStatut = [['EN_ATTENTE', stats.pending], ['CONFIRME', stats.confirmed], ['TERMINE', stats.done], ['ANNULE', stats.cancelled]].map(([key, value]) => ({
+        key, label: STATUS[key].label, value, color: COULEURS_STATUT[key], tooltip: [STATUS[key].label, `${value} rendez-vous · ${periodLabel.toLowerCase()}`],
+    }));
+    const card = 'rounded-lg border border-slate-200 bg-white dark:border-gray-800 dark:bg-gray-900';
 
     const newButton = !droitCreer ? null : (
-        <button onClick={() => setModal({ type: 'create' })} className="inline-flex items-center gap-2 rounded-xl bg-teal-700 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-teal-800">
-            <Plus size={17} /><span className="hidden sm:inline">Nouveau rendez-vous</span>
+        <button onClick={() => setModal({ type: 'create' })} aria-label="Nouveau rendez-vous" className="inline-flex items-center gap-2 rounded-md bg-teal-700 px-3 py-2 text-sm font-semibold text-white transition hover:bg-teal-800">
+            <Plus size={16} /><span className="hidden whitespace-nowrap 2xl:inline">Nouveau rendez-vous</span>
         </button>
     );
 
@@ -262,85 +291,92 @@ function Dashboard() {
                         onFermer={() => setParams({}, { replace: true })} />
                 )}
 
-                {/* ---------- Bandeau d'accueil ---------- */}
-                <section className="relative overflow-hidden rounded-[2rem] bg-linear-to-br from-(--mt-main) via-(--mt-main) to-(--mt-main-clair) p-6 text-(--mt-sur-main) shadow-[0_24px_60px_rgba(3,204,230,.30)] sm:p-8">
-                    <div className="pointer-events-none absolute -right-10 -top-16 h-56 w-56 rounded-full bg-white/30 blur-2xl" />
-                    <div className="pointer-events-none absolute -bottom-20 right-1/3 h-48 w-48 rounded-full bg-white/25 blur-3xl" />
-                    <div className="relative flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
-                        <div>
-                            <p className="text-sm font-semibold opacity-80">Bonjour{profile?.nom ? `, ${profile.nom}` : ''}</p>
-                            <h2 className="mt-1 text-2xl font-bold sm:text-3xl">
-                                {todayItems.length
-                                    ? (vuePraticien ? `${todayItems.length} patient${todayItems.length > 1 ? 's' : ''} aujourd’hui` : `${todayItems.length} rendez-vous aujourd’hui`)
-                                    : (vuePraticien ? 'Aucun patient aujourd’hui' : 'Aucun rendez-vous aujourd’hui')}
-                            </h2>
-                            <p className="mt-2 max-w-xl text-sm opacity-85">
-                                {vuePraticien
-                                    ? (rdvs.filter(rdv => peutAccepter(rdv, profile)).length > 0
-                                        ? `${rdvs.filter(rdv => peutAccepter(rdv, profile)).length} rendez-vous vous attendent : acceptez-les pour que le cabinet les confirme au patient.`
-                                        : 'Vos rendez-vous sont à jour.')
+                {/* ---------- Accueil : salutation, actions, heure ---------- */}
+                <section className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                    <div className="min-w-0">
+                        <h2 className="text-2xl font-light sm:text-3xl">{salutation}{profile?.nom ? <>, <span className="font-bold">{profile.nom}</span></> : ''}</h2>
+                        <p className="mt-1 max-w-2xl text-sm text-slate-600 dark:text-gray-400">
+                            <strong className="font-semibold text-slate-800 dark:text-gray-100">{phraseJour}.</strong>{' '}
+                            {vuePraticien
+                                ? (rdvs.filter(rdv => peutAccepter(rdv, profile)).length > 0
+                                    ? `${rdvs.filter(rdv => peutAccepter(rdv, profile)).length} rendez-vous vous attendent : acceptez-les pour que le cabinet les confirme au patient.`
+                                    : 'Vos rendez-vous sont à jour.')
                                 : pendingToday > 0
-                                    ? (droitConfirmer ? `${pendingToday} en attente de confirmation. Pensez à les valider pour prévenir les patients.` : `${pendingToday} en attente de confirmation par le cabinet.`)
+                                    ? (droitConfirmer ? `${pendingToday} en cours de confirmation. Pensez à les valider pour prévenir les patients.` : `${pendingToday} en cours de confirmation par le cabinet.`)
                                     : todayItems.length ? 'Tout est confirmé pour aujourd’hui.' : 'Profitez-en pour préparer la semaine ou saisir un nouveau rendez-vous.'}
-                            </p>
-                        </div>
-                        <div className="flex flex-wrap gap-3">
-                            {droitCreer && <button onClick={() => setModal({ type: 'create' })} className="inline-flex items-center gap-2 rounded-full bg-[#0e2a38] px-5 py-2.5 text-sm font-bold text-white shadow-lg transition hover:bg-[#12384a]"><Plus size={17} />Nouveau rendez-vous</button>}
-                            {peut('EXPORT_RDV') && <details className="relative">
-                                <summary className="inline-flex cursor-pointer list-none items-center gap-2 rounded-full bg-white/45 px-5 py-2.5 text-sm font-bold backdrop-blur transition hover:bg-white/70 [&::-webkit-details-marker]:hidden"><Download size={16} />Exporter</summary>
-                                <div className="absolute right-0 z-20 mt-2 w-56 overflow-hidden rounded-xl bg-white p-1 text-sm text-slate-800 shadow-xl dark:bg-gray-900 dark:text-gray-100">
-                                    <button onClick={() => exportList('csv')} className="block w-full rounded-lg px-3 py-2 text-left hover:bg-slate-100 dark:hover:bg-gray-800">Excel (CSV) — {periodLabel.toLowerCase()}</button>
-                                    <button onClick={() => exportList('pdf')} className="block w-full rounded-lg px-3 py-2 text-left hover:bg-slate-100 dark:hover:bg-gray-800">PDF — {periodLabel.toLowerCase()}</button>
-                                </div>
-                            </details>}
-                            <button onClick={() => load()} className="inline-flex items-center gap-2 rounded-full bg-white/45 px-5 py-2.5 text-sm font-bold backdrop-blur transition hover:bg-white/70"><RefreshCw size={16} className={loading ? 'animate-spin' : ''} />Actualiser</button>
+                        </p>
+                    </div>
+                    <div className="flex flex-col gap-2 sm:items-end sm:gap-3">
+                        <Horloge />
+                        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                        {peut('EXPORT_RDV') && <details className="group/export relative">
+                            <summary className="group inline-flex items-center gap-2 rounded-xl border border-(--st-line) bg-(--st-panel) py-1.5 pl-2 pr-3.5 text-sm font-semibold shadow-sm transition duration-150 hover:-translate-y-0.5 hover:border-(--mt-main) hover:shadow-md active:translate-y-0 cursor-pointer list-none [&::-webkit-details-marker]:hidden"><span className="flex h-7 w-7 items-center justify-center rounded-lg bg-(--mt-main)/15 text-(--mt-main-fort) transition group-hover:bg-(--mt-main) group-hover:text-(--mt-sur-main) dark:text-(--mt-main)"><Download size={15} /></span>Exporter<ChevronDown size={14} className="text-slate-400 transition-transform duration-200 group-open/export:rotate-180" /></summary>
+                            <div className="absolute right-0 z-20 mt-2 w-64 overflow-hidden rounded-xl border border-(--st-line) bg-(--st-panel) p-1.5 text-sm text-slate-800 shadow-xl dark:text-gray-100">
+                                <p className="px-3 pb-1 pt-1.5 text-[11px] font-semibold uppercase tracking-widest text-slate-400">{periodLabel}</p>
+                                <button onClick={event => { event.currentTarget.closest('details')?.removeAttribute('open'); exportList('csv'); }} className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left transition hover:bg-slate-100 dark:hover:bg-gray-800"><span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-500/15 text-emerald-600 dark:text-emerald-400"><FileSpreadsheet size={16} /></span><span><span className="block font-semibold">Excel</span><span className="block text-xs text-slate-500 dark:text-gray-400">Fichier CSV, à ouvrir dans un tableur</span></span></button>
+                                <button onClick={event => { event.currentTarget.closest('details')?.removeAttribute('open'); exportList('pdf'); }} className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left transition hover:bg-slate-100 dark:hover:bg-gray-800"><span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-rose-500/15 text-rose-600 dark:text-rose-400"><FileText size={16} /></span><span><span className="block font-semibold">PDF</span><span className="block text-xs text-slate-500 dark:text-gray-400">Liste prête à imprimer</span></span></button>
+                            </div>
+                        </details>}
+                        <button onClick={() => load()} className="group inline-flex items-center gap-2 rounded-xl border border-(--st-line) bg-(--st-panel) py-1.5 pl-2 pr-3.5 text-sm font-semibold shadow-sm transition duration-150 hover:-translate-y-0.5 hover:border-(--mt-main) hover:shadow-md active:translate-y-0"><span className="flex h-7 w-7 items-center justify-center rounded-lg bg-(--mt-main)/15 text-(--mt-main-fort) transition group-hover:bg-(--mt-main) group-hover:text-(--mt-sur-main) dark:text-(--mt-main)"><RefreshCw size={15} className={loading ? 'animate-spin' : 'transition-transform duration-500 group-hover:rotate-180'} /></span>Actualiser</button>
                         </div>
                     </div>
                 </section>
 
-                {notice && <div role="status" className="flex items-center justify-between rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-200"><span>{notice}</span><button onClick={() => setNotice('')} aria-label="Fermer"><X size={16} /></button></div>}
-                {error && <div role="alert" className="flex items-center justify-between rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-200"><span>{error}</span><button onClick={() => setError('')} aria-label="Fermer"><X size={16} /></button></div>}
+                <Notice tone="success" onClose={() => setNotice('')}>{notice}</Notice>
+                <Notice tone="error" onClose={() => setError('')}>{error}</Notice>
 
                 {/* ---------- Indicateurs ---------- */}
-                <section aria-label="Indicateurs">
-                    <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-                        <h2 className="font-semibold">Vue d’ensemble · <span className="text-teal-700 dark:text-teal-300">{periodLabel}</span></h2>
-                        <div role="tablist" aria-label="Période" className="inline-flex max-w-full overflow-x-auto rounded-full bg-white p-1 shadow-sm dark:bg-gray-800">
-                            {PERIODS.map(([key, label]) => (
-                                <button key={key} role="tab" aria-selected={period === key} onClick={() => { setPeriod(key); setPage(1); }}
-                                    className={`whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-semibold transition sm:px-4 sm:text-sm ${period === key ? 'bg-(--mt-main) text-(--mt-sur-main) shadow-sm' : 'text-slate-600 hover:text-slate-900 dark:text-gray-400'}`}>{label}</button>
-                            ))}
-                        </div>
+                <section aria-label="Indicateurs" className="space-y-3">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                        <h2 className="text-sm font-semibold">Vue d’ensemble · <span className="text-teal-700 dark:text-teal-300">{periodLabel}</span></h2>
+                        <Tabs value={period} onValueChange={valeur => { setPeriod(valeur); setPage(1); }}>
+                            <TabsList aria-label="Période">
+                                {PERIODS.map(([key, label]) => <TabsTrigger key={key} value={key}>{label}</TabsTrigger>)}
+                            </TabsList>
+                            {PERIODS.map(([key]) => <TabsContent key={key} value={key} />)}
+                        </Tabs>
                     </div>
-                    <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
-                        {kpis.map(({ key, label, value, icon: Icon, tone }) => (
+                    <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
+                        {kpis.map(({ key, label, value, icon: Icon }) => (
                             <button key={key} onClick={() => { setStatus(key); setPage(1); }} aria-pressed={status === key}
-                                className={`${card} p-4 text-left transition hover:-translate-y-0.5 hover:shadow-md ${key === 'TOUS' ? 'col-span-2 lg:col-span-1' : ''} ${status === key ? 'ring-2 ring-teal-600/40' : ''}`}>
-                                <div className="flex items-center justify-between">
-                                    <span className="text-xs font-medium text-slate-500 dark:text-gray-400 sm:text-sm">{label}</span>
-                                    <span className={`rounded-xl p-2 ${tone}`}><Icon size={17} /></span>
-                                </div>
-                                <div className="mt-3 text-4xl font-extrabold tabular-nums">{loading ? <span className="inline-block h-8 w-10 animate-pulse rounded bg-slate-200 dark:bg-gray-800" /> : value}</div>
+                                className={`${card} flex items-center gap-3 px-3.5 py-3 text-left transition hover:bg-slate-50 dark:hover:bg-gray-800/60 ${status === key ? 'border-(--mt-main) ring-1 ring-(--mt-main)/60' : ''}`}>
+                                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-linear-to-br from-(--mt-main) to-(--mt-main-clair) text-(--mt-sur-main)"><Icon size={17} aria-hidden="true" /></span>
+                                <span className="min-w-0">
+                                    <span className="block truncate text-xs text-slate-500 dark:text-gray-400">{label}</span>
+                                    <span className="block text-xl font-bold leading-tight tabular-nums">{loading ? '…' : value}</span>
+                                </span>
                             </button>
                         ))}
                     </div>
                 </section>
 
-                {/* ---------- Graphique + agenda du jour ---------- */}
-                <section className="grid gap-6 xl:grid-cols-5">
-                    <div className={`${card} p-5 xl:col-span-3`}>
-                        <div className="mb-4 flex items-start justify-between gap-3">
-                            <div><h2 className="font-semibold">{vuePraticien ? 'Ma semaine' : 'Rendez-vous de la semaine'}</h2><p className="text-xs text-slate-500 dark:text-gray-400">Par jour, hors rendez-vous annulés</p></div>
-                            <span className="rounded-full bg-teal-100 px-3 py-1 text-xs font-semibold tabular-nums text-teal-800 dark:bg-teal-500/15 dark:text-teal-300">{week.reduce((sum, day) => sum + day.total, 0)} au total</span>
+                {/* ---------- Aperçu de la semaine : courbes, anneau par service, jauges, radar (lecture seule, mêmes données que la page) ---------- */}
+                {!loading && <ApercuSemaine week={week} weekRdvs={weekRdvs} rdvs={rdvs} stats={stats} />}
+
+                {/* ---------- Graphiques, agenda du jour et activité récente ---------- */}
+                <section className="grid gap-4 xl:grid-cols-3">
+                    <div className="min-w-0 space-y-4 xl:col-span-2">
+                        <div className={`${card} p-4`}>
+                            <div className="mb-3 flex items-start justify-between gap-3">
+                                <div><h2 className="font-semibold">{vuePraticien ? 'Ma semaine' : 'Rendez-vous de la semaine'}</h2><p className="text-xs text-slate-500 dark:text-gray-400">Par jour, hors rendez-vous annulés</p></div>
+                                <span className="rounded-full bg-(--mt-main)/15 px-3 py-1 text-xs font-semibold tabular-nums text-teal-800 dark:text-teal-300">{week.reduce((sum, day) => sum + day.total, 0)} au total</span>
+                            </div>
+                            <GrapheDiffere hauteur="h-48"><WeekChart days={week} /></GrapheDiffere>
                         </div>
-                        <WeekChart days={week} />
+                        <div className={`${card} p-4`}>
+                            <div className="mb-3"><h2 className="font-semibold">Rendez-vous par statut</h2><p className="text-xs text-slate-500 dark:text-gray-400">{periodLabel}</p></div>
+                            <GrapheDiffere><ColumnChart items={parStatut} ariaLabel="Rendez-vous par statut" height="h-44" /></GrapheDiffere>
+                        </div>
                     </div>
-                    <div className={`${card} p-5 xl:col-span-2`}>
-                        <div className="mb-4 flex items-center justify-between">
-                            <div><h2 className="font-semibold">{vuePraticien ? 'Mes patients du jour' : 'Agenda du jour'}</h2><p className="text-xs text-slate-500 dark:text-gray-400">{formatDateFr(today, { weekday: 'long', day: 'numeric', month: 'long' })}</p></div>
-                            <CalendarClock className="text-teal-600" size={20} />
+                    <div className="min-w-0 space-y-4">
+                        <div className={`${card} p-4`}>
+                            <div className="mb-3 flex items-center justify-between">
+                                <div><h2 className="font-semibold">{vuePraticien ? 'Mes patients du jour' : 'Agenda du jour'}</h2><p className="text-xs text-slate-500 dark:text-gray-400">{formatDateFr(today, { weekday: 'long', day: 'numeric', month: 'long' })}</p></div>
+                                <CalendarClock className="text-teal-600" size={20} />
+                            </div>
+                            <AgendaToday items={todayItems} peutConfirmer={rdv => peutAccepter(rdv, profile) || peutConfirmer(rdv)} libelle={rdv => (peutAccepter(rdv, profile) ? 'Accepter' : 'Confirmer')} onConfirm={rdv => (peutAccepter(rdv, profile) ? accepterRdv(rdv) : confirmRdv(rdv))} onOpen={rdv => setModal({ type: 'view', rdv })} />
                         </div>
-                        <AgendaToday items={todayItems} peutConfirmer={rdv => peutAccepter(rdv, profile) || peutConfirmer(rdv)} libelle={rdv => (peutAccepter(rdv, profile) ? 'Accepter' : 'Confirmer')} onConfirm={rdv => (peutAccepter(rdv, profile) ? accepterRdv(rdv) : confirmRdv(rdv))} onOpen={rdv => setModal({ type: 'view', rdv })} />
+                        {peut('JOURNAL_VOIR') && <ActivityLog />}
                     </div>
                 </section>
 
@@ -356,8 +392,9 @@ function Dashboard() {
                         <div className="flex flex-col gap-3 xl:flex-row xl:items-center">
                             <label className="relative flex-1">
                                 <Search size={17} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                                <BoutonScanQr onCle={cle => { setQuery(cle); setPage(1); }} label="Scanner un QR code de rendez-vous" className="absolute right-1.5 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-md text-slate-500 transition hover:bg-slate-100 hover:text-teal-700 dark:text-gray-400 dark:hover:bg-gray-800" />
                                 <input value={query} onChange={e => { setQuery(e.target.value); setPage(1); }} placeholder="Rechercher un patient, un téléphone, un service…"
-                                    className="w-full rounded-xl border border-slate-200 py-2.5 pl-10 pr-3 text-sm outline-none transition focus:border-teal-600 focus:ring-2 focus:ring-teal-600/20 dark:border-gray-700 dark:bg-gray-950" />
+                                    className="w-full rounded-xl border border-slate-200 py-2.5 pl-10 pr-11 text-sm outline-none transition focus:border-teal-600 focus:ring-2 focus:ring-teal-600/20 dark:border-gray-700 dark:bg-gray-950" />
                             </label>
                             <div className="flex flex-wrap gap-2">
                                 {FILTERS.map(([key, label]) => (
@@ -400,8 +437,7 @@ function Dashboard() {
                                                     {peutConfirmer(rdv) && <IconButton label="Confirmer le rendez-vous (le patient reçoit son SMS)" tone="text-emerald-700 hover:bg-emerald-50 dark:text-emerald-300 dark:hover:bg-emerald-500/10" onClick={() => confirmRdv(rdv)}><BadgeCheck size={16} /></IconButton>}
                                                     {droitAttribuer && (rdv.statut === 'EN_ATTENTE' || rdv.statut === 'CONFIRME') && <IconButton label="Attribuer à une personne du personnel" tone="text-violet-700 hover:bg-violet-50 dark:text-violet-300 dark:hover:bg-violet-500/10" onClick={() => setAttribution({ rdv })}><UserCheck size={16} /></IconButton>}
                                                     {peutTerminer(rdv, profile) && <IconButton label="Marquer comme terminé" tone="text-sky-700 hover:bg-sky-50 dark:text-sky-300 dark:hover:bg-sky-500/10" onClick={() => finishRdv(rdv)}><CheckCheck size={16} /></IconButton>}
-                                                    <IconButton label="Télécharger le reçu PDF" onClick={() => downloadPdf(rdv)}><FileDown size={16} /></IconButton>
-                                                    <IconButton label="Télécharger le reçu en image" onClick={() => downloadImage(rdv)}><ImageIcon size={16} /></IconButton>
+                                                    <BoutonTelecharger rdv={rdv} icone onDebut={() => setError('')} onErreur={setError} className="rounded-lg p-2 text-slate-500 hover:bg-slate-100 hover:text-teal-700 dark:text-gray-400 dark:hover:bg-gray-800" />
                                                     {open && !vuePraticien && <IconButton label="Annuler le rendez-vous" tone="text-amber-700 hover:bg-amber-50 dark:text-amber-300 dark:hover:bg-amber-500/10" onClick={() => cancelRdv(rdv)}><Ban size={16} /></IconButton>}
                                                     {droitModifier && !vuePraticien && <IconButton label="Mettre dans la corbeille" tone="text-rose-700 hover:bg-rose-50 dark:text-rose-300 dark:hover:bg-rose-500/10" onClick={() => trashRdv(rdv)}><Trash2 size={16} /></IconButton>}
                                                 </div>
@@ -411,7 +447,7 @@ function Dashboard() {
                                 })}
                             </tbody>
                         </table>
-                        {loading && <div className="flex items-center justify-center gap-2 p-12 text-sm text-slate-500"><Loader2 size={18} className="animate-spin" />Chargement des rendez-vous…</div>}
+                        {loading && <SkeletonTable rows={6} cols={5} />}
                         {!loading && visible.length === 0 && (
                             <div className="flex flex-col items-center gap-2 p-12 text-center text-sm text-slate-500 dark:text-gray-400">
                                 <CalendarDays size={26} className="text-slate-300" />
@@ -434,13 +470,6 @@ function Dashboard() {
                     </div>
                 </section>
 
-                {toast && (
-                    <div role="status" className="fixed bottom-5 right-5 z-60 flex items-center gap-4 rounded-xl bg-slate-900 px-4 py-3 text-sm text-white shadow-xl">
-                        <span>{toast.message}</span>
-                        {toast.undo && <button onClick={async () => { try { await toast.undo(); setToast(null); } catch { setError('Impossible de restaurer ce rendez-vous (le créneau a peut-être été repris).'); setToast(null); } }} className="font-semibold text-teal-300">Annuler</button>}
-                        <button onClick={() => setToast(null)} aria-label="Fermer" className="text-slate-300"><X size={16} /></button>
-                    </div>
-                )}
                 {confirmDialog && (
                     <div className="fixed inset-0 z-70 flex items-center justify-center bg-slate-950/50 p-4 backdrop-blur-sm">
                         <section role="alertdialog" aria-modal="true" aria-label={confirmDialog.title} className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl dark:bg-gray-900">

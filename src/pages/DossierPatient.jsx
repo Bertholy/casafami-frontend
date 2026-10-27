@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { SkeletonPage } from '../components/ui/skeleton';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { ClipboardPlus, FileSignature, Loader2, Pencil, Phone, Save, Search, Stethoscope, Trash2, UserRound } from 'lucide-react';
 import axiosClient from '../api/axiosClient';
@@ -101,7 +102,7 @@ export default function DossierPatient() {
         <AdminLayout title={dossier?.nom || 'Dossier patient'} subtitle={formatPhone(dossier?.telephone || telephone)}>
             <Notice tone="success" onClose={() => setNotice('')}>{notice}</Notice>
             <Notice tone="error" onClose={() => setError('')}>{error}</Notice>
-            {loading && !dossier && <div className="flex items-center justify-center gap-2 p-12 text-sm text-slate-500"><Loader2 className="animate-spin" size={18} />Chargement du dossier…</div>}
+            {loading && !dossier && <SkeletonPage />}
 
             {dossier && !peutEcrire && <Notice tone="info">Vous pouvez consulter ce dossier mais pas le modifier.</Notice>}
             {dossier && (

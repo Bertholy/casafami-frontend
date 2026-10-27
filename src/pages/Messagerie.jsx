@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { SkeletonList } from '../components/ui/skeleton';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, Loader2, MessageSquare, Search, Send } from 'lucide-react';
 import axiosClient, { assetUrl } from '../api/axiosClient';
@@ -101,7 +102,7 @@ export default function Messagerie() {
                         </div>
                     </div>
                     <ul className="min-h-0 flex-1 overflow-y-auto">
-                        {loading && <li className="flex justify-center p-6"><Loader2 size={18} className="animate-spin text-slate-400" /></li>}
+                        {loading && <li><SkeletonList rows={5} /></li>}
                         {!loading && filtres.length === 0 && <li className="p-6 text-center text-sm text-slate-500">Aucun collègue trouvé.</li>}
                         {filtres.map(c => (
                             <li key={c.id}>
@@ -141,7 +142,7 @@ export default function Messagerie() {
                                 <div className="min-w-0"><p className="truncate text-sm font-semibold">{courant.nom}</p><p className="text-xs text-slate-500 dark:text-gray-400">{getRoleLabel(courant.role)}</p></div>
                             </header>
                             <div className="min-h-0 flex-1 space-y-1 overflow-y-auto bg-slate-50/60 px-4 py-4 dark:bg-gray-950/40" aria-live="polite">
-                                {!messages && <div className="flex justify-center p-6"><Loader2 size={18} className="animate-spin text-slate-400" /></div>}
+                                {!messages && <SkeletonList rows={4} />}
                                 {messages && messages.length === 0 && <p className="p-6 text-center text-sm text-slate-500">Aucun message. Écrivez le premier ci-dessous.</p>}
                                 {messages && messages.map((m, i) => (
                                     <div key={m.id}>

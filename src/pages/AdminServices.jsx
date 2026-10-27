@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { SkeletonList } from '../components/ui/skeleton';
 import { useNavigate } from 'react-router-dom';
 import { ImagePlus, Loader2, Pencil, Plus, Trash2, X } from 'lucide-react';
 import axiosClient, { assetUrl } from '../api/axiosClient';
@@ -117,7 +118,7 @@ export default function AdminServices() {
 
             <section>
                 <div className="mb-3 flex items-center justify-between"><h2 className="font-semibold">Services publiés <span className="ml-1 rounded-full bg-slate-100 px-2 py-0.5 text-xs font-normal dark:bg-gray-800">{services.length}</span></h2><button onClick={load} className="text-sm text-teal-700 hover:underline dark:text-teal-300">Actualiser</button></div>
-                {loading ? <div className={`${card} flex items-center justify-center gap-2 p-10 text-sm text-slate-500`}><Loader2 size={18} className="animate-spin" />Chargement des services…</div>
+                {loading ? <div className={card}><SkeletonList rows={4} /></div>
                     : services.length === 0 ? <div className={`${card} p-10 text-center text-sm text-slate-500`}>Aucun service dans le catalogue.</div>
                         : <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">{services.map(service => (
                             <article key={service.id} className={`${card} overflow-hidden`}>

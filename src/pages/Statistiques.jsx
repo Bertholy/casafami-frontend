@@ -1,13 +1,17 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { lazy, useCallback, useEffect, useMemo, useState } from 'react';
+import { SkeletonPage } from '../components/ui/skeleton';
 import { useNavigate } from 'react-router-dom';
-import { Ban, CalendarDays, Loader2, UserPlus, Users } from 'lucide-react';
+import { Ban, CalendarDays, UserPlus, Users } from 'lucide-react';
 import axiosClient from '../api/axiosClient';
 import AdminLayout from '../components/AdminLayout';
-import ColumnChart from '../components/dashboard/ColumnChart';
+import GrapheDiffere from '../components/dashboard/GrapheDiffere';
 import Notice from '../components/Notice';
 import { STATUS, todayISO } from '../constants/app';
 import { card } from '../constants/ui';
 import { apiErrorMessage, getRole, hasSession, LOGIN_PATH, homeForRole, peut } from '../utils/auth';
+
+// Les graphiques (Recharts) se chargent après le reste de la page.
+const ColumnChart = lazy(() => import('../components/dashboard/ColumnChart'));
 
 const MOIS = ['janv.', 'févr.', 'mars', 'avr.', 'mai', 'juin', 'juil.', 'août', 'sept.', 'oct.', 'nov.', 'déc.'];
 const JOURS = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
@@ -109,7 +113,7 @@ export default function Statistiques() {
             </div>
 
             <Notice tone="error" onClose={() => setError('')}>{error}</Notice>
-            {loading && !synthese && <div className="flex items-center justify-center gap-2 p-12 text-sm text-slate-500"><Loader2 className="animate-spin" size={18} />Chargement…</div>}
+            {loading && !synthese && <SkeletonPage />}
 
             {synthese && (
                 <>
@@ -140,14 +144,14 @@ export default function Statistiques() {
 
                     <section className={`${card} p-5`}>
                         <div className="mb-4"><h2 className="font-semibold">Évolution sur 12 mois</h2><p className="text-xs text-slate-500 dark:text-gray-400">Rendez-vous par mois, hors annulés</p></div>
-                        <ColumnChart items={mois} ariaLabel="Rendez-vous par mois" />
+                        <GrapheDiffere hauteur="h-56"><ColumnChart items={mois} ariaLabel="Rendez-vous par mois" /></GrapheDiffere>
                     </section>
 
                     <section className="grid gap-6 lg:grid-cols-2">
                         <div className={`${card} p-5`}><h2 className="mb-4 font-semibold">Par service</h2><BarList items={synthese.parService} /></div>
                         <div className={`${card} p-5`}><h2 className="mb-4 font-semibold">Par praticien</h2><BarList items={synthese.parPraticien} /></div>
-                        <div className={`${card} p-5`}><div className="mb-4"><h2 className="font-semibold">Jours les plus chargés</h2><p className="text-xs text-slate-500 dark:text-gray-400">Hors annulés</p></div><ColumnChart items={jours} ariaLabel="Rendez-vous par jour de la semaine" height="h-44" /></div>
-                        <div className={`${card} p-5`}><div className="mb-4"><h2 className="font-semibold">Heures les plus demandées</h2><p className="text-xs text-slate-500 dark:text-gray-400">Hors annulés</p></div>{heures.length ? <ColumnChart items={heures} ariaLabel="Rendez-vous par heure" height="h-44" /> : <p className="py-6 text-center text-sm text-slate-500 dark:text-gray-400">Aucune donnée sur cette période.</p>}</div>
+                        <div className={`${card} p-5`}><div className="mb-4"><h2 className="font-semibold">Jours les plus chargés</h2><p className="text-xs text-slate-500 dark:text-gray-400">Hors annulés</p></div><GrapheDiffere><ColumnChart items={jours} ariaLabel="Rendez-vous par jour de la semaine" height="h-44" /></GrapheDiffere></div>
+                        <div className={`${card} p-5`}><div className="mb-4"><h2 className="font-semibold">Heures les plus demandées</h2><p className="text-xs text-slate-500 dark:text-gray-400">Hors annulés</p></div>{heures.length ? <GrapheDiffere><ColumnChart items={heures} ariaLabel="Rendez-vous par heure" height="h-44" /></GrapheDiffere> : <p className="py-6 text-center text-sm text-slate-500 dark:text-gray-400">Aucune donnée sur cette période.</p>}</div>
                     </section>
                 </>
             )}

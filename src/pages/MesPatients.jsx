@@ -1,4 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { SkeletonList } from '../components/ui/skeleton';
+import BoutonScanQr from '../components/BoutonScanQr';
+import useOuvrirParCle from '../hooks/useOuvrirParCle';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { CalendarClock, Check, CheckCheck, ClipboardCheck, FolderOpen, Loader2, Phone, Search, UserCheck } from 'lucide-react';
 import axiosClient from '../api/axiosClient';
@@ -22,6 +25,7 @@ const motifCourt = motif => (motif || '').split('\n').find(l => l.trim() && !l.s
 export default function MesPatients() {
     const navigate = useNavigate();
     const [params] = useSearchParams();
+    const ouvrirParCle = useOuvrirParCle();
     const rdvFocus = Number(params.get('rdv')) || null;
     const [liste, setListe] = useState([]);
     const [filtre, setFiltre] = useState(null); // null = automatique (« À venir », ou « Passés » si le rendez-vous ciblé est passé)
@@ -97,11 +101,11 @@ export default function MesPatients() {
             <Notice tone="success" onClose={() => setNotice('')}>{notice}</Notice>
             <Notice tone="error" onClose={() => setError('')}>{error}</Notice>
             {rdvFocus && !loading && !cible && <Notice tone="warning">Ce rendez-vous ne vous est plus attribué (le super administrateur l’a peut-être confié à quelqu’un d’autre ou annulé).</Notice>}
-            {loading && <div className="flex justify-center p-10"><Loader2 className="animate-spin text-slate-400" size={20} /></div>}
+            {loading && <SkeletonList rows={4} />}
 
             {/* ---------- à accepter ---------- */}
             {aAccepter.length > 0 && (
-                <section className="rounded-2xl border-2 border-amber-300 bg-amber-50/60 p-5 dark:border-amber-500/40 dark:bg-amber-500/5" aria-label="Rendez-vous à accepter">
+                <section className="rounded-2xl border border-amber-300 p-5 dark:border-amber-500/40" aria-label="Rendez-vous à accepter">
                     <h2 className="mb-1 flex items-center gap-2 font-semibold text-amber-900 dark:text-amber-200"><UserCheck size={18} />À accepter <span className="rounded-full bg-amber-200 px-2 py-0.5 text-xs dark:bg-amber-500/20">{aAccepter.length}</span></h2>
                     <p className="mb-3 text-sm text-amber-900/80 dark:text-amber-200/80">Ces rendez-vous vous ont été confiés par le super administrateur. Acceptez-les pour qu’il puisse les confirmer aux patients.</p>
                     <ul className="space-y-2">
@@ -124,7 +128,7 @@ export default function MesPatients() {
                 <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
                     <h2 className="flex items-center gap-2 font-semibold"><ClipboardCheck size={18} className="text-teal-700" />Patients que j’ai acceptés <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs dark:bg-gray-800">{acceptes.length}</span></h2>
                     <div className="flex flex-wrap items-center gap-2">
-                        <div className="relative"><Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" /><input value={recherche} onChange={e => setRecherche(e.target.value)} placeholder="Chercher un patient" aria-label="Chercher un patient" className={`${inputClass} w-52 pl-9`} /></div>
+                        <div className="relative"><Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" /><input value={recherche} onChange={e => setRecherche(e.target.value)} placeholder="Chercher un patient" aria-label="Chercher un patient" className={`${inputClass} w-56 pl-9 pr-10`} /><BoutonScanQr onCle={ouvrirParCle} label="Scanner le QR code d’un patient" className="absolute right-1.5 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-md text-slate-500 transition hover:bg-slate-100 hover:text-teal-700 dark:text-gray-400 dark:hover:bg-gray-800" /></div>
                         <div className="inline-flex rounded-xl bg-slate-100 p-1 dark:bg-gray-800" role="group" aria-label="Période">
                             {FILTRES.map(([cle, libelle]) => <button key={cle} onClick={() => setFiltre(cle)} aria-pressed={filtreEffectif === cle} className={`rounded-lg px-3 py-1.5 text-sm font-medium transition ${filtreEffectif === cle ? 'bg-white text-teal-800 shadow-sm dark:bg-gray-700 dark:text-teal-300' : 'text-slate-600 dark:text-gray-300'}`}>{libelle}</button>)}
                         </div>

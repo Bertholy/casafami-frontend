@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
+import { SkeletonTable } from '../components/ui/skeleton';
 import { useNavigate } from 'react-router-dom';
-import { KeyRound, Loader2, Pencil, Plus, ShieldCheck, Trash2, UserCog, X } from 'lucide-react';
+import { KeyRound, Loader2, Pencil, Plus, Search, Trash2, UserCog, X } from 'lucide-react';
 import axiosClient from '../api/axiosClient';
 import AdminLayout from '../components/AdminLayout';
 import { apiErrorMessage, clearSession, getEmail, getRole, hasSession, homeForRole, LOGIN_PATH, peut } from '../utils/auth';
@@ -12,6 +13,8 @@ const ROLES = [
     ['SECRETAIRE', 'Secrétaire'],
     ['SUPER_ADMIN', 'Super administrateur'],
 ];
+// Recherche sans tenir compte des majuscules ni des accents (« Secretaire » trouve « Secrétaire »).
+const normaliser = texte => String(texte ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
 const EMPTY = { nom: '', email: '', motDePasse: '', telephone: '', role: 'SAGE_FEMME' };
 const field = 'rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-teal-600 focus:ring-2 focus:ring-teal-600/20 dark:border-gray-700 dark:bg-gray-950';
 const card = 'rounded-2xl border border-slate-200/80 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900';
@@ -27,6 +30,10 @@ export default function AdminUsers() {
     const myEmail = getEmail();
     const [dialog, setDialog] = useState(null); // { type: 'edit' | 'password', user, nom, email, telephone, motDePasse }
     const [dialogError, setDialogError] = useState('');
+    const [recherche, setRecherche] = useState('');
+    const terme = normaliser(recherche.trim());
+    const libelleRole = Object.fromEntries([...ROLES, ['INFIRMIERE', 'Infirmière']]);
+    const affiches = terme ? users.filter(user => [user.nom, user.email, user.telephone, libelleRole[user.role]].some(valeur => normaliser(valeur).includes(terme))) : users;
     const [dialogSaving, setDialogSaving] = useState(false);
 
     // silencieux = actualisation en arrière-plan : la liste reste affichée au lieu de repasser par « Chargement… »
@@ -117,15 +124,24 @@ export default function AdminUsers() {
 
             <section className={`${card} overflow-hidden`}>
                 <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4 dark:border-gray-800">
-                    <div className="flex items-center gap-2"><UserCog size={19} className="text-teal-700" /><h2 className="font-semibold">Comptes existants</h2><span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs dark:bg-gray-800">{users.length}</span></div>
-                    <button onClick={() => load()} className="text-sm text-teal-700 hover:underline dark:text-teal-300">Actualiser</button>
+                    <div className="flex items-center gap-2"><UserCog size={19} className="text-teal-700" /><h2 className="font-semibold">Comptes existants</h2><span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs dark:bg-gray-800">{terme ? `${affiches.length} sur ${users.length}` : users.length}</span></div>
+                    <div className="flex items-center gap-4">
+                        <label className="relative block w-48 sm:w-64">
+                            <Search size={15} aria-hidden="true" className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                            <input type="search" value={recherche} onChange={e => setRecherche(e.target.value)} onKeyDown={e => { if (e.key === 'Escape') setRecherche(''); }}
+                                placeholder="Rechercher un compte…" aria-label="Rechercher un compte par nom, e-mail, téléphone ou rôle" autoComplete="off"
+                                className="w-full rounded-xl border border-slate-200 bg-white py-2 pl-9 pr-8 text-sm outline-none transition focus:border-teal-600 focus:ring-2 focus:ring-teal-600/20 dark:border-gray-700 dark:bg-gray-950 [&::-webkit-search-cancel-button]:hidden" />
+                            {recherche && <button type="button" onClick={() => setRecherche('')} aria-label="Effacer la recherche" className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full p-1 text-slate-400 hover:text-slate-700 dark:hover:text-gray-200"><X size={14} /></button>}
+                        </label>
+                        <button onClick={() => load()} className="text-sm text-teal-700 hover:underline dark:text-teal-300">Actualiser</button>
+                    </div>
                 </div>
-                {loading ? <div className="flex items-center justify-center gap-2 p-10 text-sm text-slate-500"><Loader2 size={18} className="animate-spin" />Chargement…</div> : (
+                {loading ? <SkeletonTable rows={6} cols={5} /> : (
                     <div className="overflow-x-auto">
                         <table className="w-full min-w-175 text-left text-sm">
                             <thead className="bg-slate-50 text-xs uppercase text-slate-500 dark:bg-gray-800/60"><tr>{['Nom', 'E-mail', 'Téléphone', 'Rôle et accès', 'Action'].map(h => <th key={h} className="px-5 py-3 font-semibold">{h}</th>)}</tr></thead>
                             <tbody className="divide-y divide-slate-100 dark:divide-gray-800">
-                                {users.map(user => (
+                                {affiches.map(user => (
                                     <tr key={user.id}>
                                         <td className="px-5 py-3 font-medium">{user.nom}</td>
                                         <td className="px-5 py-3">{user.email}</td>
@@ -146,7 +162,7 @@ export default function AdminUsers() {
                                 ))}
                             </tbody>
                         </table>
-                        {users.length === 0 && <div className="p-10 text-center text-sm text-slate-500">Aucun compte trouvé.</div>}
+                        {affiches.length === 0 && <div className="p-10 text-center text-sm text-slate-500">{users.length === 0 ? 'Aucun compte trouvé.' : `Aucun compte ne correspond à « ${recherche.trim()} ».`}</div>}
                     </div>
                 )}
             </section>
@@ -173,10 +189,7 @@ export default function AdminUsers() {
                 </div>
             )}
 
-            <div className="flex gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-200">
-                <ShieldCheck size={18} className="mt-0.5 shrink-0" />
-                <p><strong>Règles d’accès :</strong> le super administrateur gère les comptes. Les médecins, sages-femmes et secrétaires ont chacun leur espace. Les comptes avec l’ancien rôle « Infirmière » restent reconnus et peuvent être changés ici.</p>
-            </div>
+            <p className="px-1 text-xs text-slate-500 dark:text-gray-400">Seul le super administrateur gère les comptes. Les comptes « Infirmière » déjà créés restent valables et peuvent être modifiés ici.</p>
         </AdminLayout>
     );
 }

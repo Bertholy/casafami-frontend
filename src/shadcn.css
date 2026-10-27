@@ -1,0 +1,119 @@
+/*
+ * Jetons « shadcn/ui » du site public : couleurs sémantiques (background, primary, muted, border…), bordures fines, pas d'ombres.
+ * Ils prennent les couleurs du site (« Couleurs du site » dans l'administration) : le bouton principal suit la couleur de bouton choisie.
+ * L'espace du personnel n'utilise pas ces jetons.
+ */
+:root {
+    --sc-background: #ffffff;
+    --sc-foreground: #09090b;
+    --sc-card: #ffffff;
+    --sc-card-foreground: #09090b;
+    --sc-popover: #ffffff;
+    --sc-popover-foreground: #09090b;
+    --sc-primary: #18181b;
+    --sc-primary-foreground: #fafafa;
+    --sc-secondary: #f4f4f5;
+    --sc-secondary-foreground: #18181b;
+    --sc-muted: #f4f4f5;
+    --sc-muted-foreground: #52525b;
+    --sc-accent: #f4f4f5;
+    --sc-accent-foreground: #18181b;
+    --sc-destructive: #dc2626;
+    --sc-destructive-foreground: #ffffff;
+    --sc-border: #e4e4e7;
+    --sc-input: #d4d4d8;
+    --sc-ring: #18181b;
+}
+
+.theme-doux {
+    --sc-background: var(--mt-fond);
+    --sc-foreground: var(--mt-ink);
+    --sc-card: #ffffff;
+    --sc-card-foreground: var(--mt-ink);
+    --sc-popover: #ffffff;
+    --sc-popover-foreground: var(--mt-ink);
+    --sc-primary: var(--mt-bouton);
+    --sc-primary-foreground: var(--mt-sur-bouton);
+    --sc-secondary: #eaf3f8;
+    --sc-secondary-foreground: var(--mt-ink);
+    --sc-muted: #eaf3f8;
+    --sc-muted-foreground: #4b6670;
+    --sc-accent: #e3f1f7;
+    --sc-accent-foreground: var(--mt-ink);
+    --sc-destructive: #dc2626;
+    --sc-destructive-foreground: #ffffff;
+    --sc-border: #dce9f0;
+    --sc-input: #c5d9e3;
+    --sc-ring: var(--mt-main-fort);
+}
+
+.dark .theme-doux {
+    --sc-background: #0b1e29;
+    --sc-foreground: #e5eef3;
+    --sc-card: #12293a;
+    --sc-card-foreground: #e5eef3;
+    --sc-popover: #12293a;
+    --sc-popover-foreground: #e5eef3;
+    --sc-secondary: #1a3a4b;
+    --sc-secondary-foreground: #e5eef3;
+    --sc-muted: #1a3a4b;
+    --sc-muted-foreground: #a3bac6;
+    --sc-accent: #1f4457;
+    --sc-accent-foreground: #e5eef3;
+    --sc-destructive: #ef4444;
+    --sc-border: #234557;
+    --sc-input: #2f5568;
+}
+
+/* Thème « montagne » du site public : mêmes jetons, avec le bleu du bâtiment et des angles droits (les rayons sont à 0 dans montagne.css). */
+.theme-montagne {
+    --mt-bouton: var(--casafami-button);
+    --mt-sur-bouton: #ffffff;
+    --mt-main-fort: color-mix(in srgb, var(--mt-main) 72%, black);
+    --sc-background: #ffffff;
+    --sc-foreground: var(--mt-texte);
+    --sc-card: #ffffff;
+    --sc-card-foreground: var(--mt-texte);
+    --sc-popover: #ffffff;
+    --sc-popover-foreground: var(--mt-texte);
+    --sc-primary: var(--casafami-button);
+    --sc-primary-foreground: #ffffff;
+    --sc-secondary: #f3f3f3;
+    --sc-secondary-foreground: var(--mt-texte);
+    --sc-muted: #f3f3f3;
+    --sc-muted-foreground: #5b5b66;
+    --sc-accent: #eaf4fa;
+    --sc-accent-foreground: var(--mt-texte);
+    --sc-destructive: #dc2626;
+    --sc-destructive-foreground: #ffffff;
+    --sc-border: #e2e2e6;
+    --sc-input: #c9c9d0;
+    --sc-ring: var(--mt-main);
+}
+
+.dark .theme-montagne {
+    --sc-background: #111827;
+    --sc-foreground: #e5e7eb;
+    --sc-card: #1f2937;
+    --sc-card-foreground: #e5e7eb;
+    --sc-popover: #1f2937;
+    --sc-popover-foreground: #e5e7eb;
+    --sc-secondary: #273244;
+    --sc-secondary-foreground: #e5e7eb;
+    --sc-muted: #273244;
+    --sc-muted-foreground: #a8b0bd;
+    --sc-accent: #2b3a4f;
+    --sc-accent-foreground: #e5e7eb;
+    --sc-border: #374151;
+    --sc-input: #475569;
+}
+
+.theme-montagne .mt-carte { background: var(--sc-card); border: 1px solid var(--sc-border); }
+
+/* Les noms de couleurs Tailwind (bg-primary, border-input…) sont déclarés dans index.css, là où Tailwind est importé. */
+
+/* Animations des notifications et des menus (components/ui) */
+@keyframes toast-in { from { opacity: 0; transform: translateX(1rem); } to { opacity: 1; transform: none; } }
+@keyframes toast-out { from { opacity: 1; } to { opacity: 0; transform: translateX(1rem); } }
+@keyframes menu-in { from { opacity: 0; transform: translateY(-4px) scale(.98); } to { opacity: 1; transform: none; } }
+@keyframes fond-in { from { opacity: 0; } to { opacity: 1; } }

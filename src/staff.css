@@ -30,28 +30,61 @@
 .dark .theme-staff :focus-visible { outline-color: var(--mt-main-clair); }
 
 /*
- * Design « doux » de l'espace du personnel : fond bleuté, coins plus arrondis, ombres légères, police ronde, boutons en pilule.
- * Pour revenir à l'ancien aspect : retirer ce bloc, ou repasser sur la branche design-doux ou main.
+ * Design « console » de l'espace du personnel (clair et sombre) : fond presque noir en sombre, panneaux à fine bordure,
+ * coins peu arrondis, pas d'ombres, cyan de la marque en accent. Les jetons --st-* servent à la barre latérale et à la page ;
+ * les jetons --sc-* (shadcn/ui) servent aux composants de components/ui. Le thème clair/sombre se change avec le bouton de l'en-tête.
  */
 .theme-staff {
-    --radius-lg: .9rem; --radius-xl: 1.15rem; --radius-2xl: 1.75rem; --radius-3xl: 2.25rem;
-    --shadow-sm: 0 8px 26px rgba(15, 80, 120, .07);
-    --shadow-md: 0 14px 36px rgba(15, 80, 120, .11);
-    --shadow-lg: 0 22px 50px rgba(15, 80, 120, .14);
-    font-family: 'Plus Jakarta Sans', 'Segoe UI', system-ui, sans-serif;
+    --radius-lg: .5rem; --radius-xl: .65rem; --radius-2xl: .85rem; --radius-3xl: 1rem;
+    --shadow-sm: none; --shadow-md: 0 8px 24px rgba(2, 8, 20, .12); --shadow-lg: 0 16px 40px rgba(2, 8, 20, .18);
+    /* Police à empattements (Lora) ; les titres sont en gras italique, comme le modèle choisi. Pour revenir à l'ancienne police : 'Plus Jakarta Sans', 'Segoe UI', system-ui, sans-serif */
+    font-family: 'Lora', Georgia, 'Times New Roman', serif;
+
+    --st-page: #f4f7fa; --st-panel: #ffffff; --st-line: #e3e8ef;
+    --st-side: #ffffff; --st-side-fg: #475569; --st-side-strong: #0f172a; --st-side-muted: #64748b; --st-side-hover: rgba(15, 23, 42, .05); --st-side-line: #e3e8ef;
+
+    --sc-background: var(--st-page); --sc-foreground: #0f172a;
+    --sc-card: var(--st-panel); --sc-card-foreground: #0f172a;
+    --sc-popover: #ffffff; --sc-popover-foreground: #0f172a;
+    --sc-primary: var(--mt-bouton); --sc-primary-foreground: var(--mt-sur-bouton);
+    --sc-secondary: #eef2f6; --sc-secondary-foreground: #0f172a;
+    --sc-muted: #eef2f6; --sc-muted-foreground: #5b6778;
+    --sc-accent: color-mix(in srgb, var(--mt-main) 14%, white); --sc-accent-foreground: #0f172a;
+    --sc-destructive: #dc2626; --sc-destructive-foreground: #ffffff;
+    --sc-border: var(--st-line); --sc-input: #cfd7e2; --sc-ring: var(--mt-main);
 }
-.theme-staff h1, .theme-staff h2, .theme-staff h3 { letter-spacing: -.015em; }
-/* bordures de cartes presque invisibles : c'est l'ombre qui sépare */
-.theme-staff .border-slate-200\/80, .theme-staff .border-slate-200 { border-color: rgba(15, 80, 120, .08); }
-/* boutons pleins du personnel : le cyan de la marque, texte bleu nuit, forme de pilule */
+.dark .theme-staff {
+    --st-page: #070a0f; --st-panel: #0e131a; --st-line: #1c2430;
+    --st-side: #0a0e14; --st-side-fg: #b6c0cd; --st-side-strong: #ffffff; --st-side-muted: #8593a6; --st-side-hover: rgba(255, 255, 255, .06); --st-side-line: #18202b;
+
+    --sc-foreground: #e6ebf2; --sc-card-foreground: #e6ebf2;
+    --sc-popover: #0e131a; --sc-popover-foreground: #e6ebf2;
+    --sc-secondary: #18202b; --sc-secondary-foreground: #e6ebf2;
+    --sc-muted: #18202b; --sc-muted-foreground: #8e9aab;
+    --sc-accent: color-mix(in srgb, var(--mt-main) 16%, #0e131a); --sc-accent-foreground: #e6ebf2;
+    --sc-input: #2a3544;
+
+    /* gris du mode sombre : neutres presque noirs de la maquette (remplacent les bleus nuit de index.css) */
+    --color-gray-950: #070a0f; --color-gray-900: #0e131a; --color-gray-800: #18202b; --color-gray-700: #273140; --color-gray-600: #3b4859;
+    --color-gray-500: #778396; --color-gray-400: #9aa6b6; --color-gray-300: #c5cdd8; --color-gray-200: #e0e5ec;
+    --color-slate-950: #070a0f; --color-slate-900: #0e131a; --color-slate-800: #18202b; --color-slate-700: #273140;
+    --color-slate-500: #7a8698; --color-slate-400: #9ea9b8; --color-slate-300: #c5cdd8;
+}
+.theme-staff h1, .theme-staff h2, .theme-staff h3 { letter-spacing: -.01em; font-style: italic; }
+.theme-staff :is(h1, h2, h3):not([class*="font-"]) { font-weight: 700; }   /* les titres qui règlent déjà leur graisse (font-light, font-bold…) la gardent */
+.theme-staff .border-slate-200\/80, .theme-staff .border-slate-200 { border-color: var(--st-line); }
+.dark .theme-staff .border-gray-800, .dark .theme-staff .border-gray-700 { border-color: var(--st-line); }
+/* boutons pleins du personnel : le cyan de la marque, texte bleu nuit */
 .theme-staff button.bg-teal-700.text-white, .theme-staff a.bg-teal-700.text-white,
 .theme-staff button.bg-teal-600.text-white, .theme-staff a.bg-teal-600.text-white {
-    background-color: var(--mt-bouton); color: var(--mt-sur-bouton); border-radius: 999px;
+    background-color: var(--mt-bouton); color: var(--mt-sur-bouton); border-radius: .6rem;
 }
 .theme-staff button.bg-teal-700.text-white:hover, .theme-staff a.bg-teal-700.text-white:hover,
 .theme-staff button.bg-teal-600.text-white:hover, .theme-staff a.bg-teal-600.text-white:hover {
     background-color: color-mix(in srgb, var(--mt-bouton) 88%, black);
 }
 .theme-staff input:not([type='checkbox']):not([type='radio']):not([type='file']):not([type='range']), .theme-staff select, .theme-staff textarea {
-    border-radius: 1rem;
+    border-radius: .6rem;
 }
+/* barre de défilement fine, assortie au thème */
+.theme-staff * { scrollbar-width: thin; scrollbar-color: color-mix(in srgb, var(--st-side-muted) 45%, transparent) transparent; }

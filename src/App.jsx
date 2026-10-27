@@ -7,13 +7,18 @@ import SiteEditorBar from './components/site/SiteEditorBar';
 import TextesAjoutes from './components/site/TextesAjoutes';
 import { SiteContentProvider } from './context/SiteContentContext';
 import TitrePage from './components/TitrePage';
+import ChargementPage from './components/ChargementPage';
+import NiveauDefilement from './components/NiveauDefilement';
+import BarreProgression from './components/BarreProgression';
 import { LangProvider, useLang } from './i18n/LangContext';
-import { PAGES_EDITABLES, STAFF_PREFIXES } from './constants/routes';
+import { PAGES_EDITABLES, STAFF_PREFIXES, pagePublique } from './constants/routes';
 
 // Chaque page est chargée seulement quand on la visite : le premier affichage du site est beaucoup plus léger.
 const Accueil = lazy(() => import('./pages/Accueil'));
 const Services = lazy(() => import('./pages/Services'));
 const PrendreRdv = lazy(() => import('./pages/PrendreRdv'));
+const Portfolio = lazy(() => import('./pages/Portfolio'));
+const Faq = lazy(() => import('./pages/Faq'));
 const MesRdv = lazy(() => import('./pages/MesRdv'));
 const Login = lazy(() => import('./pages/Login'));
 const Dashboard = lazy(() => import('./pages/Dashboard'));
@@ -36,14 +41,8 @@ const Messagerie = lazy(() => import('./pages/Messagerie'));
 const MotDePasseOublie = lazy(() => import('./pages/MotDePasseOublie'));
 const ReinitialiserMotDePasse = lazy(() => import('./pages/ReinitialiserMotDePasse'));
 const Corbeille = lazy(() => import('./pages/Corbeille'));
-
-function Chargement() {
-    return (
-        <div className="flex min-h-[50vh] items-center justify-center" role="status" aria-label="Chargement">
-            <span className="h-8 w-8 animate-spin rounded-full border-4 border-teal-200 border-t-teal-600" />
-        </div>
-    );
-}
+const MentionsLegales = lazy(() => import('./pages/MentionsLegales'));
+const Confidentialite = lazy(() => import('./pages/Confidentialite'));
 
 function NotFound() {
     const { t } = useLang();
@@ -61,22 +60,31 @@ function AppContent() {
     const { t } = useLang();
     const isStaffPage = STAFF_PREFIXES.some(prefix => location.pathname.startsWith(prefix));
     const isLogin = ['/medecin/login', '/medecin/mot-de-passe-oublie', '/medecin/reinitialiser'].includes(location.pathname);
-    const isPublicPage = !isStaffPage && !isLogin;
+    const isPortfolio = location.pathname === '/portfolio';   // page autonome : ni barre de navigation ni pied de page du cabinet
+    const isPublicPage = !isStaffPage && !isLogin && !isPortfolio;
     return (
         <>
+            <BarreProgression />
             <ScrollToTop />
             <TitrePage />
             <a href="#contenu" className="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-[100] focus:rounded-lg focus:bg-white focus:px-4 focus:py-2 focus:text-sm focus:font-bold focus:text-gray-900 focus:shadow-lg">{t("Aller au contenu")}</a>
-            <div className={`min-h-screen flex flex-col bg-white dark:bg-gray-900 transition-colors ${isPublicPage || isLogin ? "theme-doux" : ""}`}>
+            <div className={`min-h-screen flex flex-col bg-white dark:bg-gray-900 transition-colors ${isPublicPage ? "theme-montagne" : isLogin ? "theme-doux" : ""}`}>
+                {isPublicPage && <NiveauDefilement />}
                 {isPublicPage && <Navbar />}
-                <main id="contenu" tabIndex={-1} className="grow focus:outline-none">
-                    {isPublicPage && PAGES_EDITABLES[location.pathname] && <TextesAjoutes page={PAGES_EDITABLES[location.pathname]} zone="haut" />}
-                    <Suspense fallback={<Chargement />}>
+                <main id="contenu" tabIndex={-1} className={`grow focus:outline-none ${isPublicPage ? "mt-fond-doux" : ""}`}>
+                    {isPublicPage && PAGES_EDITABLES[pagePublique(location.pathname)] && <TextesAjoutes page={PAGES_EDITABLES[pagePublique(location.pathname)]} zone="haut" />}
+                    <Suspense fallback={<ChargementPage personnel={isStaffPage} />}>
+                    {/* Chaque page du site public entre en fondu ; la clé garde le même composant pour /prendre-rdv et ses sous-pages (les réponses ne sont pas perdues). */}
+                    <div key={isPublicPage || isPortfolio ? pagePublique(location.pathname) : 'espace'} className={isPublicPage || isPortfolio ? 'page-entree' : undefined}>
                     <Routes>
                         <Route path="/" element={<Accueil />} />
                         <Route path="/services" element={<Services />} />
-                        <Route path="/prendre-rdv" element={<PrendreRdv />} />
+                        <Route path="/prendre-rdv/*" element={<PrendreRdv />} />
                         <Route path="/mes-rdv" element={<MesRdv />} />
+                        <Route path="/portfolio" element={<Portfolio />} />
+                        <Route path="/faq" element={<Faq />} />
+                        <Route path="/mentions-legales" element={<MentionsLegales />} />
+                        <Route path="/confidentialite" element={<Confidentialite />} />
                         <Route path="/medecin/login" element={<Login />} />
                         <Route path="/medecin/mot-de-passe-oublie" element={<MotDePasseOublie />} />
                         <Route path="/medecin/reinitialiser" element={<ReinitialiserMotDePasse />} />
@@ -103,8 +111,9 @@ function AppContent() {
                         <Route path="/medecin/maladies" element={<MaladiesMedecin />} />
                         <Route path="*" element={<NotFound />} />
                     </Routes>
+                    </div>
                     </Suspense>
-                    {isPublicPage && PAGES_EDITABLES[location.pathname] && <TextesAjoutes page={PAGES_EDITABLES[location.pathname]} zone="bas" />}
+                    {isPublicPage && PAGES_EDITABLES[pagePublique(location.pathname)] && <TextesAjoutes page={PAGES_EDITABLES[pagePublique(location.pathname)]} zone="bas" />}
                 </main>
                 {isPublicPage && <Footer />}
             </div>

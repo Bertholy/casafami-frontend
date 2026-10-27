@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { SkeletonList } from '../ui/skeleton';
 import { AlertTriangle, Baby, CalendarClock, CheckCircle2, ClipboardPlus, HeartPulse, Loader2, Plus, Syringe, Trash2, X } from 'lucide-react';
 import axiosClient from '../../api/axiosClient';
 import Notice from '../Notice';
@@ -105,7 +106,7 @@ export default function MaterniteDossier({ telephone, peutSupprimer }) {
             </div>
             <Notice tone="success" onClose={() => setNotice('')}>{notice}</Notice>
             <Notice tone="error" onClose={() => setError('')}>{error}</Notice>
-            {loading && <div className="flex justify-center p-6"><Loader2 size={18} className="animate-spin text-slate-400" /></div>}
+            {loading && <SkeletonList rows={3} />}
 
             {formulaire && (
                 <form onSubmit={soumettre} className="my-4 space-y-3 rounded-2xl border border-teal-200 bg-teal-50/50 p-4 dark:border-teal-500/30 dark:bg-teal-500/5">
@@ -174,7 +175,7 @@ export default function MaterniteDossier({ telephone, peutSupprimer }) {
 
             {/* ---------- grossesse en cours ---------- */}
             {enCours && (
-                <div className="space-y-4 rounded-2xl border border-rose-200 bg-rose-50/40 p-4 dark:border-rose-500/20 dark:bg-rose-500/5">
+                <div className="space-y-4 rounded-2xl border border-rose-200 p-4 dark:border-rose-500/20">
                     <div className="flex flex-wrap items-start justify-between gap-3">
                         <div>
                             <p className="text-xs font-semibold uppercase tracking-wide text-rose-700 dark:text-rose-300">Grossesse en cours</p>
@@ -236,7 +237,7 @@ export default function MaterniteDossier({ telephone, peutSupprimer }) {
             {(data?.enfants || []).map(enfant => {
                 const groupes = [...new Set(enfant.vaccins.map(v => v.groupe))];
                 return (
-                    <div key={enfant.id} className="mt-4 space-y-3 rounded-2xl border border-sky-200 bg-sky-50/40 p-4 dark:border-sky-500/20 dark:bg-sky-500/5">
+                    <div key={enfant.id} className="mt-4 space-y-3 rounded-2xl border border-sky-200 p-4 dark:border-sky-500/20">
                         <div className="flex flex-wrap items-start justify-between gap-3">
                             <div>
                                 <p className="flex items-center gap-2 font-semibold"><Baby size={18} className="text-sky-700" />{enfant.nom} {enfant.sexe && <span className="text-xs font-normal text-slate-500">({enfant.sexe === 'F' ? 'fille' : 'garçon'})</span>}</p>

@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { SkeletonPage } from '../components/ui/skeleton';
 import { useNavigate } from 'react-router-dom';
-import { CheckCircle2, Loader2, Lock, RotateCcw, ShieldCheck, UserRound, UsersRound } from 'lucide-react';
+import { CheckCircle2, Lock, RotateCcw, ShieldCheck, UserRound, UsersRound } from 'lucide-react';
 import axiosClient from '../api/axiosClient';
 import AdminLayout from '../components/AdminLayout';
+import { Switch } from '../components/ui/switch';
 import Notice from '../components/Notice';
-import { btnSecondary, card, inputClass } from '../constants/ui';
+import { btnSecondary, card } from '../constants/ui';
 import { getRoleLabel } from '../constants/app';
 import { apiErrorMessage, getRole, hasSession, homeForRole, LOGIN_PATH, peut } from '../utils/auth';
 
@@ -99,7 +101,7 @@ export default function AdminPermissions() {
                 ))}
             </div>
 
-            {!vue && !error && <div className="flex items-center justify-center gap-2 p-12 text-sm text-slate-500"><Loader2 className="animate-spin" size={18} />Chargement des droits…</div>}
+            {!vue && !error && <SkeletonPage />}
 
             {vue && onglet === 'roles' && (
                 <section className={`${card} overflow-x-auto`} aria-label="Droits par rôle">
@@ -190,12 +192,14 @@ export default function AdminPermissions() {
                                                             {permission.verrouille ? (
                                                                 <span className="inline-flex items-center gap-1 text-xs text-slate-500" title="Réservé au super administrateur"><Lock size={13} />Réservé au super admin</span>
                                                             ) : (
-                                                                <select aria-label={`${permission.libelle} pour ${personne.nom}`} value={valeur} disabled={Boolean(occupe)}
-                                                                    onChange={e => changerException(personne, permission.code, e.target.value)} className={`${inputClass} w-52 ${valeur !== 'role' ? 'border-amber-400' : ''}`}>
-                                                                    <option value="role">Selon le rôle ({duRole ? 'oui' : 'non'})</option>
-                                                                    <option value="oui">Accorder</option>
-                                                                    <option value="non">Retirer</option>
-                                                                </select>
+                                                                <div className="flex items-center gap-3">
+                                                                    <span className={`text-right text-xs ${valeur === 'role' ? 'text-slate-500 dark:text-gray-400' : 'font-semibold text-amber-700 dark:text-amber-300'}`}>
+                                                                        {valeur === 'role' ? 'Selon le rôle' : valeur === 'oui' ? 'Accordé en plus' : 'Retiré'}
+                                                                    </span>
+                                                                    {/* l'interrupteur montre le droit réel ; s'il redevient celui du rôle, l'exception disparaît */}
+                                                                    <Switch checked={effectif} disabled={Boolean(occupe)} signale={valeur !== 'role'} label={`${permission.libelle} pour ${personne.nom}`}
+                                                                        onCheckedChange={nouveau => changerException(personne, permission.code, nouveau === duRole ? 'role' : nouveau ? 'oui' : 'non')} />
+                                                                </div>
                                                             )}
                                                         </li>
                                                     );

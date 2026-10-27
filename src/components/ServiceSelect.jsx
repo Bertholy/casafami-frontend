@@ -36,7 +36,7 @@ export default function ServiceSelect({ services, statut, value, onChange, onRet
             </button>
 
             {ouvert && (
-                <ul role="listbox" aria-labelledby="serviceId" className="absolute z-20 mt-1 max-h-72 w-full overflow-auto rounded-xl border border-gray-200 bg-white py-1 shadow-xl dark:border-gray-700 dark:bg-gray-900">
+                <ul role="listbox" aria-labelledby="serviceId" className="absolute z-20 mt-1 max-h-72 w-full overflow-auto rounded-xl border border-gray-200 bg-white py-1 dark:border-gray-700 dark:bg-gray-900">
                     {statut === 'chargement' && (
                         <li className="flex items-center gap-2 px-4 py-3 text-sm text-gray-500 dark:text-gray-400"><Loader2 className="h-4 w-4 animate-spin" />{t("Chargement des services...")}</li>
                     )}

@@ -1,19 +1,34 @@
+import { useEffect, useRef } from 'react';
 import { X } from 'lucide-react';
+import { toast } from '../lib/toast';
 
+// Bandeaux discrets : pas de fond ni de cadre coloré, seulement un trait à gauche dont la couleur indique le type de message.
 const TONES = {
-    success: 'border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-200',
-    error: 'border-rose-200 bg-rose-50 text-rose-800 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-200',
-    warning: 'border-amber-200 bg-amber-50 text-amber-900 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-200',
-    info: 'border-sky-200 bg-sky-50 text-sky-900 dark:border-sky-500/30 dark:bg-sky-500/10 dark:text-sky-200',
+    success: 'border-emerald-500',
+    error: 'border-rose-500',
+    warning: 'border-amber-500',
+    info: 'border-slate-300 dark:border-gray-600',
 };
 
-/** Bandeau de message (succès, erreur, avertissement, information) ; `onClose` ajoute un bouton de fermeture. */
+/**
+ * Message (succès, erreur, avertissement, information). Un texte simple s'affiche en notification (toast) en bas à droite ;
+ * `onClose` est appelé quand elle se ferme (la page peut ainsi vider son message). Un contenu plus riche (liens, listes)
+ * reste un bandeau dans la page, avec un bouton de fermeture si `onClose` est fourni.
+ */
 export default function Notice({ tone = 'info', onClose, children }) {
-    if (!children) return null;
+    const message = typeof children === 'string' ? children : '';
+    const fermeture = useRef(onClose);
+    useEffect(() => { fermeture.current = onClose; });
+    useEffect(() => {
+        if (!message) return;
+        toast[tone]?.(message, { onClose: () => fermeture.current?.() });
+    }, [message, tone]);
+
+    if (!children || message) return null;
     return (
-        <div role={tone === 'error' ? 'alert' : 'status'} className={`flex items-start justify-between gap-3 rounded-xl border px-4 py-3 text-sm ${TONES[tone]}`}>
+        <div role={tone === 'error' ? 'alert' : 'status'} className={`flex items-start justify-between gap-3 border-l-2 py-1 pl-3 text-sm text-slate-600 dark:text-gray-300 ${TONES[tone]}`}>
             <div className="min-w-0">{children}</div>
-            {onClose && <button onClick={onClose} aria-label="Fermer" className="shrink-0"><X size={16} /></button>}
+            {onClose && <button onClick={onClose} aria-label="Fermer" className="shrink-0 text-slate-400 hover:text-slate-700 dark:hover:text-gray-200"><X size={16} /></button>}
         </div>
     );
 }

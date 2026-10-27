@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { SkeletonList } from '../components/ui/skeleton';
 import { useNavigate } from 'react-router-dom';
 import axiosClient from '../api/axiosClient';
 import AdminLayout from '../components/AdminLayout';
@@ -132,16 +133,16 @@ function MaladiesMedecin() {
             )}
 
             {loading ? (
-                <div className="py-16 text-center"><Loader2 className="mx-auto mb-3 h-10 w-10 animate-spin text-teal-600" /><p className="text-slate-500">Chargement…</p></div>
+                <SkeletonList rows={6} />
             ) : maladies.length === 0 ? (
                 <div className={`${card} p-12 text-center`}>
                     <Activity className="mx-auto mb-4 h-14 w-14 text-slate-300" />
                     <p className="text-slate-500">Aucune maladie enregistrée</p>
                 </div>
             ) : (
-                <div className="space-y-4">
+                <div className="grid items-start gap-4 lg:grid-cols-2">
                     {maladies.map(maladie => (
-                        <article key={maladie.id} className={`${card} p-6`}>
+                        <article key={maladie.id} className={`${card} @container min-w-0 p-5`}>
                             {edition?.id === maladie.id ? (
                                 <form onSubmit={enregistrerEdition} className="space-y-3">
                                     <input required maxLength={100} value={edition.nom} onChange={e => setEdition({ ...edition, nom: e.target.value })} aria-label="Nom de la maladie" className={field} />
@@ -186,12 +187,12 @@ function MaladiesMedecin() {
                                 ) : <p className="text-sm text-slate-500">Aucun traitement enregistré pour cette maladie.</p>}
 
                                 {traitement?.maladieId === maladie.id && (
-                                    <form onSubmit={ajouterTraitement} className="mt-3 grid gap-2 rounded-xl bg-white p-3 dark:bg-gray-900 sm:grid-cols-6">
-                                        <input required maxLength={150} value={traitement.medicament} onChange={e => setTraitement({ ...traitement, medicament: e.target.value })} placeholder="Médicament (ex. Amoxicilline 500 mg)" aria-label="Médicament" className={`${field} sm:col-span-6`} />
-                                        <input maxLength={200} value={traitement.posologie} onChange={e => setTraitement({ ...traitement, posologie: e.target.value })} placeholder="Posologie (ex. 1 gélule 3 fois par jour)" aria-label="Posologie" className={`${field} sm:col-span-4`} />
-                                        <input maxLength={100} value={traitement.duree} onChange={e => setTraitement({ ...traitement, duree: e.target.value })} placeholder="Durée (ex. 7 jours)" aria-label="Durée" className={`${field} sm:col-span-2`} />
-                                        <input maxLength={500} value={traitement.remarques} onChange={e => setTraitement({ ...traitement, remarques: e.target.value })} placeholder="Remarques (ex. à prendre pendant le repas)" aria-label="Remarques" className={`${field} sm:col-span-6`} />
-                                        <div className="flex gap-2 sm:col-span-6"><button className="inline-flex items-center gap-2 rounded-xl bg-teal-700 px-4 py-2 text-sm font-semibold text-white hover:bg-teal-800"><Check size={16} />Ajouter</button><button type="button" onClick={() => setTraitement(null)} className="rounded-xl border border-slate-200 px-4 py-2 text-sm dark:border-gray-700">Annuler</button></div>
+                                    <form onSubmit={ajouterTraitement} className="mt-3 grid gap-2 rounded-xl bg-white p-3 dark:bg-gray-900 @md:grid-cols-6">
+                                        <input required maxLength={150} value={traitement.medicament} onChange={e => setTraitement({ ...traitement, medicament: e.target.value })} placeholder="Médicament (ex. Amoxicilline 500 mg)" aria-label="Médicament" className={`${field} @md:col-span-6`} />
+                                        <input maxLength={200} value={traitement.posologie} onChange={e => setTraitement({ ...traitement, posologie: e.target.value })} placeholder="Posologie (ex. 1 gélule 3 fois par jour)" aria-label="Posologie" className={`${field} @md:col-span-4`} />
+                                        <input maxLength={100} value={traitement.duree} onChange={e => setTraitement({ ...traitement, duree: e.target.value })} placeholder="Durée (ex. 7 jours)" aria-label="Durée" className={`${field} @md:col-span-2`} />
+                                        <input maxLength={500} value={traitement.remarques} onChange={e => setTraitement({ ...traitement, remarques: e.target.value })} placeholder="Remarques (ex. à prendre pendant le repas)" aria-label="Remarques" className={`${field} @md:col-span-6`} />
+                                        <div className="flex gap-2 @md:col-span-6"><button className="inline-flex items-center gap-2 rounded-xl bg-teal-700 px-4 py-2 text-sm font-semibold text-white hover:bg-teal-800"><Check size={16} />Ajouter</button><button type="button" onClick={() => setTraitement(null)} className="rounded-xl border border-slate-200 px-4 py-2 text-sm dark:border-gray-700">Annuler</button></div>
                                     </form>
                                 )}
                             </div>

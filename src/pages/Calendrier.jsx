@@ -100,7 +100,7 @@ export default function Calendrier() {
                                     {actifs.length > 0 && (
                                         <span className="mt-auto flex flex-wrap items-center gap-1">
                                             <span className="rounded-full bg-teal-100 px-1.5 text-[11px] font-bold tabular-nums text-teal-800 dark:bg-teal-500/20 dark:text-teal-200">{actifs.length}</span>
-                                            {attente > 0 && <span className="hidden rounded-full bg-amber-100 px-1.5 text-[10px] font-semibold text-amber-800 sm:inline dark:bg-amber-500/20 dark:text-amber-200">{attente} en attente</span>}
+                                            {attente > 0 && <span className="hidden rounded-full bg-amber-100 px-1.5 text-[10px] font-semibold text-amber-800 sm:inline dark:bg-amber-500/20 dark:text-amber-200">{attente} en cours</span>}
                                         </span>
                                     )}
                                 </button>

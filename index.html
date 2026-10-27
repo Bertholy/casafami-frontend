@@ -2,15 +2,45 @@
 <html lang="fr">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/favicon-192.png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0a8fc7" />
+    <meta name="description" content="Cabinet d’accouchement Sainte Famille à Antsohihy : suivi de grossesse, accouchement, échographie et planning familial. Prenez rendez-vous en ligne." />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'" href="https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,400;0,700;0,900;1,400&family=Montserrat:ital,wght@0,600;0,700;0,800;1,700;1,800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" />
-    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,400;0,700;0,900;1,400&family=Montserrat:ital,wght@0,600;0,700;0,800;1,700;1,800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" /></noscript>
+    <link rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'" href="https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,400;0,700;0,900;1,400&family=Montserrat:ital,wght@0,600;0,700;0,800;1,700;1,800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,600;1,700&display=swap" />
+    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,400;0,700;0,900;1,400&family=Montserrat:ital,wght@0,600;0,700;0,800;1,700;1,800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,600;1,700&display=swap" /></noscript>
     <title>CASAFAMI — Cabinet médical</title>
+    <style>
+      /* Préchargeur : visible dès le premier affichage, retiré par main.jsx quand le site est prêt. */
+      #precharge { position: fixed; inset: 0; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 22px; background: linear-gradient(160deg, #0a8fc7, #07688f); color: #fff; font-family: Lato, system-ui, sans-serif; transition: opacity .5s ease, visibility .5s ease; }
+      #precharge.precharge-fin { opacity: 0; visibility: hidden; }
+      #precharge .logo { position: relative; width: 112px; height: 112px; display: grid; place-items: center; }
+      #precharge .logo::before { content: ""; position: absolute; inset: 0; border-radius: 50%; border: 3px solid rgba(255,255,255,.25); border-top-color: #fff; animation: precharge-tour 1s linear infinite; }
+      #precharge .logo img { width: 80px; height: 80px; object-fit: contain; background: #fff; border-radius: 22px; padding: 8px; animation: precharge-bat 1.6s ease-in-out infinite; }
+      #precharge .nom { font-family: Montserrat, Lato, sans-serif; font-weight: 800; font-size: 1.15rem; letter-spacing: .38em; text-transform: uppercase; margin-right: -.38em; }
+      #precharge .sous { margin-top: -14px; font-size: .8rem; letter-spacing: .12em; opacity: .8; }
+      #precharge .barre { width: 150px; height: 3px; border-radius: 3px; background: rgba(255,255,255,.25); overflow: hidden; }
+      #precharge .barre::after { content: ""; display: block; width: 40%; height: 100%; border-radius: 3px; background: #fff; animation: precharge-barre 1.3s ease-in-out infinite; }
+      @keyframes precharge-tour { to { transform: rotate(360deg); } }
+      @keyframes precharge-bat { 0%, 100% { transform: scale(1); } 50% { transform: scale(.93); } }
+      @keyframes precharge-barre { 0% { transform: translateX(-100%); } 100% { transform: translateX(250%); } }
+      @media (prefers-reduced-motion: reduce) {
+        #precharge .logo::before, #precharge .logo img, #precharge .barre::after { animation: none; }
+        #precharge { transition: none; }
+      }
+    </style>
+    <noscript><style>#precharge { display: none; }</style></noscript>
   </head>
   <body>
+    <div id="precharge" role="status" aria-label="Chargement du site">
+      <div class="logo"><img src="/logo_casafami.png" alt="" width="80" height="80" /></div>
+      <div class="nom">casafami</div>
+      <div class="sous">Cabinet d'accouchement</div>
+      <div class="barre" aria-hidden="true"></div>
+    </div>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>

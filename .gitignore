@@ -22,3 +22,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Rapports Lighthouse (npm run lighthouse)
+lighthouse-reports

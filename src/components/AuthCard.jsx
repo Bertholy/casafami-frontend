@@ -27,10 +27,10 @@ export function AuthFond({ children }) {
                     <img src="/cabinet_1.jpg" alt="Le cabinet CASAFAMI" className="absolute inset-0 h-full w-full object-cover" />
                     <div aria-hidden="true" className="absolute inset-0 bg-linear-to-t from-[#0e2a38]/90 via-[#0e2a38]/10 to-[#0e2a38]/30" />
                     <div className="relative flex h-full flex-col justify-between p-8">
-                        <div className="flex items-center gap-3">
+                        <Link to="/" aria-label="Retour à l’accueil du site" className="flex w-fit items-center gap-3">
                             <img src="/logo_casafami.png" alt="" className="h-11 w-11 rounded-2xl bg-white object-contain p-1" />
                             <span className="text-sm font-extrabold uppercase tracking-[0.16em] text-white drop-shadow">{APP_NAME}</span>
-                        </div>
+                        </Link>
                         <div className="rounded-3xl border border-white/20 bg-white/10 p-5 text-white backdrop-blur-md">
                             <p className="text-lg font-extrabold leading-snug">Cabinet d'accouchement Sainte Famille</p>
                             <p className="mt-1 flex items-center gap-2 text-sm text-white/80"><MapPin className="h-4 w-4 shrink-0" />Andongona, Antsohihy</p>

@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { LOGIN_PATH, clearSession, getToken } from '../utils/auth';
+import { debutChargement, finChargement } from '../utils/progression';
 
 // L'adresse de l'API peut être changée sans toucher au code : VITE_API_URL=https://mon-serveur/api
 export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
@@ -19,19 +20,22 @@ const axiosClient = axios.create({
 // Intercepteur pour ajouter le token JWT automatiquement
 axiosClient.interceptors.request.use(
     (config) => {
+        debutChargement();   // fin dans l'intercepteur de réponse (succès ou erreur)
         const token = getToken();
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
         }
         return config;
     },
-    (error) => Promise.reject(error)
+    (error) => Promise.reject(error)   // requête jamais partie : pas de chargement à terminer
 );
 
 // Session expirée ou compte supprimé : on nettoie et on renvoie vers la connexion au lieu de laisser une page cassée.
 axiosClient.interceptors.response.use(
-    response => response,
+    response => { finChargement(); return response; },
     error => {
+        // une requête qui n'a pas pu partir (config absente) n'avait pas été comptée
+        if (error.config) finChargement();
         const isLogin = error.config?.url?.includes('/auth/login');
         if (error.response?.status === 401 && !isLogin && getToken()) {
             clearSession();

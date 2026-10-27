@@ -1,0 +1,11 @@
+User-agent: *
+Allow: /
+Disallow: /medecin/
+Disallow: /admin/
+Disallow: /espace/
+Disallow: /patients/
+Disallow: /assistant/
+Disallow: /calendrier
+Disallow: /corbeille
+Disallow: /statistiques
+Disallow: /messagerie

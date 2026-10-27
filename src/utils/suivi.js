@@ -11,6 +11,17 @@ export function formaterCle(saisie) {
     return s ? ['CF', ...morceaux].join('-') : '';
 }
 
+/** Clé de suivi contenue dans ce que lit un QR code : le lien « …/mes-rdv?cle=CF-… » ou la clé seule. null si ce n'est pas une clé du cabinet. */
+export function extraireCle(texte) {
+    const brut = String(texte ?? '').trim();
+    try {
+        const cle = new URL(brut).searchParams.get('cle');
+        if (cle && estUneCleComplete(formaterCle(cle))) return formaterCle(cle);
+    } catch { /* pas un lien : on cherche la clé dans le texte */ }
+    const trouve = brut.toUpperCase().match(/CF[\s-]?[A-Z0-9]{4}[\s-]?[A-Z0-9]{4}/);
+    return trouve ? formaterCle(trouve[0]) : null;
+}
+
 /** Une clé complète (avec son préfixe CF) : le personnel peut encore chercher par nom ou numéro, le reste est traité comme une clé. */
 export const estUneCleComplete = saisie => /^CF[\s-]?[A-Z0-9]{4}[\s-]?[A-Z0-9]{4}$/i.test(String(saisie ?? '').trim());
 

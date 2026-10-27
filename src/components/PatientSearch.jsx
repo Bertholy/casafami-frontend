@@ -4,11 +4,14 @@ import { Search } from 'lucide-react';
 import axiosClient from '../api/axiosClient';
 import { peut } from '../utils/auth';
 import { formatPhone } from '../utils/phone';
+import BoutonScanQr from './BoutonScanQr';
+import useOuvrirParCle from '../hooks/useOuvrirParCle';
 
 // Le personnel soignant ouvre le dossier du patient ; la secrétaire voit ses rendez-vous.
 
 export default function PatientSearch({ className = 'relative z-30 mx-4 my-3 w-64' }) {
     const navigate = useNavigate();
+    const ouvrirParCle = useOuvrirParCle();
     const [query, setQuery] = useState('');
     const [results, setResults] = useState([]);
     const term = query.trim();
@@ -40,8 +43,10 @@ export default function PatientSearch({ className = 'relative z-30 mx-4 my-3 w-6
                 onChange={e => setQuery(e.target.value)}
                 placeholder="Rechercher un patient"
                 aria-label="Rechercher un patient par nom ou téléphone"
-                className="w-full rounded-xl border border-slate-200 bg-white py-2 pl-9 pr-3 text-sm outline-none transition focus:border-teal-600 focus:ring-2 focus:ring-teal-600/20 dark:border-gray-700 dark:bg-gray-900"
+                autoComplete="off"
+                className="w-full rounded-xl border border-slate-200 bg-white py-2 pl-9 pr-10 text-sm outline-none transition focus:border-teal-600 focus:ring-2 focus:ring-teal-600/20 dark:border-gray-700 dark:bg-gray-900"
             />
+            <BoutonScanQr onCle={ouvrirParCle} label="Scanner le QR code d’un patient" className="absolute right-1 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-md text-slate-500 transition hover:bg-slate-100 hover:text-teal-700 dark:text-gray-400 dark:hover:bg-gray-800" />
             {active && (
                 <div className="absolute right-0 top-full z-50 mt-1 max-h-96 w-[min(36rem,calc(100vw-2rem))] overflow-auto rounded-xl border border-slate-200 bg-white p-1 shadow-xl dark:border-gray-700 dark:bg-gray-900">
                     {results.length ? results.map((patient, index) => (

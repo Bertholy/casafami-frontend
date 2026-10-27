@@ -2,6 +2,29 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+/* Couleurs sémantiques shadcn/ui (valeurs dans shadcn.css) : bg-primary, text-muted-foreground, border-input… */
+@theme inline {
+    --color-background: var(--sc-background);
+    --color-foreground: var(--sc-foreground);
+    --color-card: var(--sc-card);
+    --color-card-foreground: var(--sc-card-foreground);
+    --color-popover: var(--sc-popover);
+    --color-popover-foreground: var(--sc-popover-foreground);
+    --color-primary: var(--sc-primary);
+    --color-primary-foreground: var(--sc-primary-foreground);
+    --color-secondary: var(--sc-secondary);
+    --color-secondary-foreground: var(--sc-secondary-foreground);
+    --color-muted: var(--sc-muted);
+    --color-muted-foreground: var(--sc-muted-foreground);
+    --color-accent: var(--sc-accent);
+    --color-accent-foreground: var(--sc-accent-foreground);
+    --color-destructive: var(--sc-destructive);
+    --color-destructive-foreground: var(--sc-destructive-foreground);
+    --color-border: var(--sc-border);
+    --color-input: var(--sc-input);
+    --color-ring: var(--sc-ring);
+}
+
 /* ========== THÈME CASAFAMI ========== */
 :root {
     --primary: #0d9488;        /* Vert émeraude */
@@ -131,3 +154,79 @@ body {
 .dark :focus-visible { outline-color: #5eead4; }
 /* Liens et icônes « teal » : en mode sombre ils passent à une teinte claire (le design public a sa propre couleur claire) */
 .dark .text-teal-600, .dark .text-teal-700, .dark .hover\:text-teal-700:hover { color: var(--dark-link, #5eead4); }
+
+/* Tous les boutons ont des coins arrondis de 12 px (boutons, liens en forme de bouton « mt-btn », champs de type bouton).
+   Hors couche Tailwind et en !important : la règle l'emporte sur les « rounded-* » des composants et sur les thèmes.
+   Seule exception : les interrupteurs (role="switch"), qui doivent rester ronds. */
+button:not([role="switch"]),
+input[type="button"], input[type="submit"], input[type="reset"],
+.mt-btn, .mt-btn-ligne, .mt-btn-blanc, .mt-btn-blanc-plein {
+    border-radius: 12px !important;
+}
+
+/* ========== PORTFOLIO (page /portfolio) ==========
+ * Titres en capitales épaisses (Anton), texte en Figtree : les polices sont chargées par la page elle-même, avec une police de secours. */
+.pf-page { font-family: "Figtree", system-ui, -apple-system, "Segoe UI", sans-serif; }
+.pf-titre { font-family: "Anton", Impact, "Arial Narrow", sans-serif; font-weight: 400; text-transform: uppercase; line-height: .98; letter-spacing: .005em; text-wrap: balance; }
+.pf-contour { color: transparent; -webkit-text-stroke: 2px #f4f2ee; transition: color .3s, -webkit-text-stroke-color .3s; }
+.pf-contour:hover { color: #ff6a13; -webkit-text-stroke-color: #ff6a13; }
+.pf-damier { background: repeating-conic-gradient(#131316 0% 25%, #0a0a0b 0% 50%) 0 0 / 56px 56px; }
+.pf-etoile::after { content: "✦"; margin: 0 1.6rem; font-size: .7em; }
+@keyframes pf-defile { to { transform: translateX(-50%); } }
+.pf-piste { animation: pf-defile 22s linear infinite; }
+.pf-piste:hover { animation-play-state: paused; }
+@keyframes pf-flotte { 0%, 100% { translate: 0 0; } 50% { translate: 0 -10px; } }
+.pf-flotte { animation: pf-flotte 6s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) {
+    .pf-piste, .pf-flotte { animation: none; }
+}
+
+/* ========== ANIMATIONS DU SITE PUBLIC ==========
+ * Entrée de chaque page en fondu, apparition des blocs quand on fait défiler, petits effets au survol.
+ * Tout est coupé si la personne a demandé moins d'animations (prefers-reduced-motion). L'apparition au défilement utilise
+ * les animations pilotées par le défilement : un navigateur qui ne les connaît pas affiche simplement tout, sans effet.
+ * On anime la propriété « translate » (et non « transform ») pour ne pas gêner les éléments déplaçables de l'éditeur du site. */
+@media (prefers-reduced-motion: no-preference) {
+    @keyframes pageEntree { from { opacity: 0; translate: 0 12px; } to { opacity: 1; translate: 0 0; } }
+    @keyframes revele { from { opacity: 0; translate: 0 34px; } to { opacity: 1; translate: 0 0; } }
+
+    .page-entree { animation: pageEntree .5s ease-out both; }
+
+    @supports (animation-timeline: view()) {
+        .page-entree section > div > *:not(.pf-piste),
+        .page-entree > div > div > *:not(.pf-piste) {
+            animation: revele linear both;
+            animation-timeline: view();
+            animation-range: entry 0% entry 30%;
+        }
+    }
+
+    .theme-montagne .mt-btn, .theme-montagne .mt-btn-ligne, .theme-montagne .mt-btn-blanc, .theme-montagne .mt-btn-blanc-plein {
+        transition: translate .2s ease, background-color .2s, color .2s, border-color .2s, box-shadow .2s;
+    }
+    .theme-montagne .mt-btn:hover, .theme-montagne .mt-btn-ligne:hover, .theme-montagne .mt-btn-blanc:hover, .theme-montagne .mt-btn-blanc-plein:hover { translate: 0 -2px; box-shadow: 0 10px 22px -10px rgba(0, 0, 0, .45); }
+    .theme-montagne .mt-btn:active, .theme-montagne .mt-btn-ligne:active, .theme-montagne .mt-btn-blanc:active, .theme-montagne .mt-btn-blanc-plein:active { translate: 0 0; box-shadow: none; }
+
+    .theme-montagne .mt-carte:not(form) { transition: translate .25s ease, box-shadow .25s ease; }
+    .theme-montagne .mt-carte:not(form):hover { translate: 0 -4px; box-shadow: 0 18px 34px -18px rgba(0, 0, 0, .4); }
+
+    .theme-montagne .mt-lien-nav { transition: color .2s, opacity .2s; }
+}
+
+/* ========== MESSAGES DISCRETS (tout le site) ==========
+ * Les messages d'erreur, de succès ou d'avertissement qui s'affichaient dans un encadré coloré (fond rose, vert, jaune…) n'ont plus
+ * de fond ni de cadre : seulement un trait fin à gauche dont la couleur indique le type. Le texte garde sa couleur.
+ * Concerne les éléments avec role="alert" ou role="status", et les simples paragraphes teintés. Exceptions : les alertes d'urgence
+ * médicale (bordure épaisse) restent bien visibles, et les pastilles rondes ne sont pas touchées.
+ * Pour revenir aux encadrés colorés d'origine : supprimer ce bloc. */
+:is([role="alert"], [role="status"], p):is([class*="bg-rose-50"], [class*="bg-red-50"], [class*="bg-emerald-50"], [class*="bg-green-50"], [class*="bg-amber-50"], [class*="bg-orange-50"], [class*="bg-yellow-50"], [class*="bg-sky-50"]):not([class*="border-2"]):not([class*="rounded-full"]) {
+    background: transparent !important;
+    border-radius: 0 !important;
+    border-style: solid !important;
+    border-width: 0 0 0 2px !important;
+    padding: .25rem 0 .25rem .75rem !important;
+}
+:is([role="alert"], [role="status"], p):is([class*="bg-rose-50"], [class*="bg-red-50"]):not([class*="border-2"]):not([class*="rounded-full"]) { border-left-color: #f43f5e !important; }
+:is([role="alert"], [role="status"], p):is([class*="bg-emerald-50"], [class*="bg-green-50"]):not([class*="border-2"]):not([class*="rounded-full"]) { border-left-color: #10b981 !important; }
+:is([role="alert"], [role="status"], p):is([class*="bg-amber-50"], [class*="bg-orange-50"], [class*="bg-yellow-50"]):not([class*="border-2"]):not([class*="rounded-full"]) { border-left-color: #f59e0b !important; }
+:is([role="alert"], [role="status"], p):is([class*="bg-sky-50"]):not([class*="border-2"]):not([class*="rounded-full"]) { border-left-color: #94a3b8 !important; }

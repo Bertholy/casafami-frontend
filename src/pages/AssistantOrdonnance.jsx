@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { SkeletonPage } from '../components/ui/skeleton';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { AlertOctagon, AlertTriangle, ClipboardCheck, Copy, Info, Loader2, Plus, Printer, Save, Sparkles, Trash2, UserRound } from 'lucide-react';
 import axiosClient from '../api/axiosClient';
@@ -12,10 +13,11 @@ import { apiErrorMessage, getRole, hasSession, homeForRole, LOGIN_PATH, peut } f
 import { formatPhone } from '../utils/phone';
 
 const ALLOWED = ['SUPER_ADMIN', 'MEDECIN', 'SAGE_FEMME'];
+// Contrôles : une ligne avec un trait à gauche, sans fond coloré ; seule l'icône et le trait portent la couleur.
 const NIVEAUX = {
-    danger: { classe: 'border-rose-300 bg-rose-50 text-rose-900 dark:border-rose-500/40 dark:bg-rose-500/10 dark:text-rose-100', Icone: AlertOctagon, titre: 'À vérifier absolument' },
-    attention: { classe: 'border-amber-300 bg-amber-50 text-amber-900 dark:border-amber-500/40 dark:bg-amber-500/10 dark:text-amber-100', Icone: AlertTriangle, titre: 'Attention' },
-    info: { classe: 'border-sky-200 bg-sky-50 text-sky-900 dark:border-sky-500/30 dark:bg-sky-500/10 dark:text-sky-100', Icone: Info, titre: 'Pour information' },
+    danger: { classe: 'border-rose-500', couleurIcone: 'text-rose-600 dark:text-rose-400', Icone: AlertOctagon, titre: 'À vérifier absolument' },
+    attention: { classe: 'border-amber-500', couleurIcone: 'text-amber-600 dark:text-amber-400', Icone: AlertTriangle, titre: 'Attention' },
+    info: { classe: 'border-slate-300 dark:border-gray-600', couleurIcone: 'text-slate-400', Icone: Info, titre: 'Pour information' },
 };
 let compteur = 0;
 const nouvelleLigne = (base = {}) => ({ id: ++compteur, actif: true, medicament: '', posologie: '', duree: '', remarques: '', ...base });
@@ -101,13 +103,11 @@ export default function AssistantOrdonnance() {
         finally { setSaving(false); }
     };
 
-    if (loading) return <AdminLayout title="Assistant d’ordonnance"><div className="flex items-center justify-center gap-2 p-12 text-sm text-slate-500"><Loader2 className="animate-spin" size={18} />Chargement…</div></AdminLayout>;
+    if (loading) return <AdminLayout title="Assistant d’ordonnance"><SkeletonPage /></AdminLayout>;
 
     return (
         <AdminLayout title="Assistant d’ordonnance" subtitle="Brouillon à relire, corriger et signer par le prescripteur">
-            <Notice tone="warning">
-                <strong>Aide à la rédaction, pas un avis médical.</strong> L’assistant reprend les traitements que <em>vous</em> avez enregistrés dans « Maladies et traitements » et contrôle quelques risques courants (allergies déclarées, grossesse, enfant). La décision et la responsabilité de la prescription restent au prescripteur.
-            </Notice>
+            <p className="px-1 text-xs text-slate-500 dark:text-gray-400">Brouillon à relire : la décision et la responsabilité de la prescription restent au prescripteur.</p>
             <Notice tone="success" onClose={() => setNotice('')}>{notice}</Notice>
             <Notice tone="error" onClose={() => setError('')}>{error}</Notice>
 
@@ -201,10 +201,10 @@ export default function AssistantOrdonnance() {
                     <section className={`${card} p-5`} aria-live="polite">
                         <h2 className="mb-3 font-semibold">Contrôles automatiques</h2>
                         {alertes.length === 0 ? <p className="flex items-center gap-2 text-sm text-emerald-700 dark:text-emerald-300"><ClipboardCheck size={16} />Aucune alerte détectée (cela ne dispense pas de votre vérification).</p> : (
-                            <ul className="space-y-2">
+                            <ul className="space-y-1.5">
                                 {alertes.map(a => {
-                                    const { classe, Icone, titre } = NIVEAUX[a.niveau];
-                                    return <li key={a.message} className={`flex gap-2 rounded-xl border p-3 text-sm ${classe}`}><Icone size={17} className="mt-0.5 shrink-0" aria-label={titre} /><span>{a.message}</span></li>;
+                                    const { classe, couleurIcone, Icone, titre } = NIVEAUX[a.niveau];
+                                    return <li key={a.message} className={`flex gap-2.5 border-l-2 py-1 pl-3 text-sm text-slate-700 dark:text-gray-200 ${classe}`}><Icone size={16} className={`mt-0.5 shrink-0 ${couleurIcone}`} aria-label={titre} /><span>{a.message}</span></li>;
                                 })}
                             </ul>
                         )}

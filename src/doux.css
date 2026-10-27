@@ -1,5 +1,5 @@
 /*
- * Design « doux » du site public : fond bleu très clair, coins très arrondis, boutons en pilule, ombres légères,
+ * Design « doux » du site public : fond bleu très clair, coins très arrondis, boutons en pilule, bordures fines à la place des ombres,
  * police ronde (Plus Jakarta Sans), une teinte chaude (sable et corail) pour les informations rassurantes.
  * Tout est limité à .theme-doux : l'espace du personnel n'est pas touché.
  * Pour revenir à l'ancien design : repasser sur la branche main (git checkout main), ou remettre la classe « theme-montagne » dans App.jsx.
@@ -18,7 +18,7 @@
     --mt-sable: #fff4ea;
     --mt-sable-bord: #f4dec9;
     --mt-corail: #e8704a;
-    --mt-ombre: 0 12px 34px rgba(15, 80, 120, .08);
+    --mt-ombre: none; /* pas d’ombres portées */
 
     --casafami-primary: var(--mt-main);
     --casafami-button: var(--site-button, var(--mt-main-fort));
@@ -64,17 +64,17 @@
 .theme-doux .mt-regle::before { display: none; }
 .theme-doux .mt-clair .mt-titre, .theme-doux .mt-clair .mt-titre em { color: #fff; }
 
-/* ---- boutons en pilule ---- */
+/* ---- boutons (style shadcn/ui : coins peu arrondis, bordures fines) ---- */
 .theme-doux .mt-btn, .theme-doux .mt-btn-ligne, .theme-doux .mt-btn-blanc, .theme-doux .mt-btn-blanc-plein {
-    display: inline-flex; align-items: center; justify-content: center; gap: .6rem; padding: 1rem 1.8rem;
-    font-size: .95rem; font-weight: 700; line-height: 1; border-radius: 999px; border: 0;
+    display: inline-flex; align-items: center; justify-content: center; gap: .5rem; min-height: 2.75rem; padding: .5rem 1.25rem;
+    font-size: .875rem; font-weight: 500; line-height: 1.25rem; border-radius: .375rem; border: 0;
     transition: background-color .2s, color .2s, box-shadow .2s, transform .2s; cursor: pointer;
 }
-.theme-doux .mt-btn { background: var(--mt-bouton); color: var(--mt-sur-bouton); box-shadow: 0 14px 30px color-mix(in srgb, var(--mt-bouton) 38%, transparent); }
-.theme-doux .mt-btn:hover { background: color-mix(in srgb, var(--mt-bouton) 88%, black); transform: translateY(-1px); }
-.theme-doux .mt-btn-ligne { background: #fff; color: var(--mt-ink); box-shadow: 0 0 0 1px #cfe0e9; }
-.theme-doux .mt-btn-ligne:hover { box-shadow: 0 0 0 2px var(--mt-main); color: var(--mt-main); }
-.dark .theme-doux .mt-btn-ligne { background: #14303d; color: #e5eef3; box-shadow: 0 0 0 1px #2a4756; }
+.theme-doux .mt-btn { background: var(--mt-bouton); color: var(--mt-sur-bouton); }
+.theme-doux .mt-btn:hover { background: color-mix(in srgb, var(--mt-bouton) 90%, black); }
+.theme-doux .mt-btn-ligne { background: var(--sc-background); color: var(--mt-ink); box-shadow: inset 0 0 0 1px var(--sc-input); }
+.theme-doux .mt-btn-ligne:hover { background: var(--sc-accent); }
+.dark .theme-doux .mt-btn-ligne { background: var(--sc-background); color: var(--sc-foreground); box-shadow: inset 0 0 0 1px var(--sc-input); }
 .theme-doux .mt-btn-blanc { background: transparent; color: #fff; box-shadow: inset 0 0 0 2px rgba(255, 255, 255, .85); }
 .theme-doux .mt-btn-blanc:hover { background: #fff; color: var(--mt-ardoise); }
 .theme-doux .mt-btn-blanc-plein { background: #fff; color: var(--mt-ink); }
@@ -86,14 +86,14 @@
 .theme-doux .mt-ardoise { background: var(--mt-ardoise); color: #fff; }
 .theme-doux .mt-marine { background: var(--mt-main); color: #fff; }
 .theme-doux .mt-relief { background: transparent; }
-.theme-doux .mt-cadre { background: none; padding: 0; border-radius: 2rem; overflow: hidden; }
-.theme-doux .mt-carte { background: #fff; border-radius: 2rem; box-shadow: var(--mt-ombre); }
-.dark .theme-doux .mt-carte { background: #12293a; box-shadow: none; }
+.theme-doux .mt-cadre { background: none; padding: 0; border-radius: .75rem; overflow: hidden; }
+.theme-doux .mt-carte { background: #fff; border-radius: .75rem; border: 1px solid var(--sc-border); box-shadow: var(--mt-ombre); }
+.dark .theme-doux .mt-carte { background: #12293a; border-color: #234557; box-shadow: none; }
 .theme-doux .mt-sable { background: var(--mt-sable); box-shadow: inset 0 0 0 1px var(--mt-sable-bord); }
 
 /* ---- barre de navigation ---- */
 .theme-doux .mt-lien-nav {
-    position: relative; padding: .6rem 1.1rem; border-radius: 999px; font-size: .9rem; font-weight: 600; color: #3c5766; transition: background-color .2s, color .2s;
+    position: relative; padding: .6rem 1rem; border-radius: .375rem; font-size: .9rem; font-weight: 600; color: #3c5766; transition: background-color .2s, color .2s;
 }
 .theme-doux .mt-lien-nav:hover { background: color-mix(in srgb, var(--mt-main) 8%, white); color: var(--mt-ink); }
 .theme-doux .mt-lien-nav[aria-current='page'] { background: color-mix(in srgb, var(--mt-main) 18%, white); color: color-mix(in srgb, var(--mt-main) 44%, black); font-weight: 700; }
