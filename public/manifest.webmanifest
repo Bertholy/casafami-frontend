@@ -1,0 +1,23 @@
+{
+  "name": "CASAFAMI — Cabinet d'accouchement Sainte Famille",
+  "short_name": "CASAFAMI",
+  "description": "Prendre et suivre un rendez-vous au cabinet d'accouchement Sainte Famille, à Antsohihy.",
+  "lang": "fr",
+  "dir": "ltr",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#ffffff",
+  "theme_color": "#0a8fc7",
+  "categories": ["medical", "health"],
+  "icons": [
+    { "src": "/pwa-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/pwa-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/pwa-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Prendre rendez-vous", "url": "/prendre-rdv", "icons": [{ "src": "/pwa-192.png", "sizes": "192x192" }] },
+    { "name": "Mes rendez-vous", "url": "/mes-rdv", "icons": [{ "src": "/pwa-192.png", "sizes": "192x192" }] }
+  ]
+}

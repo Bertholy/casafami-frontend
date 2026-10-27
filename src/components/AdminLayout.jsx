@@ -1,11 +1,12 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import {
-    Activity, BarChart3, Baby, Bolt, House, ShieldCheck, ClipboardCheck, DatabaseBackup, CalendarDays, CalendarPlus, Camera, CalendarClock, ChevronsLeft, ChevronsRight, ChevronUp, ExternalLink, FileSignature, KeyRound, Loader2, LogOut, Menu, Moon,
-    Pencil, ScrollText, UsersRound, Stethoscope, Sun, Trash2, UserCog, UserRound, Users, X, HeartPulse,
+    Activity, BarChart3, Baby, Bolt, House, ShieldCheck, ClipboardCheck, DatabaseBackup, CalendarDays, CalendarPlus, Camera, CalendarClock, ChevronUp, CircleChevronDown, ExternalLink, FileSignature, KeyRound, Loader2, LogOut, Menu, Moon,
+    Pencil, ScrollText, Squircle, UsersRound, Stethoscope, Sun, Trash2, UserCog, UserRound, Users, X, HeartPulse,
 } from 'lucide-react';
 import axiosClient, { assetUrl } from '../api/axiosClient';
 import PatientSearch from './PatientSearch';
+import { useStylePersonnel } from '../utils/stylePersonnel';
 import NotificationBell from './NotificationBell';
 import MessagerieBouton from './MessagerieBouton';
 import useNouveautes, { sectionDePage } from '../hooks/useNouveautes';
@@ -30,6 +31,13 @@ export default function AdminLayout({ title, subtitle, actions, children }) {
     const { pathname } = useLocation();
     const nombre = useNouveautes(sectionDePage(pathname));
     const { theme, toggleTheme } = useTheme();
+    const { style, suivant, basculerStyle } = useStylePersonnel();
+    const encoche = style === 'encoche';
+    const libelleStyle = suivant === 'console' ? 'Revenir au style console' : `Passer au style ${suivant}`;
+    // Style « encoche » : l'onglet du menu suit la ligne visée par le curseur ou le clavier, et revient sur la page ouverte quand ils s'en vont.
+    const nav = useRef(null);
+    const onglet = useRef(null);
+    const [vise, setVise] = useState(null);
     const role = getRole();
     const home = homeForRole(role);
     const [menuOpen, setMenuOpen] = useState(false);
@@ -42,6 +50,8 @@ export default function AdminLayout({ title, subtitle, actions, children }) {
     // Le bouton du bas permet de le garder ouvert en permanence ; ce choix est gardé sur cet appareil (« menu-ouvert-fixe »).
     const [reduit, setReduit] = useState(() => { try { return localStorage.getItem('menu-ouvert-fixe') !== '1'; } catch { return true; } });
     // Sections du menu repliables (petite flèche à droite du titre) : celles qui sont fermées sont gardées sur cet appareil.
+    // flèche cerclée pleine (section repliée, menu réduit) ; contour seul quand c'est ouvert
+    const plein = '[&_circle]:fill-current [&_path]:stroke-(--st-side)';
     const [fermees, setFermees] = useState(() => {
         try { const liste = JSON.parse(localStorage.getItem('menu-sections-fermees') || '[]'); return Array.isArray(liste) ? liste : []; } catch { return []; }
     });
@@ -145,12 +155,33 @@ export default function AdminLayout({ title, subtitle, actions, children }) {
         },
     ].filter(section => section.items.length > 0);
 
+    const placerOnglet = useCallback(() => {
+        const marque = onglet.current, barre = nav.current;
+        const ligne = barre?.querySelector('a.encoche-vise');
+        if (!marque || !barre) return;
+        if (!ligne) { marque.dataset.visible = 'false'; return; }
+        const decalage = ligne.getBoundingClientRect().top - barre.getBoundingClientRect().top + barre.scrollTop;
+        const marge = 5;   // l'onglet déborde un peu de la ligne, en haut et en bas, comme sur la maquette
+        marque.style.transform = `translateY(${decalage - marge}px)`;
+        marque.style.height = `${ligne.offsetHeight + 2 * marge}px`;
+        marque.dataset.visible = 'true';
+    }, []);
+    useLayoutEffect(() => {
+        if (!encoche) return undefined;
+        placerOnglet();
+        // le menu s'élargit ou se réduit en 200 ms et la hauteur des lignes change avec les icônes : on replace l'onglet à la fin
+        const apres = setTimeout(placerOnglet, 230);
+        const observe = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(placerOnglet);
+        if (nav.current) observe?.observe(nav.current);
+        return () => { clearTimeout(apres); observe?.disconnect(); };
+    });
+
     // L'action principale sort de la liste : un bouton plein en haut du menu. Les autres pages gardent leur ordre.
     const nouveau = sections.flatMap(section => section.items).find(item => item.key === 'new');
     const sectionsMenu = sections.map(section => ({ ...section, items: section.items.filter(item => item.key !== 'new') })).filter(section => section.items.length > 0);
 
     // Menu compact : la hauteur des lignes s'adapte à la hauteur de l'écran pour que tout tienne sans défiler.
-    const linkClass = ({ isActive }) => `group relative flex items-center gap-2.5 rounded-md px-2.5 transition-transform duration-150 ${compact ? 'origin-center lg:justify-center lg:px-0 hover:scale-110' : 'origin-left hover:scale-[1.04]'} py-[clamp(3px,0.75vh,8px)] text-[13px] leading-tight transition ${
+    const linkClass = ({ isActive }, id) => `${encoche && (vise ? vise === id : isActive) ? 'encoche-vise ' : ''}group relative z-10 flex items-center gap-2.5 rounded-md px-2.5 transition-transform duration-150 ${compact ? 'origin-center lg:justify-center lg:px-0 hover:scale-110' : 'origin-left hover:scale-[1.04]'} py-[clamp(3px,0.75vh,8px)] text-[13px] leading-tight transition ${
         isActive ? 'bg-(--mt-main)/15 font-bold text-(--st-side-strong) before:absolute before:inset-y-1.5 before:left-0 before:w-[3px] before:rounded-full before:bg-(--mt-main)' : 'font-medium text-(--st-side-fg) hover:bg-(--st-side-hover) hover:text-(--st-side-strong)'} focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-(--mt-main)`;
 
     const nomAffiche = profile?.nom || getEmail();
@@ -166,6 +197,7 @@ export default function AdminLayout({ title, subtitle, actions, children }) {
         ...sections.flatMap(section => section.items.map(item => ({ id: `${item.to}-${item.label}`, label: item.label, groupe: section.heading, icon: item.icon, onSelect: () => navigate(item.to, { state: item.state }) }))),
         { id: 'site', label: 'Voir le site public', groupe: 'Site', icon: ExternalLink, onSelect: () => navigate('/') },
         { id: 'theme', label: theme === 'dark' ? 'Passer au thème clair' : 'Passer au thème sombre', groupe: 'Affichage', icon: theme === 'dark' ? Sun : Moon, onSelect: toggleTheme },
+        { id: 'style', label: libelleStyle, groupe: 'Affichage', icon: Squircle, onSelect: basculerStyle },
     ];
 
     return (
@@ -192,7 +224,9 @@ export default function AdminLayout({ title, subtitle, actions, children }) {
                             </Tooltip>
                         </div>
                     )}
-                    <nav className="flex min-h-0 flex-1 flex-col justify-evenly overflow-y-auto px-2.5 py-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" aria-label="Navigation principale">
+                    <nav ref={nav} onMouseLeave={() => setVise(null)} onBlur={event => { if (!event.currentTarget.contains(event.relatedTarget)) setVise(null); }} onScroll={encoche ? placerOnglet : undefined}
+                        className="flex min-h-0 flex-1 flex-col justify-evenly overflow-y-auto px-2.5 py-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" aria-label="Navigation principale">
+                        {encoche && <span ref={onglet} className="encoche-onglet" aria-hidden="true" />}
                         {sectionsMenu.map(section => (
                             <div key={section.heading} className="border-t border-(--st-side-line) pt-1 first:border-t-0 first:pt-0">
                                 {/* titre de la section : un clic replie ou déplie ses pages (inactif quand le menu est réduit aux icônes ou que l'écran est trop bas pour afficher les titres) */}
@@ -204,7 +238,7 @@ export default function AdminLayout({ title, subtitle, actions, children }) {
                                             const caches = section.items.reduce((total, item) => total + (item.badge ? nombre(item.badge) : 0), 0);
                                             return caches > 0 ? <span aria-label={`${caches} nouveauté${caches > 1 ? 's' : ''} dans cette section`} className="rounded-full bg-sky-500 px-1.5 py-0.5 text-[10px] font-bold leading-none tabular-nums text-white">{caches > 99 ? '99+' : caches}</span> : null;
                                         })()}
-                                        <ChevronUp size={14} aria-hidden="true" className={`transition-transform duration-200 ${fermees.includes(section.heading) ? 'rotate-180' : ''}`} />
+                                        <CircleChevronDown size={16} aria-hidden="true" className={`transition-transform duration-200 ${fermees.includes(section.heading) ? plein : 'rotate-180'}`} />
                                     </span>
                                 </button>
                                 <div className={`${fermees.includes(section.heading) ? 'hidden [@media(max-height:700px)]:block' : ''} ${compact && fermees.includes(section.heading) ? 'lg:block' : ''}`}>
@@ -216,7 +250,8 @@ export default function AdminLayout({ title, subtitle, actions, children }) {
                                             <NavLink to={item.to} state={item.state} end={item.end}
                                                 aria-label={compact ? item.label : undefined}
                                                 onClick={() => setMenuOpen(false)}
-                                                className={item.key ? () => linkClass({ isActive: false }) : linkClass}>
+                                                onMouseEnter={() => setVise(item.key || item.label)} onFocus={() => setVise(item.key || item.label)}
+                                                className={state => linkClass(item.key ? { isActive: false } : state, item.key || item.label)}>
                                                 <Icon size={16} className={`shrink-0 ${compact ? 'lg:h-[22px] lg:w-[22px]' : ''} transition group-aria-[current=page]:text-(--mt-main-fort) group-hover:scale-110 dark:group-aria-[current=page]:text-(--mt-main)`} /><span className={compact ? 'lg:hidden' : ''}>{item.label}</span>
                                                 {n > 0 && <span aria-label={`${n} nouveau${n > 1 ? 'x' : ''}`} className={`${compact ? 'lg:absolute lg:right-1 lg:top-0 lg:min-w-4 lg:px-1 lg:text-[9px]' : ''} ml-auto inline-flex min-w-[1.5rem] items-center justify-center rounded-full bg-sky-500 px-1.5 py-0.5 text-[11px] font-bold leading-none tabular-nums text-white`}>{n > 99 ? '99+' : n}</span>}
                                             </NavLink>
@@ -233,7 +268,7 @@ export default function AdminLayout({ title, subtitle, actions, children }) {
                         <Tooltip label={compact ? 'Garder le menu ouvert' : undefined} side="right">
                             <button type="button" onClick={basculerMenu} aria-label={reduit ? 'Garder le menu ouvert' : 'Réduire le menu'} aria-pressed={reduit}
                                 className={`mb-2 hidden w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-[13px] font-medium text-(--st-side-muted) transition hover:bg-(--st-side-hover) hover:text-(--st-side-strong) lg:flex ${compact ? 'justify-center px-0' : ''}`}>
-                                {reduit ? <ChevronsRight size={16} className={compact ? 'lg:h-5 lg:w-5' : ''} /> : <ChevronsLeft size={16} />}<span className={compact ? 'hidden' : ''}>{reduit ? 'Garder le menu ouvert' : 'Réduire le menu'}</span>
+                                <CircleChevronDown size={18} aria-hidden="true" className={`shrink-0 transition-transform duration-200 ${reduit ? `-rotate-90 ${plein}` : 'rotate-90'} ${compact ? 'lg:h-5 lg:w-5' : ''}`} /><span className={compact ? 'hidden' : ''}>{reduit ? 'Garder le menu ouvert' : 'Réduire le menu'}</span>
                             </button>
                         </Tooltip>
                         <input ref={fileInput} type="file" accept="image/*" className="hidden" onChange={uploadPhoto} />
@@ -255,6 +290,7 @@ export default function AdminLayout({ title, subtitle, actions, children }) {
                                     <DropdownMenuItem onSelect={() => fileInput.current?.click()}><Camera size={15} />Changer ma photo</DropdownMenuItem>
                                     <DropdownMenuItem onSelect={() => setPasswordOpen(true)}><KeyRound size={15} />Changer mon mot de passe</DropdownMenuItem>
                                     <DropdownMenuItem onSelect={toggleTheme}>{theme === 'dark' ? <Sun size={15} /> : <Moon size={15} />}{theme === 'dark' ? 'Thème clair' : 'Thème sombre'}</DropdownMenuItem>
+                                    <DropdownMenuItem onSelect={basculerStyle}><Squircle size={15} />{suivant === 'console' ? 'Style console' : `Style ${suivant}`}</DropdownMenuItem>
                                     <DropdownMenuItem onSelect={() => navigate('/')}><ExternalLink size={15} />Voir le site public</DropdownMenuItem>
                                     <DropdownMenuSeparator />
                                     <DropdownMenuItem danger onSelect={logout}><LogOut size={15} />Se déconnecter</DropdownMenuItem>
@@ -274,6 +310,9 @@ export default function AdminLayout({ title, subtitle, actions, children }) {
                         <div className="ml-auto flex shrink-0 items-center gap-1.5 sm:gap-2">
                             {peut('PATIENTS_RECHERCHER') && <PatientSearch className="relative hidden w-44 md:block 2xl:w-60" />}
                             <Tooltip label="Voir le site public"><Link to="/" aria-label="Voir le site public" className={`${boutonEntete} hidden 2xl:inline-flex`}><ExternalLink size={16} /></Link></Tooltip>
+                            <Tooltip label={libelleStyle}>
+                                <button onClick={basculerStyle} aria-label={libelleStyle} aria-pressed={style !== 'console'} className={`${boutonEntete} hidden sm:inline-flex`}><Squircle size={16} /></button>
+                            </Tooltip>
                             <Tooltip label={theme === 'dark' ? 'Thème clair' : 'Thème sombre'}>
                                 <button onClick={toggleTheme} aria-label="Changer de thème" className={`${boutonEntete} hidden sm:inline-flex`}>{theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}</button>
                             </Tooltip>

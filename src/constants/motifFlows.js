@@ -17,7 +17,7 @@ const COMMENTAIRE = {
 
 export const CATEGORIES = [
     {
-        id: 'grossesse', label: 'Suivi de grossesse', emoji: '🤰', service: ['grossesse'],
+        id: 'grossesse', label: 'Suivi de grossesse', service: ['grossesse'],
         questions: [
             { id: 'etape', type: 'choice', resume: 'Étape de la grossesse', text: 'Où en êtes-vous de votre grossesse ?',
                 options: choix(['Je pense être enceinte / test positif', '1er trimestre (jusqu’à 3 mois)', '2e trimestre (4 à 6 mois)', '3e trimestre (7 à 9 mois)', 'Je ne sais pas']) },
@@ -45,7 +45,7 @@ export const CATEGORIES = [
         ],
     },
     {
-        id: 'echo', label: 'Échographie', emoji: '🖥️', service: ['échographie', 'echographie'],
+        id: 'echo', label: 'Échographie', service: ['échographie', 'echographie'],
         questions: [
             { id: 'type', type: 'choice', resume: 'Type d’échographie', text: 'Quelle échographie souhaitez-vous ?',
                 options: choix(['1re échographie (confirmer et dater la grossesse)', 'Échographie morphologique (vers 5 mois)', 'Échographie de croissance (3e trimestre)', 'Échographie pelvienne / gynécologique', 'Je ne sais pas, c’est sur ordonnance']) },
@@ -56,7 +56,7 @@ export const CATEGORIES = [
         ],
     },
     {
-        id: 'planning', label: 'Planning familial / contraception', emoji: '💊', service: ['planning'],
+        id: 'planning', label: 'Planning familial / contraception', service: ['planning'],
         questions: [
             { id: 'demande', type: 'choice', resume: 'Demande', text: 'Que souhaitez-vous ?',
                 options: choix(['Commencer une contraception', 'Changer de méthode', 'Suivi / renouvellement de ma méthode', 'Retrait d’un implant ou d’un stérilet', 'Avoir des conseils pour concevoir un enfant', 'Autre']) },
@@ -70,7 +70,7 @@ export const CATEGORIES = [
         ],
     },
     {
-        id: 'gyneco', label: 'Douleurs, règles, pertes (gynécologie)', emoji: '🩺', service: ['consultation'],
+        id: 'gyneco', label: 'Douleurs, règles, pertes (gynécologie)', service: ['consultation'],
         questions: [
             { id: 'probleme', type: 'choice', resume: 'Problème principal', text: 'Quel est votre problème principal ?',
                 options: choix(['Douleurs au bas-ventre / pelviennes', 'Règles irrégulières ou absentes', 'Règles très douloureuses ou très abondantes', 'Pertes ou démangeaisons', 'Saignements en dehors des règles', 'Difficulté à avoir un enfant', 'Contrôle / frottis', 'Ménopause', 'Autre']) },
@@ -85,7 +85,7 @@ export const CATEGORIES = [
         ],
     },
     {
-        id: 'postpartum', label: 'Après l’accouchement', emoji: '👶', service: ['grossesse', 'consultation'],
+        id: 'postpartum', label: 'Après l’accouchement', service: ['grossesse', 'consultation'],
         questions: [
             { id: 'quand', type: 'choice', resume: 'Date de l’accouchement', text: 'Quand avez-vous accouché ?', options: choix(['Il y a moins d’une semaine', 'Il y a 1 à 6 semaines', 'Il y a plus de 6 semaines']) },
             { id: 'voie', type: 'choice', resume: 'Type d’accouchement', text: 'Comment s’est passé l’accouchement ?', options: choix(['Voie basse (naturel)', 'Césarienne', 'Je préfère l’expliquer plus tard']) },
@@ -104,7 +104,7 @@ export const CATEGORIES = [
         ],
     },
     {
-        id: 'accouchement', label: 'Préparer mon accouchement', emoji: '🏥', service: ['accouchement'],
+        id: 'accouchement', label: 'Préparer mon accouchement', service: ['accouchement'],
         questions: [
             { id: 'terme', type: 'date', optional: true, resume: 'Date prévue d’accouchement', text: 'Quelle est la date prévue de votre accouchement ? (facultatif)' },
             { id: 'demande', type: 'choice', resume: 'Demande', text: 'Que souhaitez-vous ?',
@@ -115,7 +115,7 @@ export const CATEGORIES = [
         ],
     },
     {
-        id: 'vaccination', label: 'Vaccination', emoji: '💉', service: ['vaccin'],
+        id: 'vaccination', label: 'Vaccination', service: ['vaccin'],
         questions: [
             { id: 'pour', type: 'choice', resume: 'Pour', text: 'Pour qui est la vaccination ?', options: choix(['Moi (adulte)', 'Moi, je suis enceinte', 'Mon enfant / mon bébé']) },
             { id: 'age', type: 'text', optional: true, resume: 'Âge de l’enfant', text: 'Quel est l’âge de l’enfant ?', placeholder: 'Ex. : 2 mois', showIf: r => r.pour === 'Mon enfant / mon bébé' },
@@ -126,7 +126,7 @@ export const CATEGORIES = [
         ],
     },
     {
-        id: 'bebe', label: 'Mon bébé / mon enfant', emoji: '🍼', service: ['consultation', 'soin'],
+        id: 'bebe', label: 'Mon bébé / mon enfant', service: ['consultation', 'soin'],
         questions: [
             { id: 'age', type: 'choice', resume: 'Âge', text: 'Quel est l’âge de l’enfant ?', options: choix(['Moins de 1 mois', '1 à 6 mois', '6 à 12 mois', 'Plus de 1 an']) },
             { id: 'motif', type: 'multi', resume: 'Motif', text: 'Pourquoi souhaitez-vous consulter ?',
@@ -147,7 +147,7 @@ export const CATEGORIES = [
         ],
     },
     {
-        id: 'general', label: 'Consultation générale', emoji: '🩺', service: ['consultation'],
+        id: 'general', label: 'Consultation générale', service: ['consultation'],
         questions: [
             { id: 'motif', type: 'choice', resume: 'Motif principal', text: 'Quel est le motif principal ?',
                 options: choix(['Fièvre', 'Douleurs', 'Toux / rhume', 'Problème digestif', 'Bilan de santé / certificat', 'Renouvellement d’ordonnance', 'Autre']) },
@@ -159,7 +159,7 @@ export const CATEGORIES = [
         ],
     },
     {
-        id: 'soins', label: 'Soins infirmiers (pansement, injection…)', emoji: '🩹', service: ['soin'],
+        id: 'soins', label: 'Soins infirmiers (pansement, injection…)', service: ['soin'],
         questions: [
             { id: 'soin', type: 'multi', resume: 'Soins souhaités', text: 'Quel(s) soin(s) souhaitez-vous ?',
                 options: [{ label: 'Pansement ou soin d’une plaie' }, { label: 'Injection prescrite par un médecin' }, { label: 'Perfusion' }, { label: 'Prise de tension ou de glycémie' }, { label: 'Retrait de fils ou de points de suture' }, { label: 'Autre soin' }] },
@@ -171,7 +171,7 @@ export const CATEGORIES = [
         ],
     },
     {
-        id: 'analyses', label: 'Analyses de sang et tests', emoji: '🧪', service: ['analyse'],
+        id: 'analyses', label: 'Analyses de sang et tests', service: ['analyse'],
         questions: [
             { id: 'examens', type: 'multi', resume: 'Examens souhaités', text: 'Quel(s) examen(s) souhaitez-vous ?',
                 options: [{ label: 'Prise de sang (bilan complet)' }, { label: 'Test de paludisme' }, { label: 'Glycémie (sucre dans le sang)' }, { label: 'Groupe sanguin' }, { label: 'Test de grossesse' }, { label: 'Je ne sais pas, c’est sur ordonnance' }, { label: 'Autre examen' }] },
@@ -181,7 +181,7 @@ export const CATEGORIES = [
         ],
     },
     {
-        id: 'autre', label: 'Autre demande', emoji: '💬', service: [],
+        id: 'autre', label: 'Autre demande', service: [],
         questions: [
             { id: 'demande', type: 'text', multiline: true, resume: 'Demande', text: 'Décrivez en quelques mots votre demande.', placeholder: 'Ex. : certificat, avis sur un résultat d’analyse…' },
             { id: 'depuis', type: 'choice', resume: 'Depuis', text: 'Si c’est un problème de santé, depuis quand ?', options: [...choix(DUREES), { label: 'Ce n’est pas un problème de santé' }], optional: true },

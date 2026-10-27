@@ -25,3 +25,9 @@ dist-ssr
 
 # Rapports Lighthouse (npm run lighthouse)
 lighthouse-reports
+.ds-sync/
+ds-bundle/
+.design-sync/.cache/
+.design-sync/learnings/
+.design-sync/node_modules
+ds-out/

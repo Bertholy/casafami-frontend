@@ -9,6 +9,7 @@ import { SiteContentProvider } from './context/SiteContentContext';
 import TitrePage from './components/TitrePage';
 import ChargementPage from './components/ChargementPage';
 import NiveauDefilement from './components/NiveauDefilement';
+import BanniereInstallation from './components/BanniereInstallation';
 import BarreProgression from './components/BarreProgression';
 import { LangProvider, useLang } from './i18n/LangContext';
 import { PAGES_EDITABLES, STAFF_PREFIXES, pagePublique } from './constants/routes';
@@ -70,6 +71,7 @@ function AppContent() {
             <a href="#contenu" className="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-[100] focus:rounded-lg focus:bg-white focus:px-4 focus:py-2 focus:text-sm focus:font-bold focus:text-gray-900 focus:shadow-lg">{t("Aller au contenu")}</a>
             <div className={`min-h-screen flex flex-col bg-white dark:bg-gray-900 transition-colors ${isPublicPage ? "theme-montagne" : isLogin ? "theme-doux" : ""}`}>
                 {isPublicPage && <NiveauDefilement />}
+                {isPublicPage && <BanniereInstallation />}
                 {isPublicPage && <Navbar />}
                 <main id="contenu" tabIndex={-1} className={`grow focus:outline-none ${isPublicPage ? "mt-fond-doux" : ""}`}>
                     {isPublicPage && PAGES_EDITABLES[pagePublique(location.pathname)] && <TextesAjoutes page={PAGES_EDITABLES[pagePublique(location.pathname)]} zone="haut" />}

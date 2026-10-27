@@ -1,5 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
-import { AlertTriangle, ArrowLeft, Bot, Check, RotateCw, SendHorizonal, Sparkles, Search, X } from 'lucide-react';
+import { AlertTriangle, ArrowLeft, Bandage, Baby, Bot, Check, HeartPulse, Hospital, MessageCircle, Milk, Monitor, Pill, RotateCw, SendHorizonal, Sparkles, Search, Stethoscope, Syringe, TestTube, X } from 'lucide-react';
+
+// Icône de chaque sujet (au trait fin, comme le reste du site) ; un sujet inconnu prend la bulle de discussion.
+const ICONES = {
+    grossesse: HeartPulse, echo: Monitor, planning: Pill, gyneco: Stethoscope, postpartum: Baby, accouchement: Hospital,
+    vaccination: Syringe, bebe: Milk, general: Stethoscope, soins: Bandage, analyses: TestTube, autre: MessageCircle,
+};
+const IconeSujet = ({ id, className = 'h-4 w-4' }) => { const Icone = ICONES[id] || MessageCircle; return <Icone className={`shrink-0 ${className}`} aria-hidden="true" />; };
 import { CATEGORIES, buildMotif, findRedFlags, getCategory, nextQuestion } from '../constants/motifFlows';
 import { AIDE, analyserDemande, normaliser, propositions } from '../constants/motifRecherche';
 import { useLang } from '../i18n/LangContext';
@@ -103,7 +110,7 @@ export default function MotifAssistant({ services = [], onApply, onClose }) {
 
                 <div className="flex-1 space-y-3 overflow-y-auto px-4 py-4" aria-live="polite">
                     <div className={bubbleBot}>
-                        {t("Bonjour 👋 Je vais vous poser quelques questions simples pour que la sage-femme ou le médecin prépare votre visite.")}
+                        {t("Bonjour. Je vais vous poser quelques questions simples pour que la sage-femme ou le médecin prépare votre visite.")}
                         <span className="mt-1 block text-xs text-slate-500 dark:text-gray-400">{t("Je ne pose pas de diagnostic. En cas d’urgence, appelez le cabinet ou rendez-vous aux urgences sans attendre.")}</span>
                     </div>
                     <div className={bubbleBot}>{t("Quelle est la raison de votre visite ?")}</div>
@@ -144,7 +151,7 @@ export default function MotifAssistant({ services = [], onApply, onClose }) {
                         <div className="space-y-3">
                             <div className={bubbleBot}>
                                 {t("D’après ce que vous décrivez, le service le plus adapté est :")}
-                                <strong className="mt-1 block text-base text-teal-800 dark:text-teal-300">{getCategory(analyse.principal.id)?.emoji} {nomDuService(analyse.principal.id)}</strong>
+                                <strong className="mt-1 flex items-center gap-2 text-base text-teal-800 dark:text-teal-300"><IconeSujet id={analyse.principal.id} className="h-5 w-5" />{nomDuService(analyse.principal.id)}</strong>
                                 <span className="mt-1 block text-xs text-slate-600 dark:text-gray-300">{t(AIDE[analyse.principal.id])}</span>
                                 <span className="mt-2 block text-xs text-slate-500 dark:text-gray-400">{t("Ce choix ne remplace pas l’avis d’un soignant : l’équipe confirmera le service lors de la confirmation de votre rendez-vous.")}</span>
                             </div>
@@ -158,7 +165,7 @@ export default function MotifAssistant({ services = [], onApply, onClose }) {
                                     <div className="flex flex-wrap gap-2">
                                         {analyse.alternatives.map(a => (
                                             <button key={a.id} onClick={() => choisir(a.id)} className="rounded-xl border-2 border-teal-200 bg-white px-3 py-2 text-left text-sm font-medium text-teal-900 transition hover:border-teal-500 hover:bg-teal-50 dark:border-teal-800 dark:bg-gray-950 dark:text-teal-100 dark:hover:bg-gray-800">
-                                                {getCategory(a.id)?.emoji} {nomDuService(a.id)}<span className="block text-xs font-normal text-slate-500 dark:text-gray-400">{t(AIDE[a.id])}</span>
+                                                <span className="flex items-center gap-1.5"><IconeSujet id={a.id} />{nomDuService(a.id)}</span><span className="block text-xs font-normal text-slate-500 dark:text-gray-400">{t(AIDE[a.id])}</span>
                                             </button>
                                         ))}
                                     </div>
@@ -182,14 +189,14 @@ export default function MotifAssistant({ services = [], onApply, onClose }) {
                             <div className="grid gap-2 sm:grid-cols-2">
                             {CATEGORIES.map(c => (
                                 <button key={c.id} onClick={() => choisir(c.id)} className="flex items-center gap-2 rounded-xl border-2 border-slate-200 bg-white px-3 py-2.5 text-left text-sm font-medium transition hover:border-teal-500 hover:bg-teal-50 dark:border-gray-700 dark:bg-gray-950 dark:text-white dark:hover:bg-gray-800">
-                                    <span aria-hidden="true" className="text-lg">{c.emoji}</span><span className="min-w-0"><span className="block">{t(c.label)}</span><span className="block text-xs font-normal text-slate-500 dark:text-gray-400">{t(AIDE[c.id])}</span></span>
+                                    <span className="flex h-9 w-9 shrink-0 items-center justify-center text-teal-700 dark:text-teal-300"><IconeSujet id={c.id} className="h-5 w-5" /></span><span className="min-w-0"><span className="block">{t(c.label)}</span><span className="block text-xs font-normal text-slate-500 dark:text-gray-400">{t(AIDE[c.id])}</span></span>
                                 </button>
                             ))}
                             </div>
                         </div>
                     )}
 
-                    {category && <div className={bubbleMe}>{category.emoji} {t(category.label)}</div>}
+                    {category && <div className={`${bubbleMe} inline-flex items-center gap-2`}><IconeSujet id={category.id} />{t(category.label)}</div>}
 
                     {category && order.map(id => {
                         const q = category.questions.find(item => item.id === id);

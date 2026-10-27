@@ -1,0 +1,77 @@
+/*
+ * Style « neumorphisme » de l'espace du personnel, au choix (bouton de l'en-tête ou menu du compte) :
+ * tout est de la même couleur que le fond, les panneaux semblent sortir de la surface (ombre claire en haut à gauche,
+ * ombre sombre en bas à droite) et les champs semblent creusés dedans. Seule l'apparence change.
+ * Actif quand <html> porte la classe « neumorphisme » (voir utils/stylePersonnel.js) ; sans elle, ce fichier n'a aucun effet.
+ */
+
+/* ---- jetons : clair ---- */
+.neumorphisme .theme-staff {
+    --neu-fond: #e3e8ef;
+    --neu-haut: #ffffff;
+    --neu-bas: #b8c1ce;
+    --neu-relief: 7px 7px 16px var(--neu-bas), -7px -7px 16px var(--neu-haut);
+    --neu-relief-leger: 4px 4px 9px var(--neu-bas), -4px -4px 9px var(--neu-haut);
+    --neu-creux: inset 4px 4px 8px var(--neu-bas), inset -4px -4px 8px var(--neu-haut);
+
+    --st-page: var(--neu-fond); --st-panel: var(--neu-fond); --st-line: transparent;
+    --st-side: var(--neu-fond); --st-side-line: transparent; --st-side-hover: transparent;
+    --sc-background: var(--neu-fond); --sc-card: var(--neu-fond); --sc-popover: var(--neu-fond);
+    --sc-secondary: var(--neu-fond); --sc-muted: #d9dfe8; --sc-border: transparent; --sc-input: transparent;
+    --radius-lg: .9rem; --radius-xl: 1.1rem; --radius-2xl: 1.4rem; --radius-3xl: 1.6rem;
+}
+
+/* ---- jetons : sombre ---- */
+.neumorphisme.dark .theme-staff {
+    --neu-fond: #262b33;
+    --neu-haut: #313741;
+    --neu-bas: #191c22;
+    --st-page: var(--neu-fond); --st-panel: var(--neu-fond); --st-side: var(--neu-fond);
+    --sc-background: var(--neu-fond); --sc-card: var(--neu-fond); --sc-popover: var(--neu-fond);
+    --sc-secondary: var(--neu-fond); --sc-muted: #2c323b;
+    --color-gray-900: var(--neu-fond); --color-gray-800: #2c323b; --color-slate-900: var(--neu-fond); --color-slate-800: #2c323b;
+}
+
+/* ---- panneaux et cartes : en relief, sans bordure ---- */
+.neumorphisme .theme-staff :is(.bg-card, .bg-white, .bg-\(--st-panel\), .bg-popover):not(button):not(input):not(a) {
+    background-color: var(--neu-fond);
+    border-color: transparent;
+    box-shadow: var(--neu-relief);
+}
+.neumorphisme .theme-staff .bg-popover { box-shadow: var(--neu-relief), 0 18px 40px -18px rgba(0, 0, 0, .25); }
+/* une carte dans une carte reste plate : un seul niveau de relief */
+.neumorphisme .theme-staff :is(.bg-card, .bg-white) :is(.bg-card, .bg-white):not(button) { box-shadow: none; }
+
+/* ---- menu latéral et en-tête : même fond, séparés par une ombre douce ---- */
+.neumorphisme .theme-staff aside { background-color: var(--neu-fond); box-shadow: 6px 0 16px -6px var(--neu-bas); border-color: transparent; }
+.neumorphisme .theme-staff header { background-color: var(--neu-fond); border-color: transparent; box-shadow: 0 6px 14px -10px var(--neu-bas); }
+/* ligne active du menu : creusée */
+.neumorphisme .theme-staff aside a[aria-current='page']:not([class*='mt-bouton']) { background-color: var(--neu-fond); box-shadow: var(--neu-creux); }
+
+/* ---- boutons : en relief, enfoncés au clic ---- */
+.neumorphisme .theme-staff button:not([role='switch']):not([role='checkbox']):not([role='tab']):not([role='menuitem']):not([data-radix-collection-item]),
+.neumorphisme .theme-staff a.rounded-lg, .neumorphisme .theme-staff a.rounded-xl, .neumorphisme .theme-staff summary {
+    border-color: transparent;
+    box-shadow: var(--neu-relief-leger);
+}
+.neumorphisme .theme-staff :is(button, a, summary):active { box-shadow: var(--neu-creux) !important; }
+.neumorphisme .theme-staff aside button, .neumorphisme .theme-staff aside a { box-shadow: none; }
+.neumorphisme .theme-staff aside a[aria-current='page']:not([class*='mt-bouton']) { box-shadow: var(--neu-creux); }
+
+/* ---- champs : creusés ---- */
+.neumorphisme .theme-staff :is(input:not([type='checkbox']):not([type='radio']):not([type='range']), select, textarea) {
+    background-color: var(--neu-fond) !important;
+    border-color: transparent !important;
+    box-shadow: var(--neu-creux);
+}
+.neumorphisme .theme-staff :is(input, select, textarea):focus-visible { box-shadow: var(--neu-creux), 0 0 0 2px color-mix(in srgb, var(--mt-main) 55%, transparent); }
+
+/* ---- onglets, interrupteurs, cases : rail creusé, élément actif en relief ---- */
+.neumorphisme .theme-staff [role='tablist'] { background-color: var(--neu-fond); box-shadow: var(--neu-creux); border-color: transparent; }
+.neumorphisme .theme-staff [role='tab'][data-state='active'] { box-shadow: var(--neu-relief-leger); }
+.neumorphisme .theme-staff button[role='switch'] { box-shadow: var(--neu-creux); }
+.neumorphisme .theme-staff button[role='checkbox'] { border-color: transparent; box-shadow: var(--neu-creux); }
+
+/* ---- tableaux : en-tête creusé, lignes sans traits durs ---- */
+.neumorphisme .theme-staff thead { background-color: var(--neu-fond); box-shadow: var(--neu-creux); }
+.neumorphisme .theme-staff :is(tbody, tr, td, th) { border-color: color-mix(in srgb, var(--neu-bas) 35%, transparent); }

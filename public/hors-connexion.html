@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="fr">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#0a8fc7" />
+    <title>CASAFAMI — Hors connexion</title>
+    <style>
+        :root { --bleu: #0a8fc7; --encre: #1f2937; --gris: #5b6b75; }
+        * { box-sizing: border-box; }
+        body { margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; background: #f4f9fc; color: var(--encre); font-family: Lato, 'Segoe UI', system-ui, sans-serif; text-align: center; }
+        main { max-width: 26rem; }
+        img { width: 88px; height: 88px; object-fit: contain; background: #fff; border-radius: 12px; padding: 6px; }
+        h1 { margin: 20px 0 8px; font-size: 1.5rem; }
+        p { margin: 0 0 12px; color: var(--gris); line-height: 1.55; }
+        a, button { display: inline-flex; align-items: center; justify-content: center; margin-top: 8px; padding: 12px 20px; border: 0; border-radius: 12px; background: var(--bleu); color: #fff; font: inherit; font-weight: 700; text-decoration: none; cursor: pointer; }
+        .tel { display: block; margin-top: 20px; font-size: 1.25rem; font-weight: 700; color: var(--encre); background: none; padding: 0; }
+    </style>
+</head>
+<body>
+    <main>
+        <img src="/logo_casafami.png" alt="CASAFAMI" />
+        <h1>Pas de connexion internet</h1>
+        <p>La prise de rendez-vous a besoin d'internet. Vérifiez votre connexion, puis réessayez.</p>
+        <p>En cas d'urgence, appelez directement le cabinet :</p>
+        <a class="tel" href="tel:0340675928">034 06 759 28</a>
+        <button type="button" onclick="location.reload()">Réessayer</button>
+    </main>
+</body>
+</html>

@@ -5,6 +5,7 @@ import Editable from './site/Editable';
 import { summarizeHours, traduireJours, usePlanning } from '../utils/horaires';
 import { useLang } from '../i18n/LangContext';
 import { LienAdresse, LienTelephone } from './site/LiensContact';
+import BoutonInstaller from './BoutonInstaller';
 
 const titreColonne = 'mb-5 text-xs font-extrabold uppercase tracking-[0.2em] text-white';
 
@@ -104,6 +105,7 @@ function Footer() {
                             </div>
                         </div>
                         <Link to="/prendre-rdv" className="mt-btn-blanc mt-6">{t("Prendre rendez-vous")}</Link>
+                        <div><BoutonInstaller className="mt-btn-blanc mt-3" /></div>
                     </div>
                 </div>
 

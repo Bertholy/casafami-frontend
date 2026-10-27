@@ -1,7 +1,7 @@
 import { Link, useLocation } from 'react-router-dom';
 import { useState } from 'react';
 import { useTheme } from '../context/ThemeContext';
-import { Calendar, CircleChevronRight, House, Menu, Moon, Search, Sun, X } from 'lucide-react';
+import { Calendar, CalendarDays, CircleChevronRight, House, Menu, Moon, Search, Stethoscope, Sun, X } from 'lucide-react';
 import Editable from './site/Editable';
 import LangSwitch from './LangSwitch';
 import Movable from './site/Movable';
@@ -20,8 +20,8 @@ function Navbar() {
 
     const liens = [
         { path: '/', label: t("Accueil"), Icone: House },
-        { path: '/services', label: t("Nos services") },
-        { path: '/mes-rdv', label: t("Mes rendez-vous") },
+        { path: '/services', label: t("Nos services"), Icone: Stethoscope },
+        { path: '/mes-rdv', label: t("Mes rendez-vous"), Icone: CalendarDays },
     ];
     const bouton = 'rounded-sm p-2 text-white/90 transition hover:bg-white/10';
 
@@ -39,9 +39,9 @@ function Navbar() {
                 </Link>
 
                 {/* Liens (ordinateur) */}
-                <div className="hidden items-center gap-8 md:flex">
+                <div className="hidden items-center gap-6 md:flex lg:gap-7">
                     {liens.map(lien => (
-                        <Link key={lien.path} to={lien.path} className="mt-lien-nav inline-flex items-center gap-1.5" aria-current={location.pathname === lien.path ? 'page' : undefined}>{lien.Icone && <lien.Icone className="h-[18px] w-[18px]" aria-hidden="true" />}{lien.label}</Link>
+                        <Link key={lien.path} to={lien.path} className="mt-lien-nav inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap" aria-current={location.pathname === lien.path ? 'page' : undefined}>{lien.Icone && <lien.Icone className="h-[18px] w-[18px]" aria-hidden="true" />}{lien.label}</Link>
                     ))}
                 </div>
 
@@ -52,7 +52,7 @@ function Navbar() {
                     <button onClick={toggleTheme} className={bouton} aria-label={t("Changer de thème")}>
                         {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
                     </button>
-                    <Movable id="nav.btn-rdv" as={Link} to="/prendre-rdv" className="mt-btn-blanc hidden lg:inline-flex">
+                    <Movable id="nav.btn-rdv" as={Link} to="/prendre-rdv" className="mt-btn-blanc hidden shrink-0 whitespace-nowrap lg:inline-flex">
                         <Calendar className="h-4 w-4" />
                         <Editable id="nav.btn-rdv.label">Prendre rendez-vous</Editable>
                     </Movable>

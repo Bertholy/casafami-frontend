@@ -1,0 +1,50 @@
+/*
+ * Style « encoche » de l'espace du personnel, au choix (bouton de l'en-tête ou menu du compte) :
+ * menu latéral bleu, page blanche. La ligne visée par le curseur (ou la page ouverte quand la souris est ailleurs) devient
+ * un onglet de la couleur de la page, qui se raccorde au contenu par deux angles creux et glisse d'une ligne à l'autre.
+ * Seule l'apparence change. Actif quand <html> porte la classe « encoche » (voir utils/stylePersonnel.js) ;
+ * sans elle, ce fichier n'a aucun effet.
+ */
+
+/* ---- jetons : clair (menu bleu, texte blanc, onglet de la couleur de la page) ---- */
+.encoche .theme-staff {
+    --encoche-rayon: 26px;
+    --encoche-texte: #1e3a8a;
+    --st-side: color-mix(in srgb, var(--mt-main) 30%, #172070);
+    --st-side-fg: rgba(255, 255, 255, .88); --st-side-strong: #ffffff; --st-side-muted: rgba(255, 255, 255, .62);
+    --st-side-hover: rgba(255, 255, 255, .12); --st-side-line: rgba(255, 255, 255, .16);
+}
+/* ---- sombre : même menu bleu, l'onglet prend le fond de la page et le texte reste blanc ---- */
+.encoche.dark .theme-staff { --encoche-texte: #ffffff; }
+
+/* menu : un peu plus clair en haut, sans trait à droite (l'onglet se raccorde directement à la page) */
+.encoche .theme-staff aside { background-image: linear-gradient(180deg, rgba(255, 255, 255, .1), transparent 60%); border-right-width: 0; }
+.encoche .theme-staff aside nav { position: relative; }
+
+/* sous-titre du logo et photo de profil : le cyan clair ne se lit pas sur le bleu */
+.encoche .theme-staff aside [class*='text-(--mt-main-fort)'] { color: var(--st-side-strong); }
+
+/* ---- lignes du menu : transparentes, l'onglet fait le fond ---- */
+.encoche .theme-staff aside nav a { background-color: transparent !important; color: var(--st-side-fg); scale: none !important; transition: color .2s; }
+.encoche .theme-staff aside nav a::before { display: none; }
+.encoche .theme-staff aside nav a:not(.encoche-vise) { font-weight: 500; }
+.encoche .theme-staff aside nav > div { border-color: transparent; } /* pas de trait de séparation qui traverse l'onglet */
+.encoche .theme-staff aside nav a.encoche-vise { color: var(--encoche-texte); font-weight: 700; }
+.encoche .theme-staff aside nav a.encoche-vise svg { color: var(--encoche-texte); }
+
+/* ---- l'onglet : de la couleur de la page, arrondi à gauche, collé au bord droit du menu ---- */
+.encoche-onglet { display: none; }
+.encoche .theme-staff .encoche-onglet {
+    display: block; position: absolute; left: .5rem; right: 0; top: 0; height: 0; z-index: 0; pointer-events: none;
+    background: var(--st-page); border-radius: 9999px 0 0 9999px; opacity: 0;
+    transition: transform .28s cubic-bezier(.4, 0, .2, 1), height .28s cubic-bezier(.4, 0, .2, 1), opacity .15s;
+}
+.encoche .theme-staff .encoche-onglet[data-visible='true'] { opacity: 1; }
+/* angles creux au-dessus et au-dessous : le menu bleu « se courbe » vers la page */
+.encoche .theme-staff .encoche-onglet::before, .encoche .theme-staff .encoche-onglet::after {
+    content: ''; position: absolute; right: 0; width: var(--encoche-rayon); height: calc(var(--encoche-rayon) + 1px);   /* 1 px de recouvrement : pas de fine ligne entre l'onglet et ses angles */
+}
+.encoche .theme-staff .encoche-onglet::before { bottom: calc(100% - 1px); background: radial-gradient(circle at 0 0, transparent calc(var(--encoche-rayon) - .5px), var(--st-page) var(--encoche-rayon)); }
+.encoche .theme-staff .encoche-onglet::after { top: calc(100% - 1px); background: radial-gradient(circle at 0 100%, transparent calc(var(--encoche-rayon) - .5px), var(--st-page) var(--encoche-rayon)); }
+
+@media (prefers-reduced-motion: reduce) { .encoche .theme-staff .encoche-onglet { transition: none; } }

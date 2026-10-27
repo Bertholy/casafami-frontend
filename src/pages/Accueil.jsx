@@ -252,7 +252,7 @@ function Accueil() {
                     <div>
                         <Editable id="accueil.cta.titre" as="h2" className="mt-titre mb-4 text-3xl md:text-4xl">Prêt à prendre soin de votre santé ?</Editable>
                         <Editable id="accueil.cta.texte" as="p" className="text-lg text-white/85">Réservez votre créneau en moins de 2 minutes</Editable>
-                        <Editable id="accueil.cta.note" as="p" className="mt-5 text-sm text-white/70">✓ Sans inscription · ✓ Confirmation par message · ✓ Annulation facile</Editable>
+                        <Editable id="accueil.cta.note" as="p" className="mt-5 text-sm text-white/70">Sans inscription · Confirmation par message · Annulation facile</Editable>
                     </div>
                     <div className="flex flex-col gap-4 sm:flex-row">
                         <Movable id="accueil.cta.btn" as={Link} to="/prendre-rdv" className="mt-btn-blanc-plein">

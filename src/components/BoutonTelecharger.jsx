@@ -1,11 +1,12 @@
 import { useState } from 'react';
-import { ChevronDown, FileDown, Image as ImageIcon, Loader2 } from 'lucide-react';
+import { ChevronDown, FileDown, Image as ImageIcon, Loader2, Share2 } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from './ui/dropdown-menu';
-import { downloadReceiptImage, downloadReceiptPdf } from '../utils/receipt';
+import { downloadReceiptImage, downloadReceiptPdf, partageDisponible, shareReceiptImage } from '../utils/receipt';
 import { useLang } from '../i18n/LangContext';
 
 /**
- * Un seul bouton « Télécharger » pour le reçu d'un rendez-vous : un petit menu propose le PDF ou l'image (même document dans les deux cas).
+ * Un seul bouton « Télécharger » pour le reçu d'un rendez-vous : un petit menu propose le PDF ou l'image (même document dans les deux cas),
+ * et « Partager » sur les téléphones qui savent envoyer une image à une autre application.
  * `onErreur(message)` reçoit le message à afficher quand le téléchargement échoue ; `onDebut()` efface l'erreur précédente.
  * Avec `icone`, seul le pictogramme est affiché (lignes de tableau du personnel). `className` règle l'apparence du bouton.
  */
@@ -33,6 +34,7 @@ export default function BoutonTelecharger({ rdv, onErreur, onDebut, icone = fals
             <DropdownMenuContent align="start" className="min-w-44">
                 <DropdownMenuItem onSelect={() => lancer(downloadReceiptPdf, t("Le téléchargement du reçu a échoué."))}><FileDown className="h-4 w-4" />{t("Document PDF")}</DropdownMenuItem>
                 <DropdownMenuItem onSelect={() => lancer(downloadReceiptImage, t("Le téléchargement de l’image a échoué."))}><ImageIcon className="h-4 w-4" />{t("Image")}</DropdownMenuItem>
+                {partageDisponible() && <DropdownMenuItem onSelect={() => lancer(shareReceiptImage, t("Le partage a échoué. Téléchargez le reçu à la place."))}><Share2 className="h-4 w-4" />{t("Partager")}</DropdownMenuItem>}
             </DropdownMenuContent>
         </DropdownMenu>
     );
