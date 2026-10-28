@@ -2,13 +2,13 @@ import { createContext, useContext, useEffect, useState } from 'react';
 import axiosClient from '../api/axiosClient';
 
 const DEFAULT_THEME = {
-    primaryColor: '#03cce6', secondaryColor: '#5be3f5', buttonColor: '#03cce6', linkColor: '#0794a8',
+    primaryColor: '#01bdda', secondaryColor: '#5be3f5', buttonColor: '#01bdda', linkColor: '#0794a8',
     backgroundColor: '#ffffff', panelColor: '#f8fafc', textColor: '#1f2937', navColor: '#0f172a',
     sidebarColor: '#0f172a', borderColor: '#e2e8f0',
 };
 // Anciennes couleurs d'origine (vert du premier design, bleu de la version précédente) : elles sont enregistrées chez les
 // visiteurs et en base, mais ne sont pas un choix du super administrateur ; on les traite comme « pas de couleur choisie ».
-const COULEURS_PAR_DEFAUT = new Set(['#0f766e', '#14b8a6', '#0a8fc7', '#03cce6', '#5be3f5', '#0794a8']);
+const COULEURS_PAR_DEFAUT = new Set(['#0f766e', '#14b8a6', '#0a8fc7', '#03cce6', '#00c0e0', '#0288a5', '#01bdda', '#5be3f5', '#0794a8']);
 const ThemeContext = createContext(null);
 
 /** Texte lisible sur une couleur de fond : bleu nuit sur une couleur claire (comme le cyan), blanc sur une couleur foncée. */
@@ -38,7 +38,12 @@ export function ThemeProvider({ children }) {
         const root = document.documentElement;
         root.classList.toggle('dark', theme === 'dark');
         localStorage.setItem('theme', theme);
-        Object.entries(CSS_KEYS).forEach(([key, property]) => root.style.setProperty(property, siteTheme[key] || DEFAULT_THEME[key]));
+        // une ancienne couleur par défaut gardée par le navigateur ou la base n'écrase pas la couleur par défaut actuelle
+        Object.entries(CSS_KEYS).forEach(([key, property]) => {
+            const valeur = siteTheme[key];
+            const ancienDefaut = (key === 'primaryColor' || key === 'buttonColor') && valeur && COULEURS_PAR_DEFAUT.has(valeur.toLowerCase());
+            root.style.setProperty(property, (ancienDefaut ? DEFAULT_THEME[key] : valeur) || DEFAULT_THEME[key]);
+        });
         // Site public : la couleur d'origine du cabinet (vert) laisse la place au bleu du bâtiment (design « montagne ») ;
         // une couleur choisie par le super administrateur dans « Couleurs du site » est en revanche respectée.
         [['primaryColor', '--site-primary'], ['buttonColor', '--site-button'], ['linkColor', '--site-link']].forEach(([key, property]) => {

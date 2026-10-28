@@ -13,8 +13,8 @@ export const authButton = 'flex w-full items-center justify-center gap-2 rounded
  */
 export function AuthFond({ children }) {
     return (
-        <div className="flex min-h-screen items-center justify-center bg-linear-to-br from-[#16384a] via-[#0e2a38] to-[#081821] p-4 sm:p-8">
-            <div className="grid w-full max-w-5xl overflow-hidden rounded-[2.5rem] shadow-[0_40px_100px_rgba(0,0,0,.5)] ring-1 ring-white/10 lg:min-h-[640px] lg:grid-cols-2">
+        <div className="auth-vagues flex min-h-screen items-center justify-center p-4 pb-24 sm:p-8 sm:pb-28">
+            <div className="relative z-10 grid w-full max-w-5xl overflow-hidden rounded-[2.5rem] shadow-[0_30px_70px_-20px_rgba(6,48,58,.45)] ring-1 ring-white/10 lg:min-h-[640px] lg:grid-cols-2">
 
                 {/* Photo (téléphone : bande en haut) */}
                 <div className="relative h-44 lg:hidden">

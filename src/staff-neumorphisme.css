@@ -7,29 +7,36 @@
 
 /* ---- jetons : clair ---- */
 .neumorphisme .theme-staff {
-    --neu-fond: #e3e8ef;
+    /* fond lavande clair, reflet blanc en haut à gauche, ombre lavande plus foncée en bas à droite */
+    --neu-fond: #e8e8fb;
     --neu-haut: #ffffff;
-    --neu-bas: #b8c1ce;
-    --neu-relief: 7px 7px 16px var(--neu-bas), -7px -7px 16px var(--neu-haut);
-    --neu-relief-leger: 4px 4px 9px var(--neu-bas), -4px -4px 9px var(--neu-haut);
-    --neu-creux: inset 4px 4px 8px var(--neu-bas), inset -4px -4px 8px var(--neu-haut);
+    --neu-bas: #c3c4e8;
+    --neu-relief: 9px 9px 20px var(--neu-bas), -9px -9px 20px var(--neu-haut);
+    --neu-relief-leger: 5px 5px 11px var(--neu-bas), -5px -5px 11px var(--neu-haut);
+    --neu-creux: inset 4px 4px 9px var(--neu-bas), inset -4px -4px 9px var(--neu-haut);
 
     --st-page: var(--neu-fond); --st-panel: var(--neu-fond); --st-line: transparent;
-    --st-side: var(--neu-fond); --st-side-line: transparent; --st-side-hover: transparent;
+    --st-side: var(--neu-fond); --st-side-fg: #4a4e7a; --st-side-strong: #1f2250; --st-side-muted: #7d81ad;
+    --st-side-line: transparent; --st-side-hover: transparent;
     --sc-background: var(--neu-fond); --sc-card: var(--neu-fond); --sc-popover: var(--neu-fond);
-    --sc-secondary: var(--neu-fond); --sc-muted: #d9dfe8; --sc-border: transparent; --sc-input: transparent;
-    --radius-lg: .9rem; --radius-xl: 1.1rem; --radius-2xl: 1.4rem; --radius-3xl: 1.6rem;
+    --sc-secondary: var(--neu-fond); --sc-muted: #dedff6; --sc-border: transparent; --sc-input: transparent;
+    --sc-foreground: #1f2250; --sc-card-foreground: #1f2250; --sc-muted-foreground: #6b6f9c;
+    --radius-lg: 1rem; --radius-xl: 1.25rem; --radius-2xl: 1.6rem; --radius-3xl: 1.9rem;
 }
 
 /* ---- jetons : sombre ---- */
 .neumorphisme.dark .theme-staff {
-    --neu-fond: #262b33;
-    --neu-haut: #313741;
-    --neu-bas: #191c22;
+    --neu-fond: #25273b;
+    --neu-haut: #30334d;
+    --neu-bas: #181a2a;
+    --neu-relief: 9px 9px 20px var(--neu-bas), -9px -9px 20px var(--neu-haut);
+    --neu-relief-leger: 5px 5px 11px var(--neu-bas), -5px -5px 11px var(--neu-haut);
+    --neu-creux: inset 4px 4px 9px var(--neu-bas), inset -4px -4px 9px var(--neu-haut);
     --st-page: var(--neu-fond); --st-panel: var(--neu-fond); --st-side: var(--neu-fond);
+    --st-side-fg: #b7bbe4; --st-side-strong: #ffffff; --st-side-muted: #8e92c2;
     --sc-background: var(--neu-fond); --sc-card: var(--neu-fond); --sc-popover: var(--neu-fond);
-    --sc-secondary: var(--neu-fond); --sc-muted: #2c323b;
-    --color-gray-900: var(--neu-fond); --color-gray-800: #2c323b; --color-slate-900: var(--neu-fond); --color-slate-800: #2c323b;
+    --sc-secondary: var(--neu-fond); --sc-muted: #2b2e47;
+    --color-gray-900: var(--neu-fond); --color-gray-800: #2b2e47; --color-slate-900: var(--neu-fond); --color-slate-800: #2b2e47;
 }
 
 /* ---- panneaux et cartes : en relief, sans bordure ---- */
@@ -54,6 +61,10 @@
     border-color: transparent;
     box-shadow: var(--neu-relief-leger);
 }
+/* boutons et cases blancs (jours du calendrier, filtres…) : de la couleur du fond, pour qu'ils sortent de la surface au lieu de rester des aplats blancs */
+.neumorphisme .theme-staff :is(button, a, summary):is(.bg-white, .bg-card, .bg-slate-50, .bg-gray-900, .bg-gray-950):not([role='switch']):not([role='checkbox']):not([role='tab']):not([role='menuitem']) { background-color: var(--neu-fond); }
+.neumorphisme .theme-staff :is(button, a):is(.rounded-lg, .rounded-xl, .rounded-md):not([role='tab']):not([role='menuitem']):not([class*='mt-bouton']) { border-radius: 1rem; }
+.neumorphisme.dark .theme-staff.min-h-screen { background-image: none; }
 .neumorphisme .theme-staff :is(button, a, summary):active { box-shadow: var(--neu-creux) !important; }
 .neumorphisme .theme-staff aside button, .neumorphisme .theme-staff aside a { box-shadow: none; }
 .neumorphisme .theme-staff aside a[aria-current='page']:not([class*='mt-bouton']) { box-shadow: var(--neu-creux); }

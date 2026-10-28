@@ -69,7 +69,7 @@ function AppContent() {
             <ScrollToTop />
             <TitrePage />
             <a href="#contenu" className="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-[100] focus:rounded-lg focus:bg-white focus:px-4 focus:py-2 focus:text-sm focus:font-bold focus:text-gray-900 focus:shadow-lg">{t("Aller au contenu")}</a>
-            <div className={`min-h-screen flex flex-col bg-white dark:bg-gray-900 transition-colors ${isPublicPage ? "theme-montagne" : isLogin ? "theme-doux" : ""}`}>
+            <div className={`min-h-screen flex flex-col bg-white dark:bg-gray-900 transition-colors ${isPublicPage ? "theme-montagne theme-treuscoat" : isLogin ? "theme-doux" : ""}`}>
                 {isPublicPage && <NiveauDefilement />}
                 {isPublicPage && <BanniereInstallation />}
                 {isPublicPage && <Navbar />}

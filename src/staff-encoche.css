@@ -18,7 +18,10 @@
 .encoche.dark .theme-staff { --encoche-texte: #ffffff; }
 
 /* menu : un peu plus clair en haut, sans trait à droite (l'onglet se raccorde directement à la page) */
-.encoche .theme-staff aside { background-image: linear-gradient(180deg, rgba(255, 255, 255, .1), transparent 60%); border-right-width: 0; }
+.encoche .theme-staff aside { background-image: linear-gradient(180deg, rgba(255, 255, 255, .1), transparent 60%); border-right-width: 0; box-shadow: none !important; }
+/* ni trait ni ombre autour du menu : les séparateurs intérieurs et la ligne sous l'en-tête disparaissent, comme sur la maquette */
+.encoche .theme-staff aside :is(div, nav, button, a) { border-color: transparent !important; }
+.encoche .theme-staff header { border-color: transparent; }
 .encoche .theme-staff aside nav { position: relative; }
 
 /* sous-titre du logo et photo de profil : le cyan clair ne se lit pas sur le bleu */
@@ -32,11 +35,11 @@
 .encoche .theme-staff aside nav a.encoche-vise { color: var(--encoche-texte); font-weight: 700; }
 .encoche .theme-staff aside nav a.encoche-vise svg { color: var(--encoche-texte); }
 
-/* ---- l'onglet : de la couleur de la page, arrondi à gauche, collé au bord droit du menu ---- */
+/* ---- l'onglet : de la couleur de ce qui se trouve derrière le bord du menu (mesurée dans AdminLayout.jsx ; sinon celle de la page), arrondi à gauche, collé au bord droit ---- */
 .encoche-onglet { display: none; }
 .encoche .theme-staff .encoche-onglet {
     display: block; position: absolute; left: .5rem; right: 0; top: 0; height: 0; z-index: 0; pointer-events: none;
-    background: var(--st-page); border-radius: 9999px 0 0 9999px; opacity: 0;
+    background: var(--encoche-fond, var(--st-page)); border-radius: 9999px 0 0 9999px; opacity: 0;
     transition: transform .28s cubic-bezier(.4, 0, .2, 1), height .28s cubic-bezier(.4, 0, .2, 1), opacity .15s;
 }
 .encoche .theme-staff .encoche-onglet[data-visible='true'] { opacity: 1; }
@@ -44,7 +47,7 @@
 .encoche .theme-staff .encoche-onglet::before, .encoche .theme-staff .encoche-onglet::after {
     content: ''; position: absolute; right: 0; width: var(--encoche-rayon); height: calc(var(--encoche-rayon) + 1px);   /* 1 px de recouvrement : pas de fine ligne entre l'onglet et ses angles */
 }
-.encoche .theme-staff .encoche-onglet::before { bottom: calc(100% - 1px); background: radial-gradient(circle at 0 0, transparent calc(var(--encoche-rayon) - .5px), var(--st-page) var(--encoche-rayon)); }
-.encoche .theme-staff .encoche-onglet::after { top: calc(100% - 1px); background: radial-gradient(circle at 0 100%, transparent calc(var(--encoche-rayon) - .5px), var(--st-page) var(--encoche-rayon)); }
+.encoche .theme-staff .encoche-onglet::before { bottom: calc(100% - 1px); background: radial-gradient(circle at 0 0, transparent calc(var(--encoche-rayon) - .5px), var(--encoche-fond-haut, var(--st-page)) var(--encoche-rayon)); }
+.encoche .theme-staff .encoche-onglet::after { top: calc(100% - 1px); background: radial-gradient(circle at 0 100%, transparent calc(var(--encoche-rayon) - .5px), var(--encoche-fond-bas, var(--st-page)) var(--encoche-rayon)); }
 
 @media (prefers-reduced-motion: reduce) { .encoche .theme-staff .encoche-onglet { transition: none; } }

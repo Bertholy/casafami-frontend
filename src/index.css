@@ -45,6 +45,8 @@
     }
 }
 
+/* barre de progression du diaporama d'accueil : sa fin passe à l'image suivante */
+@keyframes hero-barre { from { transform: scaleX(0); } to { transform: scaleX(1); } }
 @keyframes fadeIn {
     from { opacity: 0; }
     to { opacity: 1; }
@@ -212,6 +214,52 @@ input[type="button"], input[type="submit"], input[type="reset"],
 
     .theme-montagne .mt-lien-nav { transition: color .2s, opacity .2s; }
 }
+
+/* ========== ANIMATIONS DE L'ACCUEIL (classe .accueil-anime, posée dans Accueil.jsx) ==========
+ * Image d'accueil : les textes entrent l'un après l'autre et la photo affichée zoome lentement.
+ * Plus bas sur la page : chaque titre se dévoile de gauche à droite (sa petite feuille se dessine), les photos arrivent en se
+ * précisant et les pastilles d'icônes rebondissent. Tout est coupé si la personne a demandé moins d'animations.
+ * Pour tout retirer : enlever « accueil-anime » dans Accueil.jsx (ou supprimer ce bloc). */
+@media (prefers-reduced-motion: no-preference) {
+    @keyframes texte-entre { from { opacity: 0; translate: 0 30px; filter: blur(6px); } to { opacity: 1; translate: 0 0; filter: blur(0); } }
+    @keyframes photo-zoom { from { scale: 1; } to { scale: 1.12; } }
+
+    .accueil-anime .mt-hero > .relative > * { animation: texte-entre .9s cubic-bezier(.2, .7, .2, 1) both; }
+    .accueil-anime .mt-hero > .relative > :nth-child(1) { animation-delay: .15s; }
+    .accueil-anime .mt-hero > .relative > :nth-child(2) { animation-delay: .35s; }
+    .accueil-anime .mt-hero > .relative > :nth-child(3) { animation-delay: .6s; }
+    .accueil-anime .mt-hero > .relative > :nth-child(4) { animation-delay: .8s; }
+    .accueil-anime .mt-hero h1 > span.block { animation: texte-entre .9s cubic-bezier(.2, .7, .2, 1) .55s both; }
+    /* la photo affichée zoome doucement : l'animation repart à chaque changement d'image (la classe opacity-100 passe à l'image suivante) */
+    .accueil-anime .mt-hero > div.opacity-100.bg-center { animation: photo-zoom 9s ease-out both; }
+
+    @supports (animation-timeline: view()) {
+        @keyframes titre-devoile { from { opacity: 0; clip-path: inset(-10% 100% -20% 0); translate: -18px 0; } to { opacity: 1; clip-path: inset(-10% -3% -20% 0); translate: 0 0; } }
+        @keyframes feuille-trace { from { scale: 0 1; opacity: 0; } to { scale: 1 1; opacity: 1; } }
+        @keyframes photo-precise { from { opacity: 0; scale: .9; translate: 0 44px; filter: blur(8px); } to { opacity: 1; scale: 1; translate: 0 0; filter: blur(0); } }
+        @keyframes pastille-rebond { 0% { opacity: 0; scale: .3; } 65% { opacity: 1; scale: 1.14; } 100% { opacity: 1; scale: 1; } }
+
+        .accueil-anime .mt-titre { animation: titre-devoile linear both; animation-timeline: view(); animation-range: entry 0% entry 55%; }
+        .accueil-anime .mt-titre::after { transform-origin: left center; animation: feuille-trace linear both; animation-timeline: view(); animation-range: entry 35% entry 90%; }
+        .accueil-anime img { animation: photo-precise linear both; animation-timeline: view(); animation-range: entry 0% entry 55%; }
+        .accueil-anime .bg-teal-600.h-16.w-16 { animation: pastille-rebond linear both; animation-timeline: view(); animation-range: entry 0% entry 60%; }
+    }
+}
+
+/* ========== CARTES QUI SE RETOURNENT (services) ==========
+ * La face avant définit la taille ; le dos, posé dessus et tourné de 180°, apparaît quand la carte pivote autour de son axe vertical.
+ * Rotation : survol (appareils qui savent survoler), classe .est-retournee (toucher), ou arrivée au clavier (focus visible).
+ * Composant : components/CarteTournante.jsx. Les angles de la carte se règlent avec --carte-rayon. */
+.carte-tourne { perspective: 1400px; }
+.carte-tourne .carte-tourne__inner { position: relative; transform-style: preserve-3d; transition: transform .7s cubic-bezier(.4, .2, .2, 1); }
+.carte-tourne .carte-tourne__face { backface-visibility: hidden; -webkit-backface-visibility: hidden; border-radius: var(--carte-rayon, 1rem); overflow: hidden; }
+.carte-tourne .carte-tourne__dos { position: absolute; inset: 0; transform: rotateY(180deg); overflow-y: auto; }
+.carte-tourne.est-retournee .carte-tourne__inner,
+.carte-tourne:focus-visible .carte-tourne__inner,
+.carte-tourne:has(:focus-visible) .carte-tourne__inner { transform: rotateY(180deg); }
+@media (hover: hover) { .carte-tourne:hover .carte-tourne__inner { transform: rotateY(180deg); } }
+.carte-tourne:focus-visible { outline: 2px solid var(--mt-main, #01bdda); outline-offset: 4px; border-radius: var(--carte-rayon, 1rem); }
+@media (prefers-reduced-motion: reduce) { .carte-tourne .carte-tourne__inner { transition-duration: .01ms; } }
 
 /* ========== MESSAGES DISCRETS (tout le site) ==========
  * Les messages d'erreur, de succès ou d'avertissement qui s'affichaient dans un encadré coloré (fond rose, vert, jaune…) n'ont plus

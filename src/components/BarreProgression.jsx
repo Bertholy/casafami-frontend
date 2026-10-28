@@ -41,7 +41,7 @@ export default function BarreProgression() {
 
     return (
         <div aria-hidden="true" className="pointer-events-none fixed inset-x-0 top-0 z-[90] h-[3px]">
-            <div className="h-full origin-left rounded-r-full bg-(--mt-main,#03cce6) shadow-[0_0_10px_var(--mt-main,#03cce6)] transition-[width,opacity] duration-300 ease-out motion-reduce:transition-none"
+            <div className="h-full origin-left rounded-r-full bg-(--mt-main,#01bdda) shadow-[0_0_10px_var(--mt-main,#01bdda)] transition-[width,opacity] duration-300 ease-out motion-reduce:transition-none"
                 style={{ width: `${largeur}%`, opacity: visible ? 1 : 0 }} />
         </div>
     );

@@ -43,13 +43,13 @@ export default function NiveauDefilement({ decalageGauche = false }) {
     return (
         <>
             <div aria-hidden="true" className="pointer-events-none fixed inset-x-0 top-0 z-[60] h-[3px]">
-                <div ref={barre} className="h-full origin-left bg-(--mt-main,#03cce6)" style={{ transform: 'scaleX(0)' }} />
+                <div ref={barre} className="h-full origin-left bg-(--mt-main,#01bdda)" style={{ transform: 'scaleX(0)' }} />
             </div>
             <button type="button" onClick={remonter} aria-label={`Remonter en haut de la page (${pourcent} % lu)`} tabIndex={visible ? 0 : -1}
-                className={`fixed bottom-4 left-4 z-50 flex h-11 w-11 items-center justify-center rounded-full bg-white text-slate-700 shadow-md ring-1 ring-slate-200 transition duration-200 hover:text-(--mt-main,#03cce6) dark:bg-gray-900 dark:text-gray-200 dark:ring-gray-700 ${decalageGauche ? 'lg:left-64' : ''} ${visible ? 'translate-y-0 opacity-100' : 'pointer-events-none translate-y-3 opacity-0'}`}>
+                className={`fixed bottom-4 left-4 z-50 flex h-11 w-11 items-center justify-center rounded-full bg-white text-slate-700 shadow-md ring-1 ring-slate-200 transition duration-200 hover:text-(--mt-main,#01bdda) dark:bg-gray-900 dark:text-gray-200 dark:ring-gray-700 ${decalageGauche ? 'lg:left-64' : ''} ${visible ? 'translate-y-0 opacity-100' : 'pointer-events-none translate-y-3 opacity-0'}`}>
                 <svg viewBox="0 0 44 44" className="absolute inset-0 -rotate-90" aria-hidden="true">
                     <circle cx="22" cy="22" r={RAYON} fill="none" strokeWidth="2.5" className="stroke-slate-200 dark:stroke-gray-700" />
-                    <circle ref={anneau} cx="22" cy="22" r={RAYON} fill="none" strokeWidth="2.5" strokeLinecap="round" strokeDasharray={CIRCONFERENCE} strokeDashoffset={CIRCONFERENCE} className="stroke-(--mt-main,#03cce6)" />
+                    <circle ref={anneau} cx="22" cy="22" r={RAYON} fill="none" strokeWidth="2.5" strokeLinecap="round" strokeDasharray={CIRCONFERENCE} strokeDashoffset={CIRCONFERENCE} className="stroke-(--mt-main,#01bdda)" />
                 </svg>
                 <ArrowUp size={17} aria-hidden="true" />
             </button>

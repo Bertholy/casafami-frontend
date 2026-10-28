@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useState } from 'react';
 
-// Style de l'espace du personnel : « encoche » (par défaut), « console » ou « neumorphisme », mémorisé sur cet appareil.
+// Style de l'espace du personnel : « neumorphisme » (par défaut), « encoche » ou « console », mémorisé sur cet appareil.
 // « console » est l'ancien aspect ; les deux autres s'activent par une classe du même nom sur <html>
-// (voir staff-encoche.css et staff-neumorphisme.css) : elle atteint aussi les fenêtres et menus affichés hors de la page (portails).
-// La clé porte un numéro : l'ancien choix « console », enregistré automatiquement avant l'existence d'« encoche », n'écrase pas le nouveau défaut.
-const CLE = 'style-personnel-2';
-const STYLES = ['encoche', 'console', 'neumorphisme'];
+// (voir staff-neumorphisme.css et staff-encoche.css) : elle atteint aussi les fenêtres et menus affichés hors de la page (portails).
+// La clé porte un numéro : un ancien choix, enregistré automatiquement avant que le défaut change, n'écrase pas le nouveau défaut.
+const CLE = 'style-personnel-3';
+const STYLES = ['neumorphisme', 'encoche', 'console'];
 const AVEC_CLASSE = ['encoche', 'neumorphisme'];
 
 const lire = () => {
@@ -23,7 +23,7 @@ export function useStylePersonnel() {
         return () => AVEC_CLASSE.forEach(nom => document.documentElement.classList.remove(nom));
     }, [style]);
 
-    // encoche → console → neumorphisme → encoche
+    // neumorphisme → encoche → console → neumorphisme
     const suivant = STYLES[(STYLES.indexOf(style) + 1) % STYLES.length];
     const basculerStyle = useCallback(() => setStyle(s => STYLES[(STYLES.indexOf(s) + 1) % STYLES.length]), []);
     return { style, suivant, basculerStyle };

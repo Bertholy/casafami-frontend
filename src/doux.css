@@ -5,10 +5,10 @@
  * Pour revenir à l'ancien design : repasser sur la branche main (git checkout main), ou remettre la classe « theme-montagne » dans App.jsx.
  */
 .theme-doux {
-    --mt-main: var(--site-primary, #03cce6); /* cyan du bâtiment du cabinet : la couleur de CASAFAMI */
+    --mt-main: var(--site-primary, #01bdda); /* turquoise du cabinet : la couleur de CASAFAMI */
     --mt-main-fort: color-mix(in srgb, var(--mt-main) 60%, black);
     --mt-main-clair: color-mix(in srgb, var(--mt-main) 70%, white);
-    --mt-sur-main: var(--site-sur-primary, #05303a);
+    --mt-sur-main: var(--site-sur-primary, #ffffff);
     --mt-bouton: var(--site-button, var(--mt-main));
     --mt-sur-bouton: var(--site-sur-button, var(--mt-sur-main));
     --mt-ardoise: #0e2a38;
@@ -110,3 +110,22 @@
 /* Le conteneur racine garde sa classe bg-white : on lui rend le fond bleuté du thème. */
 :root:not(.dark) .theme-doux.bg-white { background-color: var(--mt-fond); }
 .dark .theme-doux.dark\:bg-gray-900 { background-color: var(--mt-fond); }
+
+/*
+ * Fond des pages de connexion (identique au bas du site public) : dégradé menthe vers bleu clair, vagues, et une bande de la couleur du pied de page
+ * au bord déchiré tout en bas. Classe .auth-vagues posée dans components/AuthCard.jsx.
+ */
+.auth-vagues {
+    position: relative;
+    --auth-dechire: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 360 28' preserveAspectRatio='none'%3E%3Cpath d='M0 28 L0 14 L11 15.5 L20 10.5 L26 14.0 L36 9.3 L49 7.6 L58 16.4 L70 14.9 L75 14.5 L82 10.6 L89 10.4 L103 13.2 L121 10.6 L133 13.6 L148 9.8 L154 14.4 L171 10.8 L184 10.2 L197 8.1 L208 11.7 L218 12.4 L236 9.6 L247 10.5 L258 10.5 L266 16.9 L275 13.1 L292 14.4 L307 12.1 L312 9.6 L320 10.1 L335 9.1 L340 9.9 L350 7.7 L360 14 L360 28 Z'/%3E%3C/svg%3E");
+    background:
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 200' preserveAspectRatio='none'%3E%3Cpath fill='%237dd3fc' fill-opacity='.4' d='M0 120 C240 40 480 200 720 120 C960 40 1200 180 1440 100 L1440 200 L0 200 Z'/%3E%3Cpath fill='%23fff' fill-opacity='.6' d='M0 150 C300 90 520 200 800 140 C1040 90 1250 190 1440 130 L1440 200 L0 200 Z'/%3E%3C/svg%3E") bottom / 100% 11rem no-repeat,
+        linear-gradient(to bottom, #ecfdf5, #ecfeff 45%, #bae6fd);
+}
+.dark .auth-vagues { background: linear-gradient(to bottom, #111827, #111827 55%, #1e293b); }
+.auth-vagues::after {
+    content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 4rem; pointer-events: none;
+    background: color-mix(in srgb, var(--mt-main) 62%, black);
+    -webkit-mask: var(--auth-dechire) repeat-x left top / 360px 28px, linear-gradient(#000, #000) left 27px / 100% 100% no-repeat;
+    mask: var(--auth-dechire) repeat-x left top / 360px 28px, linear-gradient(#000, #000) left 27px / 100% 100% no-repeat;
+}

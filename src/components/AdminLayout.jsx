@@ -22,6 +22,19 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { Tooltip, TooltipProvider } from './ui/tooltip';
 import { toast } from '../lib/toast';
 
+/** Couleur de fond visible à cet endroit de l'écran, en ignorant le menu lui-même (null si rien d'opaque). */
+function fondDerriere(x, y, menu) {
+    for (const element of document.elementsFromPoint(x, y)) {
+        if (menu.contains(element)) continue;
+        const couleur = getComputedStyle(element).backgroundColor;
+        if (!couleur || couleur === 'transparent') continue;
+        // rgba(r, g, b, a) ou « oklab(... / a) » ; une couleur sans transparence indiquée est opaque
+        const alpha = couleur.startsWith('rgba(') ? parseFloat(couleur.split(',').pop()) : parseFloat(/\/\s*([\d.]+)\)$/.exec(couleur)?.[1] ?? '1');
+        if (alpha >= 0.85) return couleur;
+    }
+    return null;
+}
+
 /**
  * Coquille commune de tous les espaces du personnel : barre latérale, en-tête, recherche patient,
  * thème clair/sombre et photo de profil. Les enfants peuvent être une fonction recevant le profil chargé.
@@ -160,11 +173,21 @@ export default function AdminLayout({ title, subtitle, actions, children }) {
         const ligne = barre?.querySelector('a.encoche-vise');
         if (!marque || !barre) return;
         if (!ligne) { marque.dataset.visible = 'false'; return; }
-        const decalage = ligne.getBoundingClientRect().top - barre.getBoundingClientRect().top + barre.scrollTop;
+        const boite = ligne.getBoundingClientRect();
+        const decalage = boite.top - barre.getBoundingClientRect().top + barre.scrollTop;
         const marge = 5;   // l'onglet déborde un peu de la ligne, en haut et en bas, comme sur la maquette
-        marque.style.transform = `translateY(${decalage - marge}px)`;
-        marque.style.height = `${ligne.offsetHeight + 2 * marge}px`;
+        marque.style.transform = 'translateY(' + (decalage - marge) + 'px)';
+        marque.style.height = (ligne.offsetHeight + 2 * marge) + 'px';
         marque.dataset.visible = 'true';
+        // L'onglet et ses deux angles prennent la couleur de ce qui se trouve réellement derrière le bord du menu (page ou carte du tableau de bord),
+        // pour qu'aucune jonction ne se voie ; sans mesure possible, la couleur de la page (voir staff-encoche.css).
+        const menu = barre.closest('aside');
+        const x = menu.getBoundingClientRect().right + 3;
+        const haut = boite.top - marge, bas = boite.bottom + marge, rayon = 13;
+        [['--encoche-fond', (haut + bas) / 2], ['--encoche-fond-haut', haut - rayon], ['--encoche-fond-bas', bas + rayon]].forEach(([nom, y]) => {
+            const couleur = fondDerriere(x, y, menu);
+            if (couleur) marque.style.setProperty(nom, couleur); else marque.style.removeProperty(nom);
+        });
     }, []);
     useLayoutEffect(() => {
         if (!encoche) return undefined;
@@ -173,7 +196,11 @@ export default function AdminLayout({ title, subtitle, actions, children }) {
         const apres = setTimeout(placerOnglet, 230);
         const observe = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(placerOnglet);
         if (nav.current) observe?.observe(nav.current);
-        return () => { clearTimeout(apres); observe?.disconnect(); };
+        // la page défile derrière le menu : la couleur derrière l'onglet change
+        let image = 0;
+        const surDefilement = () => { cancelAnimationFrame(image); image = requestAnimationFrame(placerOnglet); };
+        window.addEventListener('scroll', surDefilement, { passive: true });
+        return () => { clearTimeout(apres); observe?.disconnect(); cancelAnimationFrame(image); window.removeEventListener('scroll', surDefilement); };
     });
 
     // L'action principale sort de la liste : un bouton plein en haut du menu. Les autres pages gardent leur ordre.
@@ -204,7 +231,7 @@ export default function AdminLayout({ title, subtitle, actions, children }) {
         <TooltipProvider delayDuration={250}>
             <div className="theme-staff min-h-screen bg-(--st-page) text-slate-800 dark:text-gray-100">
                 <aside onMouseEnter={() => setSurvol(true)} onMouseLeave={() => setSurvol(false)} onFocus={() => setSurvol(true)} onBlur={event => { if (!event.currentTarget.contains(event.relatedTarget)) setSurvol(false); }}
-                    className={`${menuOpen ? 'translate-x-0' : '-translate-x-full'} fixed inset-y-0 left-0 z-40 flex w-60 ${compact ? 'lg:w-[4.5rem]' : ''} ${reduit && !compact ? 'lg:shadow-2xl' : ''} flex-col border-r border-(--st-side-line) bg-(--st-side) text-(--st-side-fg) transition-[transform,width] duration-200 lg:translate-x-0`}>
+                    className={`${menuOpen ? 'translate-x-0' : '-translate-x-full'} fixed inset-y-0 left-0 z-40 flex w-60 ${compact ? 'lg:w-[4.5rem]' : ''} flex-col border-r border-(--st-side-line) bg-(--st-side) text-(--st-side-fg) transition-[transform,width] duration-200 lg:translate-x-0`}>
                     <div className={`flex h-14 shrink-0 items-center gap-2.5 border-b border-(--st-side-line) px-4 ${compact ? 'lg:justify-center lg:px-0' : ''}`}>
                         <img src="/logo_casafami.png" alt="" className="h-9 w-9 rounded-md bg-white object-contain p-0.5 ring-1 ring-(--st-side-line)" />
                         <div className={`min-w-0 ${compact ? 'lg:hidden' : ''}`}>
@@ -300,7 +327,8 @@ export default function AdminLayout({ title, subtitle, actions, children }) {
                 </aside>
                 {menuOpen && <button className="fixed inset-0 z-30 bg-black/50 lg:hidden" aria-label="Fermer le menu" onClick={() => setMenuOpen(false)} />}
 
-                <div className={`${reduit ? 'lg:pl-[4.5rem]' : 'lg:pl-60'} transition-[padding] duration-200`}>
+                {/* le contenu suit la largeur du menu (réduit, ou élargi au survol) avec la même durée d'animation : rien n'est caché derrière lui */}
+                <div className={`${compact ? 'lg:pl-[4.5rem]' : 'lg:pl-60'} transition-[padding] duration-200`}>
                     <header className="sticky top-0 z-20 flex h-14 items-center gap-3 border-b border-(--st-line) bg-(--st-page)/90 px-4 backdrop-blur-md sm:px-6">
                         <button onClick={() => setMenuOpen(true)} className="rounded-lg p-2 hover:bg-slate-100 dark:hover:bg-gray-800 lg:hidden" aria-label="Ouvrir le menu"><Menu size={20} /></button>
                         <div className="min-w-0">

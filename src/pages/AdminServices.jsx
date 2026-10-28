@@ -6,21 +6,12 @@ import axiosClient, { assetUrl } from '../api/axiosClient';
 import AdminLayout from '../components/AdminLayout';
 import ChampPhoto from '../components/ChampPhoto';
 import { apiErrorMessage, getRole, hasSession, homeForRole, LOGIN_PATH, peut } from '../utils/auth';
+import { photoDuService } from '../constants/photosServices';
 
 const EMPTY = { nom: '', description: '', duree: '', photo: null };
 const field = 'mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 font-normal outline-none transition focus:border-teal-600 focus:ring-2 focus:ring-teal-600/20 dark:border-gray-700 dark:bg-gray-950';
 const card = 'rounded-2xl border border-slate-200/80 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900';
-const fallbackImage = name => {
-    const normalized = (name || '').toLocaleLowerCase('fr');
-    if (normalized.includes('vaccin')) return '/vaccination.jpg';
-    if (normalized.includes('sang') || normalized.includes('analyse')) return '/sang.jpg';
-    if (normalized.includes('grossesse')) return '/suivi-grossesse.png';
-    if (normalized.includes('accouchement')) return '/accouchement.png';
-    if (normalized.includes('échographie') || normalized.includes('echographie')) return '/echo.png';
-    if (normalized.includes('planning')) return '/planning-familial.png';
-    if (normalized.includes('soin')) return '/infi.png';
-    return '/general.jpg';
-};
+const fallbackImage = name => photoDuService(name).src;
 
 export default function AdminServices() {
     const navigate = useNavigate();
@@ -122,7 +113,7 @@ export default function AdminServices() {
                     : services.length === 0 ? <div className={`${card} p-10 text-center text-sm text-slate-500`}>Aucun service dans le catalogue.</div>
                         : <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">{services.map(service => (
                             <article key={service.id} className={`${card} overflow-hidden`}>
-                                <img loading="lazy" decoding="async" src={imageUrl(service)} alt={service.nom} onError={e => { e.currentTarget.onerror = null; e.currentTarget.src = '/general.jpg'; }} className="h-44 w-full object-cover" />
+                                <img loading="lazy" decoding="async" src={imageUrl(service)} alt={service.nom} onError={e => { e.currentTarget.onerror = null; e.currentTarget.src = '/cabinet_1.jpg'; }} className="h-44 w-full object-cover" />
                                 <div className="p-4">
                                     <div className="flex items-start justify-between gap-3"><h3 className="font-semibold">{service.nom}</h3><div className="flex shrink-0"><button onClick={() => { setEditionError(''); setEdition({ id: service.id, nom: service.nom, description: service.description || '', duree: service.duree || '', photo: null, imageUrl: imageUrl(service) }); }} aria-label={`Modifier ${service.nom}`} className="rounded-lg p-2 text-slate-500 transition hover:bg-slate-100 dark:hover:bg-gray-800"><Pencil size={17} /></button><button onClick={() => deleteService(service)} aria-label={`Supprimer ${service.nom}`} className="rounded-lg p-2 text-rose-700 transition hover:bg-rose-50 dark:text-rose-300 dark:hover:bg-rose-500/10"><Trash2 size={17} /></button></div></div>
                                     <p className="mt-2 line-clamp-3 text-sm text-slate-600 dark:text-slate-300">{service.description || 'Aucune description.'}</p>

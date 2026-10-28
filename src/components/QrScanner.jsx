@@ -120,7 +120,7 @@ export default function QrScanner({ open, onOpenChange, onCle }) {
                         <video ref={video} muted playsInline className={`h-full w-full object-cover ${etat === 'scan' ? '' : 'invisible'}`} />
                         {etat === 'scan' && (
                             <div className="pointer-events-none absolute inset-[14%] rounded-xl border-2 border-white/90 shadow-[0_0_0_999px_rgba(0,0,0,.45)]" aria-hidden="true">
-                                <span className="absolute inset-x-2 top-1/2 h-0.5 animate-pulse bg-(--mt-main,#03cce6)" />
+                                <span className="absolute inset-x-2 top-1/2 h-0.5 animate-pulse bg-(--mt-main,#01bdda)" />
                             </div>
                         )}
                         {etat === 'demarrage' && <div className="absolute inset-0 flex items-center justify-center gap-2 text-sm text-white"><Loader2 size={18} className="animate-spin" />Ouverture de la caméra…</div>}

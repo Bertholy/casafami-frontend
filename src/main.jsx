@@ -7,6 +7,7 @@ import './doux.css';
 import './shadcn.css';
 import './staff-marine.css'; // nouveau thème du personnel ; supprimer cette ligne pour revenir à l'ancien aspect
 import './staff-neumorphisme.css'; // style « neumorphisme » au choix dans l'espace du personnel (bouton de l'en-tête)
+import './treuscoat.css'; // thème du site public inspiré de domaine-treuscoat.fr ; retirer cette ligne et « theme-treuscoat » dans App.jsx pour revenir en arrière
 import './staff-encoche.css'; // style « encoche » au choix dans l'espace du personnel : menu bleu, onglet blanc qui suit le curseur
 import App from './App.jsx';
 import { ThemeProvider } from './context/ThemeContext.jsx';

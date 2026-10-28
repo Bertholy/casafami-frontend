@@ -5,10 +5,10 @@
  * Pour revenir au vert d'origine : retirer la classe « theme-staff » dans AdminLayout.jsx.
  */
 .theme-staff {
-    --mt-main: var(--site-primary, #03cce6);
+    --mt-main: var(--site-primary, #01bdda);
     --mt-main-fort: color-mix(in srgb, var(--mt-main) 60%, black);
     --mt-main-clair: color-mix(in srgb, var(--mt-main) 70%, white);
-    --mt-sur-main: var(--site-sur-primary, #05303a);
+    --mt-sur-main: var(--site-sur-primary, #ffffff);
     --mt-bouton: var(--site-button, var(--mt-main));
     --mt-sur-bouton: var(--site-sur-button, var(--mt-sur-main));
     --casafami-primary: var(--mt-main);

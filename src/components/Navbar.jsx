@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTheme } from '../context/ThemeContext';
 import { Calendar, CalendarDays, CircleChevronRight, House, Menu, Moon, Search, Stethoscope, Sun, X } from 'lucide-react';
 import Editable from './site/Editable';
@@ -13,6 +13,15 @@ function Navbar() {
     const location = useLocation();
     const [menuOpen, setMenuOpen] = useState(false);
     const { theme, toggleTheme } = useTheme();
+    // Sur l'accueil, la barre est transparente par-dessus l'image tant qu'on est tout en haut ; elle redevient pleine dès qu'on défile.
+    const [enHaut, setEnHaut] = useState(() => typeof window === 'undefined' || window.scrollY < 40);
+    useEffect(() => {
+        const suivre = () => setEnHaut(window.scrollY < 40);
+        suivre();
+        window.addEventListener('scroll', suivre, { passive: true });
+        return () => window.removeEventListener('scroll', suivre);
+    }, []);
+    const surImage = location.pathname === '/' && enHaut && !menuOpen;
     const retourAccueil = () => {
         setMenuOpen(false);
         if (location.pathname === '/') window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -26,7 +35,7 @@ function Navbar() {
     const bouton = 'rounded-sm p-2 text-white/90 transition hover:bg-white/10';
 
     return (
-        <nav className="mt-marine sticky top-0 z-50 shadow-md" aria-label={t("Accueil")}>
+        <nav className={`${surImage ? 'mt-nav-image' : 'mt-marine shadow-md'} ${location.pathname === '/' ? '-mb-[78px]' : ''} sticky top-0 z-50 transition-colors duration-300`} aria-label={t("Accueil")}>
             <div className="mx-auto flex h-[78px] max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
 
                 {/* Logo et nom : retour à l'accueil (et en haut de la page si l'on y est déjà) */}
@@ -48,7 +57,7 @@ function Navbar() {
                 {/* Actions */}
                 <div className="flex items-center gap-2 sm:gap-3">
                     <Link to="/mes-rdv" className={bouton} aria-label={t("Retrouver mon rendez-vous")} title={t("Retrouver mon rendez-vous")}><Search className="h-5 w-5" /></Link>
-                    <LangSwitch variante="sombre" className="[&_svg]:hidden sm:[&_svg]:block" />
+                    <LangSwitch variante={surImage ? 'sombre' : 'clair'}className="[&_svg]:hidden sm:[&_svg]:block" />
                     <button onClick={toggleTheme} className={bouton} aria-label={t("Changer de thème")}>
                         {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
                     </button>

@@ -1,0 +1,134 @@
+/*
+ * Thème « Treuscoat » du site public (inspiré de domaine-treuscoat.fr) aux couleurs du cabinet : le turquoise du bâtiment, avec le fond
+ * dégradé menthe vers bleu clair et ses vagues (voir .mt-fond-doux dans montagne.css). Titres dessinés en Luckiest Guy avec une petite
+ * feuille en guise de soulignement, boutons en pilule (Montserrat gras en majuscules), photos aux angles irréguliers,
+ * bords de papier déchiré au-dessus du pied de page, menu avec séparateurs.
+ * Seule l'apparence change : aucun contenu, lien ni fonction n'est touché. Tout est limité à .theme-treuscoat (posé avec .theme-montagne
+ * sur le site public dans App.jsx) ; l'espace du personnel et la page de connexion ne sont pas concernés.
+ *
+ * POUR REVENIR À L'ANCIEN ASPECT : retirer « theme-treuscoat » dans App.jsx (ou supprimer l'import de ce fichier dans main.jsx).
+ * La couleur principale et celle des boutons restent réglables dans « Couleurs du site » (sans choix, c'est le cyan du cabinet).
+ */
+.theme-treuscoat {
+    /* le turquoise du cabinet ; --site-primary n'existe que si le super administrateur a choisi une autre couleur */
+    --mt-main: var(--site-primary, #01bdda);
+    --mt-main-fort: color-mix(in srgb, var(--mt-main) 60%, black);
+    --mt-main-clair: color-mix(in srgb, var(--mt-main) 70%, white);
+    --mt-sur-main: var(--site-sur-primary, #ffffff);
+    --mt-bouton: var(--site-button, var(--mt-main));
+    --mt-sur-bouton: var(--site-sur-button, var(--mt-sur-main));
+    --casafami-primary: var(--mt-main);
+    --casafami-button: var(--site-button, var(--mt-main-fort));
+    --casafami-link: var(--site-link, var(--mt-main-fort));
+    /* le cyan pur est trop clair pour du texte ou un fond à texte blanc : on utilise sa version foncée */
+    --color-teal-50: color-mix(in srgb, var(--mt-main) 7%, white);
+    --color-teal-100: color-mix(in srgb, var(--mt-main) 14%, white);
+    --color-teal-200: color-mix(in srgb, var(--mt-main) 28%, white);
+    --color-teal-300: color-mix(in srgb, var(--mt-main) 48%, white);
+    --color-teal-400: color-mix(in srgb, var(--mt-main) 68%, white);
+    --color-teal-500: var(--mt-main);
+    --color-teal-600: var(--mt-main-fort);
+    --color-teal-700: color-mix(in srgb, var(--mt-main) 48%, black);
+    --color-teal-800: color-mix(in srgb, var(--mt-main) 38%, black);
+    --color-teal-900: color-mix(in srgb, var(--mt-main) 28%, black);
+    --color-teal-950: color-mix(in srgb, var(--mt-main) 20%, black);
+
+    --tr-encre: #0e2a38;                                              /* texte et titres */
+    --tr-marine: var(--mt-main);                                      /* barre de navigation : le turquoise du bâtiment */
+    --tr-profond: color-mix(in srgb, var(--mt-main) 62%, black);      /* pied de page et cartes de raccourcis : le même turquoise, plus profond */
+    --tr-papier: #ecfdf5;                                             /* haut du dégradé de fond : couleur des bords déchirés */
+    --mt-texte: var(--tr-encre);
+    --mt-ardoise: var(--tr-profond);
+    /* bord de papier déchiré : une tuile de 360 px répétée (sert de masque, la couleur vient du fond) */
+    --tr-dechire: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 360 28' preserveAspectRatio='none'%3E%3Cpath d='M0 28 L0 14 L11 15.5 L20 10.5 L26 14.0 L36 9.3 L49 7.6 L58 16.4 L70 14.9 L75 14.5 L82 10.6 L89 10.4 L103 13.2 L121 10.6 L133 13.6 L148 9.8 L154 14.4 L171 10.8 L184 10.2 L197 8.1 L208 11.7 L218 12.4 L236 9.6 L247 10.5 L258 10.5 L266 16.9 L275 13.1 L292 14.4 L307 12.1 L312 9.6 L320 10.1 L335 9.1 L340 9.9 L350 7.7 L360 14 L360 28 Z'/%3E%3C/svg%3E");
+}
+.dark .theme-treuscoat {
+    --casafami-link: var(--mt-main-clair); --dark-link: var(--mt-main-clair); --color-teal-300: var(--mt-main-clair); --color-teal-400: var(--mt-main);
+    --tr-encre: #eef5fb; --tr-marine: color-mix(in srgb, var(--mt-main) 30%, #04141a); --tr-profond: color-mix(in srgb, var(--mt-main) 22%, #04141a);
+    --tr-papier: #111827; --mt-texte: #e8f0f8;
+}
+
+/* ---- titres ---- */
+.theme-treuscoat .mt-titre {
+    font-family: 'Luckiest Guy', 'Montserrat', 'Segoe UI', system-ui, sans-serif; font-weight: 400; letter-spacing: .02em;
+    text-transform: none; line-height: 1.12; color: var(--tr-encre);
+}
+.theme-treuscoat .mt-titre em { font-style: normal; color: var(--mt-main-fort); }
+.dark .theme-treuscoat .mt-titre em { color: var(--mt-main-clair); }
+.theme-treuscoat .mt-clair .mt-titre, .theme-treuscoat .mt-clair .mt-titre em { color: #fff; }
+/* petite feuille sous le titre (au lieu de la règle au-dessus) */
+.theme-treuscoat .mt-regle::before { display: none; }
+.theme-treuscoat .mt-titre::after {
+    content: ''; display: block; width: 3rem; height: .8rem; margin-top: .7rem; background: var(--mt-main);
+    -webkit-mask: var(--tr-feuille) no-repeat left center / contain; mask: var(--tr-feuille) no-repeat left center / contain;
+    --tr-feuille: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 12'%3E%3Cpath d='M2 7 C10 11 20 11 28 6 C32 3.5 36 2 40 3 C38 6 41 9 46 8 C41 12 33 11 29 9 C21 13 9 13 2 7 Z'/%3E%3C/svg%3E");
+}
+.theme-treuscoat .mt-clair .mt-titre::after { background: #fff; }
+.theme-treuscoat .text-center > .mt-titre::after, .theme-treuscoat .mt-titre.text-center::after { margin-inline: auto; -webkit-mask-position: center; mask-position: center; }
+
+/* ---- boutons : pilules, Montserrat gras en majuscules ---- */
+.theme-treuscoat .mt-btn, .theme-treuscoat .mt-btn-ligne, .theme-treuscoat .mt-btn-blanc, .theme-treuscoat .mt-btn-blanc-plein {
+    border-radius: 100px; padding: .95rem 1.9rem; font-family: 'Montserrat', 'Segoe UI', system-ui, sans-serif;
+    font-size: .78rem; font-weight: 700; letter-spacing: .06em; border-width: 2px;
+    transition: background-color .2s, color .2s, border-color .2s, transform .2s, box-shadow .2s;
+}
+.theme-treuscoat :is(.mt-btn, .mt-btn-ligne, .mt-btn-blanc, .mt-btn-blanc-plein):hover { transform: translateY(-2px); box-shadow: 0 8px 18px -8px rgba(6, 48, 58, .55); }
+/* bouton plein : le turquoise du cabinet avec un texte bleu nuit, comme dans l espace du personnel */
+.theme-treuscoat .mt-btn { background: var(--mt-bouton); border-color: var(--mt-bouton); color: var(--mt-sur-bouton); }
+.theme-treuscoat .mt-btn:hover { background: color-mix(in srgb, var(--mt-bouton) 88%, black); border-color: color-mix(in srgb, var(--mt-bouton) 88%, black); }
+.theme-treuscoat .mt-btn-ligne { color: var(--tr-encre); border-color: var(--tr-encre); }
+.theme-treuscoat .mt-btn-ligne:hover { background: var(--tr-encre); color: #fff; }
+.dark .theme-treuscoat .mt-btn-ligne { color: #eef5fb; border-color: #8fc9d6; }
+.dark .theme-treuscoat .mt-btn-ligne:hover { background: #eef5fb; color: #0e2a38; }
+.theme-treuscoat .mt-btn-blanc:hover { color: var(--tr-profond); }
+.theme-treuscoat .mt-btn-blanc-plein { color: var(--tr-profond); }
+.theme-treuscoat .mt-btn-blanc-plein:hover { color: #fff; }
+
+/* ---- image d'accueil (diaporama) : barre transparente avec un trait fin dessous, boutons à angles droits comme sur la maquette ---- */
+.theme-treuscoat .mt-nav-image { background: linear-gradient(180deg, rgba(3, 40, 54, .55), transparent); border-bottom: 1px solid rgba(255, 255, 255, .28); }
+.theme-treuscoat .mt-hero :is(.mt-btn, .mt-btn-blanc) { border-radius: 2px; }
+.theme-treuscoat .mt-hero .mt-btn-blanc { border-color: #fff; }
+
+/* ---- surfaces ---- */
+.theme-treuscoat .mt-gris { background: rgba(255, 255, 255, .72); }
+.dark .theme-treuscoat .mt-gris { background: #14304a; }
+.theme-treuscoat .mt-ardoise { background: var(--tr-profond); }
+.theme-treuscoat .mt-relief { background-image: none; }
+
+/* ---- photos et cartes : angles irréguliers, comme les cartes découpées du modèle ---- */
+.theme-treuscoat main :is(.mt-cadre, .mt-carte) { border-radius: 12px 30px 14px 34px; overflow: hidden; }
+.theme-treuscoat main img.object-cover:not(.rounded-full) { border-radius: 12px 28px 14px 32px; }
+.theme-treuscoat main .mt-carte { border: 0; box-shadow: 0 18px 30px -22px rgba(6, 48, 58, .6); }
+.theme-treuscoat main .carte-tourne, .theme-treuscoat main .carte-tourne__face { --carte-rayon: 12px 30px 14px 34px; }
+/* pastilles d'icônes (les 4 atouts) : carré arrondi légèrement penché */
+.theme-treuscoat main .bg-teal-600.h-16.w-16 { border-radius: 20px 24px 16px 26px; transform: rotate(-5deg); }
+
+/* ---- bords de papier déchiré : sous les images pleine largeur des autres pages et au-dessus du pied de page ---- */
+.theme-treuscoat main section:has(> .bg-cover):first-of-type::after, .theme-treuscoat footer.mt-ardoise::before {
+    content: ''; position: absolute; left: 0; right: 0; height: 28px; pointer-events: none;
+    -webkit-mask: var(--tr-dechire) repeat-x left bottom / 360px 28px; mask: var(--tr-dechire) repeat-x left bottom / 360px 28px;
+}
+.theme-treuscoat main section:has(> .bg-cover):first-of-type::after { bottom: -1px; z-index: 5; background: var(--tr-papier); }
+.theme-treuscoat footer.mt-ardoise { position: relative; }
+.theme-treuscoat footer.mt-ardoise::before { bottom: calc(100% - 1px); background: var(--tr-profond); }
+
+/* ---- barre de navigation : couleur du cabinet, liens séparés par un trait fin ---- */
+.theme-treuscoat .mt-marine { background: var(--tr-marine); --nav-encre: var(--mt-sur-main); }
+.dark .theme-treuscoat .mt-marine { --nav-encre: #fff; }
+/* sur le turquoise, textes et icônes sont bleu nuit (le blanc ne s'y lit pas) ; en haut de l'accueil, sur la photo, ils restent blancs */
+.theme-treuscoat .mt-marine [class*='text-white'], .theme-treuscoat .mt-marine .mt-lien-nav { color: var(--nav-encre); }
+.theme-treuscoat .mt-marine .mt-lien-nav::after { background: var(--nav-encre); }
+.theme-treuscoat .mt-marine .mt-lien-nav + .mt-lien-nav::before { background: color-mix(in srgb, var(--nav-encre) 28%, transparent); }
+/* texte blanc sur un turquoise clair : une ombre très légère garde les lettres lisibles */
+.theme-treuscoat .mt-marine [class*='text-white'], .theme-treuscoat .mt-marine .mt-lien-nav, .theme-treuscoat .mt-marine .mt-btn-blanc, .theme-treuscoat .mt-btn { text-shadow: 0 1px 2px rgba(0, 62, 80, .4); }
+.theme-treuscoat .mt-marine .mt-btn-blanc { color: var(--nav-encre); border-color: var(--nav-encre); }
+.theme-treuscoat .mt-marine .mt-btn-blanc:hover { background: var(--nav-encre); color: var(--tr-marine); }
+.theme-treuscoat .mt-marine .border-white\/15 { border-color: color-mix(in srgb, var(--nav-encre) 20%, transparent); }
+.theme-treuscoat .mt-marine .bg-black\/20 { background: rgba(255, 255, 255, .35); }
+.theme-treuscoat .mt-marine .border-white { border-color: var(--nav-encre); }
+.theme-treuscoat .mt-lien-nav { font-family: 'Montserrat', 'Segoe UI', system-ui, sans-serif; font-size: .78rem; font-weight: 700; letter-spacing: .05em; }
+.theme-treuscoat .mt-lien-nav + .mt-lien-nav::before { content: ''; position: absolute; left: -.95rem; top: 20%; bottom: 20%; width: 1px; background: rgba(255, 255, 255, .22); }
+.theme-treuscoat .mt-lien-nav::after { height: 3px; border-radius: 3px; }
+.theme-treuscoat .mt-marine img.bg-white { border-radius: 12px 16px 12px 18px; }
+
+@media (prefers-reduced-motion: reduce) { .theme-treuscoat :is(.mt-btn, .mt-btn-ligne, .mt-btn-blanc, .mt-btn-blanc-plein):hover { transform: none; } }

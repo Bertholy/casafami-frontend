@@ -6,30 +6,21 @@ import Movable from '../components/site/Movable';
 import { SkeletonCards } from '../components/ui/skeleton';
 import { detailsDuService } from '../constants/detailsServices';
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogTitle } from '../components/ui/dialog';
-import { AlertCircle, Calendar, Check, Clock, HeartPulse, Info, LayoutGrid, List, Plus, X } from 'lucide-react';
+import { AlertCircle, Calendar, Check, Clock, HeartPulse, Info, LayoutGrid, List, Plus, RotateCw, X } from 'lucide-react';
 import { useLang } from '../i18n/LangContext';
+import CarteTournante from '../components/CarteTournante';
+import { photoDuService } from '../constants/photosServices';
 
 const CLE_VUE = 'services-vue';
 
 /** Mode d'affichage mémorisé sur cet appareil : « liste » (par défaut) ou « grille ». */
 const vueEnregistree = () => {
-    try { return localStorage.getItem(CLE_VUE) === 'grille' ? 'grille' : 'liste'; }
-    catch { return 'liste'; }
+    try { return localStorage.getItem(CLE_VUE) === 'liste' ? 'liste' : 'grille'; }   // cartes qui se retournent par défaut
+    catch { return 'grille'; }
 };
 
-// Association service -> image
-const getImageForService = (nom) => {
-    const nomLower = nom.toLowerCase();
-    if (nomLower.includes('consultation')) return '/general.jpg';
-    if (nomLower.includes('soin')) return '/infi.png';
-    if (nomLower.includes('vaccin')) return '/vaccination.jpg';
-    if (nomLower.includes('analyse')) return '/sang.jpg';
-    if (nomLower.includes('grossesse')) return '/suivi-grossesse.png';
-    if (nomLower.includes('accouchement')) return '/accouchement.png';
-    if (nomLower.includes('échographie') || nomLower.includes('echographie')) return '/echo.png';
-    if (nomLower.includes('planning')) return '/planning-familial.png';
-    return '/general.jpg';
-};
+// Photo d'un service : celle envoyée par l'administrateur, sinon celle qui correspond à son nom (constants/photosServices.js)
+const photoDe = service => (service.imageUrl ? { src: assetUrl(service.imageUrl), position: '50% 50%' } : photoDuService(service.nom));
 
 /** Détail d'un service : ce qu'il comprend, ce qu'il faut apporter, et quand ne pas attendre un rendez-vous. */
 function DetailService({ detail, className = '' }) {
@@ -65,45 +56,54 @@ function DetailService({ detail, className = '' }) {
     );
 }
 
-/** Un service en carte (mode grille) : un clic ouvre une fenêtre avec le détail. */
+/** Un service en carte (mode grille) : photo et nom devant ; la carte se retourne (survol, toucher ou clavier) et montre la description derrière, avec le bouton du détail. */
 function ServiceCarte({ service, onOuvrir }) {
     const { t } = useLang();
     const detail = detailsDuService(service.nom);
-    const imageSrc = service.imageUrl ? assetUrl(service.imageUrl) : getImageForService(service.nom);
-    const corps = (
-        <>
-            <span className="block aspect-[4/3] overflow-hidden">
-                <img loading="lazy" decoding="async" src={imageSrc} alt=""
-                    onError={event => { event.currentTarget.onerror = null; event.currentTarget.src = '/general.jpg'; }}
-                    className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
-            </span>
-            <span className="flex flex-1 flex-col p-5">
-                <span className="font-titre block text-lg font-extrabold text-slate-800 dark:text-white">{t(service.nom)}</span>
-                <span className="mt-2 block flex-1 text-sm leading-relaxed text-slate-500 dark:text-gray-400">{service.description ? t(service.description) : t("Description à venir.")}</span>
-                <span className="mt-4 flex items-center justify-between gap-3 border-t border-slate-100 pt-4 dark:border-gray-700">
-                    <span className="inline-flex items-center gap-1.5 text-xs font-bold text-teal-700 dark:text-teal-300"><Clock className="h-3.5 w-3.5" aria-hidden="true" />{service.duree ? t("Durée : {duree}", { duree: service.duree }) : t("Sur rendez-vous")}</span>
-                    {detail && <span className="inline-flex items-center gap-1 text-xs font-extrabold uppercase tracking-wide text-teal-700 dark:text-teal-300">{t("Voir le détail")}<Plus className="h-4 w-4" aria-hidden="true" /></span>}
-                </span>
-            </span>
-        </>
+    const photo = photoDe(service);
+    const duree = service.duree ? t("Durée : {duree}", { duree: service.duree }) : t("Sur rendez-vous");
+    return (
+        <CarteTournante label={t(service.nom)} focusable={!!detail} className="h-full"
+            avant={(
+                <div className="relative aspect-[4/5] bg-slate-200 dark:bg-gray-800">
+                    <img loading="lazy" decoding="async" src={photo.src} style={{ objectPosition: photo.position }} alt=""
+                        onError={event => { event.currentTarget.onerror = null; event.currentTarget.src = '/cabinet_1.jpg'; }}
+                        className="absolute inset-0 h-full w-full object-cover" />
+                    <div className="absolute inset-0 bg-linear-to-t from-black/80 via-black/15 to-transparent" aria-hidden="true" />
+                    <span className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-teal-700 shadow" aria-hidden="true"><RotateCw className="h-4 w-4" /></span>
+                    <div className="absolute inset-x-0 bottom-0 p-5 text-left">
+                        <span className="font-titre block text-xl font-extrabold text-white">{t(service.nom)}</span>
+                        <span className="mt-1.5 inline-flex items-center gap-1.5 text-xs font-bold text-white/85"><Clock className="h-3.5 w-3.5" aria-hidden="true" />{duree}</span>
+                    </div>
+                </div>
+            )}
+            arriere={(
+                <div className="flex h-full flex-col justify-center gap-4 bg-teal-700 p-6 text-left text-white">
+                    <span className="font-titre block text-xl font-extrabold">{t(service.nom)}</span>
+                    <span className="block text-sm leading-relaxed text-white/90">{service.description ? t(service.description) : t("Description à venir.")}</span>
+                    <span className="inline-flex items-center gap-1.5 text-xs font-bold text-white/80"><Clock className="h-3.5 w-3.5" aria-hidden="true" />{duree}</span>
+                    {detail && (
+                        <button type="button" onClick={onOuvrir} aria-haspopup="dialog"
+                            className="inline-flex items-center gap-1.5 self-start border-b-2 border-white/60 pb-0.5 text-xs font-extrabold uppercase tracking-[0.18em] text-white transition hover:border-white">
+                            {t("Voir le détail")}<Plus className="h-4 w-4" aria-hidden="true" />
+                        </button>
+                    )}
+                </div>
+            )} />
     );
-    const classe = 'group flex h-full w-full flex-col overflow-hidden border border-slate-200 bg-white text-left transition duration-300 dark:border-gray-700 dark:bg-gray-900';
-    return detail
-        ? <button type="button" onClick={onOuvrir} aria-haspopup="dialog" className={`${classe} hover:-translate-y-1 hover:border-teal-600/60 hover:shadow-lg`}>{corps}</button>
-        : <div className={classe}>{corps}</div>;
 }
 
 /** Fenêtre qui montre le détail d'un service choisi dans la grille. */
 function FenetreService({ service, onFermer }) {
     const { t } = useLang();
     const detail = service ? detailsDuService(service.nom) : null;
-    const imageSrc = service ? (service.imageUrl ? assetUrl(service.imageUrl) : getImageForService(service.nom)) : '';
+    const photo = service ? photoDe(service) : { src: '', position: '50% 50%' };
     return (
         <Dialog open={Boolean(service && detail)} onOpenChange={ouvert => { if (!ouvert) onFermer(); }}>
             {service && detail && (
                 <DialogContent aria-describedby="service-resume" className="top-[5vh] max-h-[90vh] max-w-2xl overflow-y-auto rounded-2xl bg-white text-slate-800 dark:bg-gray-900 dark:text-gray-100">
                     <div className="relative h-40 sm:h-48">
-                        <img src={imageSrc} alt="" onError={event => { event.currentTarget.onerror = null; event.currentTarget.src = '/general.jpg'; }} className="h-full w-full object-cover" />
+                        <img src={photo.src} style={{ objectPosition: photo.position }} alt="" onError={event => { event.currentTarget.onerror = null; event.currentTarget.src = '/cabinet_1.jpg'; }} className="h-full w-full object-cover" />
                         <div aria-hidden="true" className="absolute inset-0 bg-linear-to-t from-black/70 to-transparent" />
                         <DialogTitle className="font-titre absolute bottom-4 left-6 right-16 text-2xl font-extrabold text-white">{t(service.nom)}</DialogTitle>
                         <DialogClose aria-label={t("Fermer")} className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full bg-black/40 text-white transition hover:bg-black/60"><X className="h-5 w-5" /></DialogClose>
@@ -126,15 +126,15 @@ function FenetreService({ service, onFermer }) {
 function ServiceLigne({ service, rang, ouvert, onBascule }) {
     const { t } = useLang();
     const detail = detailsDuService(service.nom);
-    const imageSrc = service.imageUrl ? assetUrl(service.imageUrl) : getImageForService(service.nom);
+    const photo = photoDe(service);
     const numero = String(rang + 1).padStart(2, '0');
 
     const contenu = (
         <>
             <span aria-hidden="true" className="font-titre hidden w-12 shrink-0 text-4xl font-extrabold text-teal-600/25 sm:block">{numero}</span>
             <span className="block aspect-[4/3] w-28 shrink-0 overflow-hidden rounded-2xl sm:w-44">
-                <img loading="lazy" decoding="async" src={imageSrc} alt=""
-                    onError={event => { event.currentTarget.onerror = null; event.currentTarget.src = '/general.jpg'; }}
+                <img loading="lazy" decoding="async" src={photo.src} style={{ objectPosition: photo.position }} alt=""
+                    onError={event => { event.currentTarget.onerror = null; event.currentTarget.src = '/cabinet_1.jpg'; }}
                     className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
             </span>
             <span className="block min-w-0 flex-1">
@@ -245,7 +245,7 @@ function Services() {
                 <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
                     <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
                         <p className="text-sm font-semibold text-slate-600 dark:text-gray-300" aria-live="polite">
-                            {!loading && services.length > 0 && `${services.length} ${services.length > 1 ? t("services") : t("service")} · ${t("Cliquez sur un service pour voir son détail.")}`}
+                            {!loading && services.length > 0 && `${services.length} ${services.length > 1 ? t("services") : t("service")} · ${vue === 'grille' ? t("Survolez ou touchez une carte pour la retourner.") : t("Cliquez sur un service pour voir son détail.")}`}
                         </p>
                         <div role="group" aria-label={t("Mode d’affichage")} className="inline-flex border border-slate-300 bg-white dark:border-gray-600 dark:bg-gray-900">
                             {[['liste', List, t("Liste")], ['grille', LayoutGrid, t("Grille")]].map(([cle, Icone, libelle]) => (

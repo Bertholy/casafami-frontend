@@ -239,7 +239,7 @@ export default function Portfolio() {
                                 <span className="h-2.5 w-2.5 rounded-full bg-red-400" /><span className="h-2.5 w-2.5 rounded-full bg-yellow-400" /><span className="h-2.5 w-2.5 rounded-full bg-green-400" />
                                 <span className="ml-3 truncate rounded-md bg-white/8 px-3 py-1 text-xs text-white/50">casafami</span>
                             </div>
-                            <img src="/general.jpg" alt="Le cabinet CASAFAMI" loading="lazy" decoding="async" className="aspect-[4/3] w-full object-cover" />
+                            <img src="/cabinet_1.jpg" alt="Le cabinet CASAFAMI" loading="lazy" decoding="async" className="aspect-[4/3] w-full object-cover" />
                         </div>
 
                         <div>

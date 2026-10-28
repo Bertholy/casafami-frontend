@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
     Users,
@@ -15,9 +15,15 @@ import {
     Sparkles,
     CircleChevronLeft,
     CircleChevronRight,
+    CalendarDays,
+    ChevronLeft,
+    ChevronRight,
+    RotateCw,
 } from 'lucide-react';
 import Editable from '../components/site/Editable';
 import Movable from '../components/site/Movable';
+import CarteTournante from '../components/CarteTournante';
+import { photoDuService } from '../constants/photosServices';
 import { LienAdresse, LienTelephone } from '../components/site/LiensContact';
 import { useSiteContent } from '../context/SiteContentContext';
 import { summarizeHours, traduireJours, usePlanning } from '../utils/horaires';
@@ -32,22 +38,41 @@ const ATOUTS = [
     { Icon: Heart, title: 'Un cadre moderne', desc: 'Confort et sérénité' },
 ];
 const SERVICES = [
-    { Icon: Baby, title: 'Suivi de grossesse', image: '/suivi-grossesse.png', desc: 'Un accompagnement tout au long de votre maternité.' },
-    { Icon: Heart, title: 'Accouchement', image: '/accouchement.png', desc: 'Un environnement sécurisé pour donner la vie.' },
-    { Icon: Stethoscope, title: 'Échographie', image: '/echo.png', desc: 'Suivi médical de votre bébé par imagerie.' },
-    { Icon: Pill, title: 'Planning familial', image: '/planning-familial.png', desc: 'Conseils et accompagnement personnalisés.' },
+    { Icon: Baby, title: 'Suivi de grossesse', desc: 'Un accompagnement tout au long de votre maternité.' },
+    { Icon: Heart, title: 'Accouchement', desc: 'Un environnement sécurisé pour donner la vie.' },
+    { Icon: Stethoscope, title: 'Échographie', desc: 'Suivi médical de votre bébé par imagerie.' },
+    { Icon: Pill, title: 'Planning familial', desc: 'Conseils et accompagnement personnalisés.' },
 ];
 const POINTS_FORTS = ['Équipement médical moderne', "Salle d'accouchement sécurisée", 'Accueil chaleureux', 'Équipe expérimentée'];
-const GALERIE = ['/cabinet_1.jpg', '/cabinet_2.jpg', '/general.jpg', '/vaccination.jpg', '/sang.jpg', '/infi.png'];
+const GALERIE = ['/cabinet_1.jpg', '/cabinet_2.jpg', '/service-grossesse.jpg', '/service-vaccination.jpg', '/service-clinique-mobile.jpg'];
 
-const etiquette = 'mb-3 block text-xs font-extrabold uppercase tracking-[0.22em] text-teal-600 dark:text-teal-300';
+// Diaporama de l'image d'accueil : une image toutes les 6 secondes (la barre de progression de l'image affichée donne le rythme).
+const DIAPOS = ['/cabinet_1.jpg', '/cabinet_2.jpg', '/accueil-famille.jpg'];
+// cadrage des photos où les visages sont en haut (sinon la photo est coupée au milieu)
+const POSITION_DIAPOS = { '/accueil-famille.jpg': 'center 18%' };
+const DUREE_DIAPO = 6000;
+const deuxChiffres = n => String(n).padStart(2, '0');
+const mouvementReduit = () => typeof window !== 'undefined' && !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+
+const etiquette ='mb-3 block text-xs font-extrabold uppercase tracking-[0.22em] text-teal-600 dark:text-teal-300';
 
 function Accueil() {
     const { t } = useLang();
-    const { content } = useSiteContent();
+    const { content, editMode } = useSiteContent();
     const planning = usePlanning();
     const horaires = summarizeHours(planning?.horaires);
     const numeroAppel = (content['accueil.tel.numero1']?.texte ?? '034 06 759 28').replace(/[^\d+]/g, '');
+    const [diapo, setDiapo] = useState(0);
+    const [pauseDiapo, setPauseDiapo] = useState(false);
+    const diaporamaAuto = !editMode && !mouvementReduit();   // pas de changement tout seul pendant la modification du site ni si l'appareil demande moins d'animations
+    const allerA = i => setDiapo((i + DIAPOS.length) % DIAPOS.length);
+    // raccourcis sous l'image d'accueil
+    const raccourcis = [
+        { Icon: Calendar, titre: t('Rendez-vous en ligne'), texte: t('Réservez en moins de 2 minutes'), lien: t('Prendre RDV'), to: '/prendre-rdv' },
+        { Icon: Stethoscope, titre: t('Nos services'), texte: t('Grossesse, accouchement, échographie'), lien: t('Découvrir'), to: '/services' },
+        { Icon: CalendarDays, titre: t('Mes rendez-vous'), texte: t('Retrouvez votre rendez-vous'), lien: t('Retrouver'), to: '/mes-rdv' },
+        { Icon: Phone, titre: t('Urgences 24h/24'), texte: (content['accueil.tel.numero1']?.texte ?? '034 06 759 28'), lien: t('Appeler'), href: `tel:${numeroAppel}` },
+    ];
     const galerie = useRef(null);
     // fait défiler la galerie d'environ une photo vers la gauche (-1) ou vers la droite (1)
     const defiler = sens => {
@@ -56,19 +81,23 @@ function Accueil() {
     };
 
     return (
-        <div className="overflow-hidden transition-colors">
+        <div className="accueil-anime overflow-hidden transition-colors">
 
             {/* ========== SECTION HERO ========== */}
-            <section className="relative flex min-h-[600px] items-center justify-center text-center md:min-h-[calc(100vh-78px)]">
-                <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: "url('/cabinet_1.jpg')" }} />
+            {/* l'image passe sous la barre de navigation (transparente tant qu'on est en haut de page) : la barre a une marge basse de -78px, sa hauteur */}
+            <section aria-roledescription="carousel" aria-label={t('Images du cabinet')} onMouseEnter={() => setPauseDiapo(true)} onMouseLeave={() => setPauseDiapo(false)}
+                className="mt-hero relative flex overflow-hidden min-h-[640px] items-center justify-center pt-[78px] text-center md:min-h-screen">
+                {DIAPOS.map((src, i) => (
+                    <div key={src} aria-hidden="true" className={`absolute inset-0 bg-center transition-opacity duration-1000 ${i === diapo ? 'opacity-100' : 'opacity-0'}`} style={{ backgroundImage: `url('${src}')`, backgroundSize: 'cover', backgroundPosition: POSITION_DIAPOS[src] }} />
+                ))}
                 <div className="absolute inset-0" style={{ background: 'linear-gradient(180deg, rgba(3,44,74,.62) 0%, rgba(3,44,74,.34) 55%, rgba(3,44,74,.72) 100%)' }} />
 
-                <div className="relative mx-auto w-full max-w-5xl animate-fade-in-up px-4 py-24 sm:px-6">
+                <div className="relative mx-auto w-full max-w-5xl px-4 pb-48 pt-24 sm:px-6 md:py-24">
                     <span className="mb-6 inline-flex items-center gap-2.5 border border-white/50 px-4 py-2 text-xs font-extrabold uppercase tracking-[0.22em] text-white">
                         <Sparkles className="h-4 w-4 shrink-0 text-[#bfeaff]" aria-hidden="true" />
                         <Editable id="accueil.hero.badge" as="span">Bienvenue au Cabinet d'Accouchement casafami</Editable>
                     </span>
-                    <h1 className="mb-6 text-4xl font-bold uppercase leading-[1.1] text-white drop-shadow-lg sm:text-5xl md:text-7xl">
+                    <h1 className="mb-6 text-4xl font-extrabold uppercase leading-[1.1] text-white drop-shadow-lg sm:text-5xl md:text-7xl lg:text-8xl">
                         <Editable id="accueil.hero.titre1">Votre santé,</Editable>
                         <Editable id="accueil.hero.titre2" as="span" className="block italic text-[#bfeaff]">notre priorité</Editable>
                     </h1>
@@ -84,6 +113,50 @@ function Accueil() {
                             <Editable id="accueil.hero.btn-services.label">Découvrir nos services</Editable>
                         </Movable>
                     </div>
+                </div>
+
+                {/* compteur, barres de progression et flèches du diaporama */}
+                <div className="absolute inset-x-0 bottom-28 z-10">
+                    <div className="mx-auto flex max-w-7xl items-end justify-between gap-6 px-4 sm:px-6 lg:px-8">
+                        <p className="text-white" aria-hidden="true"><span className="text-3xl font-extrabold">{deuxChiffres(diapo + 1)}</span><span className="ml-1.5 text-sm font-bold text-white/70">/ {deuxChiffres(DIAPOS.length)}</span></p>
+                        <div className="hidden items-center gap-3 sm:flex" role="group" aria-label={t('Choisir une image')}>
+                            {DIAPOS.map((src, i) => (
+                                <button key={src} type="button" onClick={() => allerA(i)} aria-label={`${t('Image')} ${i + 1}`} aria-current={i === diapo ? 'true' : undefined} className="flex h-8 w-16 items-center">
+                                    <span className="relative block h-[3px] w-full overflow-hidden bg-white/35">
+                                        {i === diapo && (
+                                            <span key={diapo} className="absolute inset-0 origin-left bg-white"
+                                                style={diaporamaAuto ? { animation: `hero-barre ${DUREE_DIAPO}ms linear forwards`, animationPlayState: pauseDiapo ? 'paused' : 'running' } : undefined}
+                                                onAnimationEnd={() => allerA(diapo + 1)} />
+                                        )}
+                                    </span>
+                                </button>
+                            ))}
+                        </div>
+                        <div className="flex gap-2">
+                            <button type="button" onClick={() => allerA(diapo - 1)} aria-label={t('Image précédente')} className="flex h-12 w-12 items-center justify-center border border-white/70 text-white transition hover:bg-white hover:text-slate-800"><ChevronLeft className="h-5 w-5" aria-hidden="true" /></button>
+                            <button type="button" onClick={() => allerA(diapo + 1)} aria-label={t('Image suivante')} className="flex h-12 w-12 items-center justify-center border border-white/70 text-white transition hover:bg-white hover:text-slate-800"><ChevronRight className="h-5 w-5" aria-hidden="true" /></button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            {/* ========== RACCOURCIS (empiètent sur le bas de l'image) ========== */}
+            <section aria-label={t('Accès rapides')} className="relative z-20 -mt-20">
+                <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+                  <div className="grid grid-cols-1 shadow-2xl sm:grid-cols-2 lg:grid-cols-4">
+                    {raccourcis.map(({ Icon, titre, texte, lien, to, href }) => {
+                        const classe = 'group mt-ardoise flex flex-col gap-2 border-t border-white/10 p-6 text-left transition-colors hover:brightness-110 sm:border-l sm:border-t-0 sm:first:border-l-0';
+                        const corps = (
+                            <>
+                                <Icon className="h-7 w-7 text-[#bfeaff]" aria-hidden="true" />
+                                <span className="mt-2 text-sm font-extrabold uppercase tracking-wide text-white">{titre}</span>
+                                <span className="text-sm text-white/70">{texte}</span>
+                                <span className="mt-2 inline-flex items-center gap-1.5 text-xs font-extrabold uppercase tracking-[0.18em] text-[#bfeaff]">{lien}<ChevronRight className="h-4 w-4 transition-transform group-hover:translate-x-1" aria-hidden="true" /></span>
+                            </>
+                        );
+                        return to ? <Link key={titre} to={to} className={classe}>{corps}</Link> : <a key={titre} href={href} className={classe}>{corps}</a>;
+                    })}
+                  </div>
                 </div>
             </section>
 
@@ -122,18 +195,26 @@ function Accueil() {
                     </div>
 
                     <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
+                        {/* chaque carte se retourne (survol, toucher ou clavier) : photo et titre devant, description derrière */}
                         {SERVICES.map((service, i) => (
-                            <article key={i} className="group text-center">
-                                <div className="mt-cadre">
-                                    <div className="aspect-[4/3] overflow-hidden">
-                                        <img loading="lazy" decoding="async" src={service.image} alt={t(service.title)}
-                                            onError={event => { event.currentTarget.onerror = null; event.currentTarget.src = '/general.jpg'; }}
-                                            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                            <CarteTournante key={i} plate={editMode} label={t(service.title)} className="text-center"
+                                avant={(
+                                    <div className="relative aspect-[4/5] bg-slate-200">
+                                        <img loading="lazy" decoding="async" src={photoDuService(service.title).src} style={{ objectPosition: photoDuService(service.title).position }} alt=""
+                                            onError={event => { event.currentTarget.onerror = null; event.currentTarget.src = '/cabinet_1.jpg'; }}
+                                            className="absolute inset-0 h-full w-full object-cover" />
+                                        <div className="absolute inset-0 bg-linear-to-t from-black/75 via-black/10 to-transparent" aria-hidden="true" />
+                                        <span className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-teal-700 shadow" aria-hidden="true"><RotateCw className="h-4 w-4" /></span>
+                                        <Editable id={`accueil.service${i + 1}.titre`} as="h3" className="absolute inset-x-0 bottom-0 p-5 text-left text-lg font-bold uppercase tracking-wide text-white">{service.title}</Editable>
                                     </div>
-                                </div>
-                                <Editable id={`accueil.service${i + 1}.titre`} as="h3" className="mt-6 text-lg font-bold uppercase tracking-wide text-gray-800 dark:text-white">{service.title}</Editable>
-                                <Editable id={`accueil.service${i + 1}.desc`} as="p" className="mt-3 text-sm italic leading-relaxed text-gray-500 dark:text-gray-400">{service.desc}</Editable>
-                            </article>
+                                )}
+                                arriere={(
+                                    <div className="flex h-full flex-col items-center justify-center gap-4 bg-teal-700 p-6 text-white">
+                                        <service.Icon className="h-10 w-10 text-white/90" aria-hidden="true" />
+                                        <Editable id={`accueil.service${i + 1}.desc`} as="p" className="text-base leading-relaxed text-white">{service.desc}</Editable>
+                                        <Link to="/services" className="inline-flex items-center gap-1.5 border-b-2 border-white/60 pb-0.5 text-xs font-extrabold uppercase tracking-[0.18em] text-white transition hover:border-white">{t('Voir les services')}<ChevronRight className="h-4 w-4" aria-hidden="true" /></Link>
+                                    </div>
+                                )} />
                         ))}
                     </div>
                 </div>
@@ -223,7 +304,7 @@ function Accueil() {
                     </div>
 
                     <div className="mt-cadre self-start">
-                        <img loading="lazy" decoding="async" src="/general.jpg" alt="" className="aspect-[4/3] w-full object-cover" />
+                        <img loading="lazy" decoding="async" src="/service-accouchement.jpg" alt="" className="aspect-[4/3] w-full object-cover" />
                     </div>
                 </div>
             </section>
@@ -240,7 +321,7 @@ function Accueil() {
                     </div>
                     <div ref={galerie} className="-mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto scroll-smooth px-4 pb-2 [scrollbar-width:none] sm:mx-0 sm:px-0">
                         {GALERIE.map(src => (
-                            <img key={src} loading="lazy" decoding="async" src={src} alt="" className="aspect-[3/2] w-[80%] shrink-0 snap-start object-cover sm:w-[45%] lg:w-[32%]" />
+                            <img key={src} loading="lazy" decoding="async" src={src} alt="" onError={event => { event.currentTarget.style.display = 'none'; }} className="aspect-[3/2] w-[80%] shrink-0 snap-start object-cover sm:w-[45%] lg:w-[32%]" />
                         ))}
                     </div>
                 </div>

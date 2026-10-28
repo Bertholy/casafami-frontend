@@ -183,6 +183,25 @@ function MesRdv() {
         return jour.toLocaleDateString(lang === 'mg' ? 'mg' : 'fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
     };
 
+    // Message qui explique au patient où en est son rendez-vous (en cours, confirmé, annulé ou terminé).
+    const messageRdv = rdv => {
+        switch (rdv.statut) {
+            case 'EN_ATTENTE':
+                return { Icon: Clock, classes: 'border-amber-400 text-amber-800 dark:text-amber-200',
+                    texte: `${t("Votre rendez-vous est en cours de confirmation par le cabinet. Vous serez prévenu par message.")} ${t("Gardez votre clé de suivi : elle permet de retrouver ce rendez-vous à tout moment.")}` };
+            case 'CONFIRME':
+                return { Icon: CheckCircle, classes: 'border-emerald-500 text-emerald-800 dark:text-emerald-200',
+                    texte: t("Votre rendez-vous est confirmé pour le {date} à {heure}. Merci d’arriver quelques minutes à l’avance.", { date: dateLisible(rdv.dateRdv), heure: rdv.heureRdv?.slice(0, 5) }) };
+            case 'ANNULE':
+                return { Icon: XCircle, classes: 'border-rose-400 text-rose-800 dark:text-rose-200', lien: { to: '/prendre-rdv', label: t("Prendre un nouveau rendez-vous") },
+                    texte: t("Ce rendez-vous est annulé. Vous pouvez en prendre un nouveau quand vous le souhaitez.") };
+            case 'TERMINE':
+                return { Icon: CheckCircle, classes: 'border-slate-300 text-slate-600 dark:text-gray-300', texte: t("Ce rendez-vous a eu lieu. Merci de votre confiance.") };
+            default:
+                return null;
+        }
+    };
+
     const detail = (Icone, libelle, valeur) => (
         <div className="flex items-start gap-3">
             <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-500 dark:bg-gray-700 dark:text-gray-300"><Icone className="h-4 w-4" aria-hidden="true" /></span>
@@ -365,6 +384,17 @@ function MesRdv() {
                                                             {detail(Stethoscope, t("Avec"), rdv.praticienNom || <span className="font-normal text-slate-400">{t("À préciser")}</span>)}
                                                             {personnel && detail(MessageSquareText, t("Motif"), rdv.motif || '—')}
                                                         </dl>
+                                                        {!personnel && (() => {
+                                                            const message = messageRdv(rdv);
+                                                            if (!message) return null;
+                                                            const MessageIcon = message.Icon;
+                                                            return (
+                                                                <p role="status" className={`mt-5 flex items-start gap-2.5 border-l-2 pl-3 text-sm leading-relaxed ${message.classes}`}>
+                                                                    <MessageIcon className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+                                                                    <span>{message.texte}{message.lien && <> <Link to={message.lien.to} className="font-bold underline underline-offset-4">{message.lien.label}</Link></>}</span>
+                                                                </p>
+                                                            );
+                                                        })()}
                                                     </div>
                                                     {rdv.cleSuivi && (
                                                         <div className="flex flex-col items-center gap-2 self-center rounded-2xl bg-slate-50 p-4 dark:bg-gray-700/40 sm:self-start">
