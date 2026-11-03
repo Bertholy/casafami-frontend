@@ -36,6 +36,8 @@
     --st-side-fg: #b7bbe4; --st-side-strong: #ffffff; --st-side-muted: #8e92c2;
     --sc-background: var(--neu-fond); --sc-card: var(--neu-fond); --sc-popover: var(--neu-fond);
     --sc-secondary: var(--neu-fond); --sc-muted: #2b2e47;
+    /* textes clairs sur fond sombre (sinon les textes du clair, bleu nuit, restent illisibles) : contraste de 11:1 et 6:1 */
+    --sc-foreground: #e6e8ff; --sc-card-foreground: #e6e8ff; --sc-muted-foreground: #a3a7d6;
     --color-gray-900: var(--neu-fond); --color-gray-800: #2b2e47; --color-slate-900: var(--neu-fond); --color-slate-800: #2b2e47;
 }
 
@@ -86,3 +88,6 @@
 /* ---- tableaux : en-tête creusé, lignes sans traits durs ---- */
 .neumorphisme .theme-staff thead { background-color: var(--neu-fond); box-shadow: var(--neu-creux); }
 .neumorphisme .theme-staff :is(tbody, tr, td, th) { border-color: color-mix(in srgb, var(--neu-bas) 35%, transparent); }
+
+/* page active du menu : la pastille blanche du thème sombre ne s'applique pas ici, le texte garde la couleur du menu */
+.neumorphisme .theme-staff aside a[aria-current='page'] { color: var(--st-side-strong) !important; }

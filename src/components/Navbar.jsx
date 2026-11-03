@@ -4,6 +4,7 @@ import { useTheme } from '../context/ThemeContext';
 import { Calendar, CalendarDays, CircleChevronRight, House, Menu, Moon, Search, Stethoscope, Sun, X } from 'lucide-react';
 import Editable from './site/Editable';
 import LangSwitch from './LangSwitch';
+import RechercheSite from './RechercheSite';
 import Movable from './site/Movable';
 import { useLang } from '../i18n/LangContext';
 
@@ -12,6 +13,18 @@ function Navbar() {
     const { t } = useLang();
     const location = useLocation();
     const [menuOpen, setMenuOpen] = useState(false);
+    const [rechercheOuverte, setRechercheOuverte] = useState(false);
+    // Ctrl K (ou Cmd K) ouvre la recherche du site ; « / » aussi, tant qu'on n'est pas en train d'écrire dans un champ
+    useEffect(() => {
+        const touche = event => {
+            const cible = event.target;
+            const enSaisie = cible instanceof HTMLElement && (cible.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(cible.tagName));
+            if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') { event.preventDefault(); setRechercheOuverte(ouverte => !ouverte); }
+            else if (event.key === '/' && !enSaisie && !event.ctrlKey && !event.metaKey && !event.altKey) { event.preventDefault(); setRechercheOuverte(true); }
+        };
+        window.addEventListener('keydown', touche);
+        return () => window.removeEventListener('keydown', touche);
+    }, []);
     const { theme, toggleTheme } = useTheme();
     // Sur l'accueil, la barre est transparente par-dessus l'image tant qu'on est tout en haut ; elle redevient pleine dès qu'on défile.
     const [enHaut, setEnHaut] = useState(() => typeof window === 'undefined' || window.scrollY < 40);
@@ -35,6 +48,7 @@ function Navbar() {
     const bouton = 'rounded-sm p-2 text-white/90 transition hover:bg-white/10';
 
     return (
+        <>
         <nav className={`${surImage ? 'mt-nav-image' : 'mt-marine shadow-md'} ${location.pathname === '/' ? '-mb-[78px]' : ''} sticky top-0 z-50 transition-colors duration-300`} aria-label={t("Accueil")}>
             <div className="mx-auto flex h-[78px] max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
 
@@ -56,7 +70,7 @@ function Navbar() {
 
                 {/* Actions */}
                 <div className="flex items-center gap-2 sm:gap-3">
-                    <Link to="/mes-rdv" className={bouton} aria-label={t("Retrouver mon rendez-vous")} title={t("Retrouver mon rendez-vous")}><Search className="h-5 w-5" /></Link>
+                    <button type="button" onClick={() => setRechercheOuverte(true)} className={bouton} aria-label={t("Rechercher sur le site")} title={t("Rechercher sur le site") + " (Ctrl K)"} aria-haspopup="dialog"><Search className="h-5 w-5" /></button>
                     <LangSwitch variante={surImage ? 'sombre' : 'clair'}className="[&_svg]:hidden sm:[&_svg]:block" />
                     <button onClick={toggleTheme} className={bouton} aria-label={t("Changer de thème")}>
                         {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
@@ -87,6 +101,8 @@ function Navbar() {
                 </div>
             )}
         </nav>
+        <RechercheSite open={rechercheOuverte} onOpenChange={setRechercheOuverte} />
+        </>
     );
 }
 

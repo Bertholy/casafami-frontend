@@ -62,6 +62,9 @@
     --sc-muted: #18202b; --sc-muted-foreground: #8e9aab;
     --sc-accent: color-mix(in srgb, var(--mt-main) 16%, #0e131a); --sc-accent-foreground: #e6ebf2;
     --sc-input: #2a3544;
+    --sc-success: #4ade80; --sc-success-soft: color-mix(in srgb, #22c55e 16%, #0e131a); --sc-success-soft-foreground: #86efac;
+    --sc-destructive-soft: color-mix(in srgb, #ef4444 18%, #0e131a); --sc-destructive-soft-foreground: #fca5a5;
+    --sc-warning: #fbbf24; --sc-warning-soft: color-mix(in srgb, #f59e0b 16%, #0e131a); --sc-warning-soft-foreground: #fcd34d;
 
     /* gris du mode sombre : neutres presque noirs de la maquette (remplacent les bleus nuit de index.css) */
     --color-gray-950: #070a0f; --color-gray-900: #0e131a; --color-gray-800: #18202b; --color-gray-700: #273140; --color-gray-600: #3b4859;

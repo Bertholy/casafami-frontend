@@ -23,6 +23,14 @@
     --color-border: var(--sc-border);
     --color-input: var(--sc-input);
     --color-ring: var(--sc-ring);
+    --color-success: var(--sc-success);
+    --color-success-soft: var(--sc-success-soft);
+    --color-success-soft-foreground: var(--sc-success-soft-foreground);
+    --color-destructive-soft: var(--sc-destructive-soft);
+    --color-destructive-soft-foreground: var(--sc-destructive-soft-foreground);
+    --color-warning: var(--sc-warning);
+    --color-warning-soft: var(--sc-warning-soft);
+    --color-warning-soft-foreground: var(--sc-warning-soft-foreground);
 }
 
 /* ========== THÈME CASAFAMI ========== */
@@ -261,6 +269,107 @@ input[type="button"], input[type="submit"], input[type="reset"],
 .carte-tourne:focus-visible { outline: 2px solid var(--mt-main, #01bdda); outline-offset: 4px; border-radius: var(--carte-rayon, 1rem); }
 @media (prefers-reduced-motion: reduce) { .carte-tourne .carte-tourne__inner { transition-duration: .01ms; } }
 
+/* ========== FAMI, l'assistant IA du site public (components/casa-ai) ==========
+ * Le robot CASA'AI, fixé en bas à droite de l'écran (24 px du bord ; il ne bouge ni au défilement ni au changement de page), rebondit avec son
+ * ombre au sol. La bulle d'accueil est un rectangle blanc arrondi (16 px) de 280 px au plus. Thème : bleu #1F5FBF, texte #0F2D5C, police Nunito.
+ * Rien ne bouge si la personne demande moins d'animations. */
+.casaai { position: fixed; right: 1.5rem; bottom: .9rem; z-index: 65; width: 5.5rem; height: 6.4rem; pointer-events: none; font-family: 'Nunito', 'Trebuchet MS', Arial, sans-serif; }
+.casaai > * { pointer-events: auto; }
+.casaai-bouton {
+    position: absolute; left: 0; bottom: 1rem; width: 5.5rem; height: 5.5rem; padding: 0; border: 0; background: none; cursor: pointer;
+    transform-origin: 50% 100%; filter: drop-shadow(0 3px 4px rgba(15, 45, 92, .3)); animation: casaai-saut 2.8s infinite;
+}
+.casaai-bouton:focus-visible { outline: 3px solid #0F2D5C; outline-offset: 3px; border-radius: 1.4rem; }
+/* le robot : il salue de la main, balance la tête, cligne des yeux, fait un clin d'œil toutes les 5 secondes, et son ampoule s'allume et s'éteint */
+.casaai-r-bras { transform-box: view-box; transform-origin: 68px 124px; animation: casaai-r-salut 1.4s ease-in-out infinite; }
+.casaai-r-corps { animation: casaai-r-corps 2.8s ease-in-out infinite; }
+.casaai-r-etincelle { transform-box: fill-box; transform-origin: center; opacity: 0; animation: casaai-r-scintille 5s infinite; }
+.casaai-r-tete { transform-box: view-box; transform-origin: 100px 108px; animation: casaai-r-tete 2.8s ease-in-out infinite; }
+.casaai-r-oeil { transform-box: fill-box; transform-origin: center; animation: casaai-r-cligne 4s infinite; }
+.casaai-r-oeil-droit { animation: casaai-r-cligne 4s infinite, casaai-r-ferme 5s infinite; }
+.casaai-r-clin { opacity: 0; animation: casaai-r-arc 5s infinite; }
+.casaai-r-ampoule { animation: casaai-r-ampoule 1.4s ease-in-out infinite; }
+.casaai-r-fixe :is(.casaai-r-bras, .casaai-r-corps, .casaai-r-etincelle, .casaai-r-tete, .casaai-r-oeil, .casaai-r-oeil-droit, .casaai-r-clin, .casaai-r-ampoule) { animation: none; }
+@keyframes casaai-r-salut { 0%, 100% { rotate: 0deg; } 25% { rotate: 18deg; } 50% { rotate: -6deg; } 75% { rotate: 18deg; } }
+@keyframes casaai-r-corps { 0%, 100% { translate: 0 0; } 50% { translate: 0 -3px; } }
+@keyframes casaai-r-scintille { 0%, 66%, 90%, 100% { opacity: 0; scale: .3; } 72% { opacity: 1; scale: 1.2; } 80% { opacity: 1; scale: 1; } }
+@keyframes casaai-r-tete { 0%, 100% { rotate: 0deg; } 50% { rotate: -5deg; } }
+@keyframes casaai-r-cligne { 0%, 90%, 100% { scale: 1 1; } 94% { scale: 1 .1; } }
+@keyframes casaai-r-ferme { 0%, 66%, 84%, 100% { opacity: 1; } 70%, 80% { opacity: 0; } }
+@keyframes casaai-r-arc { 0%, 66%, 84%, 100% { opacity: 0; } 70%, 80% { opacity: 1; } }
+@keyframes casaai-r-ampoule { 0%, 100% { opacity: 1; } 50% { opacity: .45; } }
+.casaai-ombre {
+    position: absolute; left: .55rem; bottom: .1rem; width: 4.4rem; height: 1rem; border-radius: 50%; pointer-events: none;
+    background: radial-gradient(closest-side, rgba(15, 45, 92, .7), rgba(15, 45, 92, 0)); animation: casaai-ombre 2.8s infinite;
+}
+.casaai[data-ouvert='true'] :is(.casaai-bouton, .casaai-ombre) { animation: none; }
+
+@keyframes casaai-saut {
+    0%, 6% { translate: 0 0; scale: 1 1; animation-timing-function: ease-out; }
+    14% { translate: 0 0; scale: 1.1 .88; animation-timing-function: cubic-bezier(.2, .8, .3, 1); }       /* s'écrase pour prendre son élan */
+    36% { translate: 0 -2.6rem; scale: .95 1.07; animation-timing-function: cubic-bezier(.6, 0, .9, .45); } /* haut du saut, étiré */
+    56% { translate: 0 0; scale: 1.14 .86; animation-timing-function: ease-out; }                           /* retombe et s'écrase */
+    66% { translate: 0 -.7rem; scale: .98 1.03; animation-timing-function: ease-in; }                       /* petit rebond */
+    76% { translate: 0 0; scale: 1.05 .95; animation-timing-function: ease-out; }
+    88%, 100% { translate: 0 0; scale: 1 1; }
+}
+@keyframes casaai-ombre {
+    0%, 6% { scale: 1 1; opacity: .5; animation-timing-function: ease-out; }
+    14% { scale: 1.08 1; opacity: .55; animation-timing-function: cubic-bezier(.2, .8, .3, 1); }
+    36% { scale: .5 .5; opacity: .16; animation-timing-function: cubic-bezier(.6, 0, .9, .45); }
+    56% { scale: 1.15 1.05; opacity: .6; animation-timing-function: ease-out; }
+    66% { scale: .8 .8; opacity: .32; animation-timing-function: ease-in; }
+    76% { scale: 1.05 1; opacity: .52; animation-timing-function: ease-out; }
+    88%, 100% { scale: 1 1; opacity: .5; }
+}
+
+/* bulle d'accueil : rectangle blanc arrondi (16 px), ombre légère, petit bouton × */
+.casaai-msg {
+    position: absolute; right: 0; bottom: 9.1rem; display: flex; align-items: flex-start; gap: .25rem; width: min(280px, calc(100vw - 2rem));
+    padding: .9rem .7rem .9rem 1.1rem; transform-origin: 90% 100%; background: #fff; color: #0F2D5C; border-radius: 16px;
+    box-shadow: 0 6px 24px rgba(15, 45, 92, .16), 0 1px 3px rgba(15, 45, 92, .1); animation: casaai-pop .45s cubic-bezier(.34, 1.56, .64, 1) both;
+}
+.casaai-msg-texte { flex: 1; min-width: 0; padding: 0; border: 0; background: none; color: inherit; text-align: left; font: 700 .92rem/1.4 'Nunito', 'Trebuchet MS', Arial, sans-serif; cursor: pointer; }
+.casaai-msg-texte:focus-visible, .casaai-msg-fermer:focus-visible { outline: 2px solid #1F5FBF; outline-offset: 2px; border-radius: 8px; }
+.casaai-msg-fermer { flex: none; display: flex; align-items: center; justify-content: center; width: 1.8rem; height: 1.8rem; padding: 0; border: 0; border-radius: 9999px; background: #E8F0FB; color: #1F5FBF; cursor: pointer; transition: background-color .15s; }
+.casaai-msg-fermer:hover { background: #D5E4F8; }
+.dark .casaai-msg { background: #1f2937; color: #f3f4f6; }
+.dark .casaai-msg-fermer { background: #374151; color: #e5e7eb; }
+@keyframes casaai-pop { from { scale: .5; opacity: 0; translate: 0 .6rem; } to { scale: 1; opacity: 1; translate: 0 0; } }
+
+/* le thème du site met tous les boutons à 12 px et les arrondis Tailwind à 0 : Fami garde ses propres arrondis */
+.casaai.casaai button { border-radius: 9999px; }
+.casaai.casaai .casaai-msg-texte { border-radius: 12px; }
+.casaai-panneau { --radius-md: .5rem; --radius-lg: .75rem; --radius-xl: 1rem; --radius-2xl: 1rem; --radius-3xl: 1.5rem; }
+
+/* fenêtre de discussion */
+.casaai-panneau {
+    position: fixed; right: 1.5rem; bottom: 8.2rem; z-index: 66; width: min(24rem, calc(100vw - 2rem)); height: min(36rem, calc(100dvh - 9.5rem));
+    transform-origin: 90% 100%; animation: casaai-ouvre .22s ease-out; font-family: 'Nunito', 'Trebuchet MS', Arial, sans-serif; color: #0F2D5C;
+}
+@keyframes casaai-ouvre { from { opacity: 0; scale: .92; translate: 0 .75rem; } to { opacity: 1; scale: 1; translate: 0 0; } }
+/* chaque bulle de la discussion apparaît avec un petit « pop » : elle grossit un peu trop puis se pose */
+.casaai-pop-msg { animation: casaai-bulle-pop .42s cubic-bezier(.34, 1.56, .64, 1) both; }
+@keyframes casaai-bulle-pop { from { scale: .3; opacity: 0; translate: 0 .5rem; } 60% { opacity: 1; } to { scale: 1; opacity: 1; translate: 0 0; } }
+.casaai-puce { flex: none; padding: .22rem .65rem; border: 1px solid #1F5FBF; border-radius: 9999px; background: #fff; color: #1F5FBF; font-size: .72rem; font-weight: 800; white-space: nowrap; cursor: pointer; transition: background-color .15s, color .15s; }
+.casaai-puce:hover { background: #1F5FBF; color: #fff; }
+.casaai-puce:disabled { opacity: .45; cursor: default; }
+.casaai-puce:disabled:hover { background: #fff; color: #1F5FBF; }
+.casaai-puce-plein { background: #1F5FBF; color: #fff; }
+.casaai-puce-plein:hover { background: #0F2D5C; border-color: #0F2D5C; }
+.casaai-puce-danger { border-color: #C23B3B; color: #C23B3B; }
+.casaai-puce-danger:hover, .casaai-puce-danger:disabled:hover { background: #C23B3B; color: #fff; }
+.casaai-action { display: inline-flex; align-items: center; padding: .25rem .7rem; border: 1.5px solid #1F5FBF; border-radius: 9999px; color: #1F5FBF; font-size: .75rem; font-weight: 800; text-decoration: none; transition: background-color .15s, color .15s; }
+.casaai-action:hover { background: #1F5FBF; color: #fff; }
+.casaai-panneau :is(button, a, input):focus-visible { outline: 2px solid #1F5FBF; outline-offset: 2px; }
+.dark .casaai-puce { background: #111827; }
+/* écran peu haut : la ligne d'avertissement disparaît pour laisser la place aux messages (l'en-tête dit déjà « Un robot, pas une personne ») */
+@media (max-height: 760px) { .casaai-aide { display: none; } }
+@media (prefers-reduced-motion: reduce) {
+    .casaai-bouton, .casaai-ombre, .casaai-msg, .casaai-panneau, .casaai-pop-msg { animation: none; }
+    .casaai :is(.casaai-r-bras, .casaai-r-corps, .casaai-r-etincelle, .casaai-r-tete, .casaai-r-oeil, .casaai-r-oeil-droit, .casaai-r-clin, .casaai-r-ampoule) { animation: none; }
+}
+
 /* ========== MESSAGES DISCRETS (tout le site) ==========
  * Les messages d'erreur, de succès ou d'avertissement qui s'affichaient dans un encadré coloré (fond rose, vert, jaune…) n'ont plus
  * de fond ni de cadre : seulement un trait fin à gauche dont la couleur indique le type. Le texte garde sa couleur.
@@ -278,3 +387,75 @@ input[type="button"], input[type="submit"], input[type="reset"],
 :is([role="alert"], [role="status"], p):is([class*="bg-emerald-50"], [class*="bg-green-50"]):not([class*="border-2"]):not([class*="rounded-full"]) { border-left-color: #10b981 !important; }
 :is([role="alert"], [role="status"], p):is([class*="bg-amber-50"], [class*="bg-orange-50"], [class*="bg-yellow-50"]):not([class*="border-2"]):not([class*="rounded-full"]) { border-left-color: #f59e0b !important; }
 :is([role="alert"], [role="status"], p):is([class*="bg-sky-50"]):not([class*="border-2"]):not([class*="rounded-full"]) { border-left-color: #94a3b8 !important; }
+
+/* ---------- Message en plein écran pour la personne de garde (components/dashboard/MessageDeGarde.jsx) ----------
+   Mêmes polices que l'accueil du site : Luckiest Guy pour le titre, Montserrat pour le reste. */
+.garde-ecran {
+    position: fixed; inset: 0; z-index: 200; display: flex; align-items: center; justify-content: center; padding: 1.5rem; overflow: hidden;
+    background: linear-gradient(135deg, #01bdda 0%, #0b8aa3 52%, #0a566d 100%); color: #fff;
+    font-family: 'Montserrat', 'Segoe UI', system-ui, sans-serif; text-align: center;
+    animation: garde-fondu .5s ease-out both;
+}
+.garde-contenu { position: relative; z-index: 1; max-width: 46rem; display: flex; flex-direction: column; align-items: center; gap: 1.1rem; }
+.garde-icone { position: relative; display: flex; align-items: center; justify-content: center; width: 7.5rem; height: 7.5rem; border-radius: 9999px; background: rgb(255 255 255 / .18); box-shadow: 0 0 0 .5rem rgb(255 255 255 / .1); animation: garde-pop .8s cubic-bezier(.2, .9, .3, 1.3) both, garde-battement 2.8s ease-in-out 1s infinite; }
+.garde-anneau { position: absolute; inset: 0; border-radius: 9999px; border: 2px solid rgb(255 255 255 / .55); animation: garde-onde 2.8s ease-out 1s infinite; }
+.garde-anneau-2 { animation-delay: 1.9s; }
+.garde-surtitre { font-weight: 700; font-size: 1rem; letter-spacing: .12em; text-transform: uppercase; opacity: .92; }
+.garde-titre { font-family: 'Luckiest Guy', 'Montserrat', 'Segoe UI', system-ui, sans-serif; font-weight: 400; letter-spacing: .02em; line-height: 1.12; font-size: clamp(2.4rem, 7vw, 4.6rem); text-shadow: 0 .18em 0 rgb(6 60 76 / .35); display: flex; flex-wrap: wrap; justify-content: center; gap: 0 .32em; }
+.garde-mot { display: inline-block; }
+.garde-periode { display: inline-flex; align-items: center; gap: .6rem; padding: .55rem 1.4rem; border-radius: 9999px; background: rgb(255 255 255 / .2); font-weight: 800; font-size: 1.15rem; letter-spacing: .06em; text-transform: uppercase; }
+.garde-texte { max-width: 34rem; font-weight: 600; font-size: 1.1rem; line-height: 1.6; opacity: .95; }
+.garde-bouton { margin-top: .5rem; padding: .95rem 2.2rem; border-radius: 9999px; border: 2px solid #fff; background: #fff; color: #0a566d; font-family: inherit; font-weight: 800; font-size: .95rem; letter-spacing: .1em; text-transform: uppercase; cursor: pointer; transition: transform .2s, box-shadow .2s, background-color .2s, color .2s; }
+.garde-bouton:hover { transform: translateY(-3px); box-shadow: 0 .8rem 1.6rem rgb(6 60 76 / .35); background: transparent; color: #fff; }
+.garde-bouton:focus-visible { outline: 3px solid rgb(255 255 255 / .8); outline-offset: 4px; }
+.garde-actions { margin-top: .5rem; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: .9rem; }
+.garde-actions .garde-bouton { margin-top: 0; }
+.garde-bouton-discret { background: transparent; color: #fff; border-color: rgb(255 255 255 / .6); }
+.garde-bouton-discret:hover { background: rgb(255 255 255 / .18); color: #fff; box-shadow: none; }
+.garde-surtitre, .garde-mot, .garde-periode, .garde-texte, .garde-actions { opacity: 0; animation: garde-entree .75s cubic-bezier(.2, .9, .3, 1.15) both; animation-delay: calc(var(--i) * 150ms + 250ms); }
+.garde-soleil { animation: garde-tourne 12s linear infinite; }
+.garde-lune { animation: garde-flotte 3.2s ease-in-out infinite; }
+.garde-bulle { position: absolute; border-radius: 9999px; background: rgb(255 255 255 / .09); animation: garde-derive 14s ease-in-out infinite alternate; }
+.garde-bulle-1 { width: 26rem; height: 26rem; left: -8rem; top: -9rem; }
+.garde-bulle-2 { width: 20rem; height: 20rem; right: -6rem; bottom: -7rem; animation-delay: -5s; }
+.garde-bulle-3 { width: 11rem; height: 11rem; right: 18%; top: 12%; animation-delay: -9s; }
+@keyframes garde-fondu { from { opacity: 0; } to { opacity: 1; } }
+@keyframes garde-pop { from { opacity: 0; transform: scale(.3) rotate(-25deg); } to { opacity: 1; transform: scale(1) rotate(0); } }
+@keyframes garde-battement { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.07); } }
+@keyframes garde-onde { from { opacity: .7; transform: scale(1); } to { opacity: 0; transform: scale(1.9); } }
+@keyframes garde-entree { from { opacity: 0; transform: translateY(28px) scale(.92); } to { opacity: 1; transform: none; } }
+@keyframes garde-tourne { to { transform: rotate(360deg); } }
+@keyframes garde-flotte { 0%, 100% { transform: translateY(0) rotate(-8deg); } 50% { transform: translateY(-4px) rotate(8deg); } }
+@keyframes garde-derive { from { transform: translate(0, 0) scale(1); } to { transform: translate(3rem, 2rem) scale(1.12); } }
+@media (prefers-reduced-motion: reduce) {
+    .garde-ecran, .garde-icone, .garde-anneau, .garde-surtitre, .garde-mot, .garde-periode, .garde-texte, .garde-actions, .garde-soleil, .garde-lune, .garde-bulle { animation: none !important; opacity: 1; }
+    .garde-anneau { display: none; }
+}
+
+/* ---------- Ticket papier (components/TicketPapier.jsx) : présentation à l'écran d'un reçu ou d'une facture, bords dentelés ----------
+   Le papier reste blanc dans tous les thèmes. Seul l'affichage change : les PDF et images téléchargés sont dessinés ailleurs. */
+.ticket-boite { width: 100%; max-width: 22rem; margin-inline: auto; }
+.ticket-ombre { filter: drop-shadow(0 .6rem 1.1rem rgb(15 23 42 / .22)); }
+.ticket-papier {
+    --r: 6px; --pas: 17px;
+    position: relative; background: #fff; color: #1f2937; padding: 2.1rem 1.6rem 2.2rem; text-align: left;
+    font-family: 'Montserrat', 'Plus Jakarta Sans', 'Segoe UI', system-ui, sans-serif;
+    -webkit-mask: radial-gradient(var(--r) at 50% 0, #0000 97%, #000) top / var(--pas) 51% repeat-x, radial-gradient(var(--r) at 50% 100%, #0000 97%, #000) bottom / var(--pas) 51% repeat-x;
+    mask: radial-gradient(var(--r) at 50% 0, #0000 97%, #000) top / var(--pas) 51% repeat-x, radial-gradient(var(--r) at 50% 100%, #0000 97%, #000) bottom / var(--pas) 51% repeat-x;
+}
+.ticket-coche { display: flex; align-items: center; justify-content: center; width: 4.2rem; height: 4.2rem; margin: 0 auto 1.2rem; border-radius: 9999px; background: #10b981; color: #fff; animation: ticket-pop .6s cubic-bezier(.2, .9, .3, 1.3) both; }
+.ticket-titre { font-size: 1.12rem; font-weight: 700; line-height: 1.3; color: #111827; }
+.ticket-reference { margin-top: .35rem; font-size: .78rem; color: #6b7280; overflow-wrap: anywhere; }
+.ticket-trait { margin: 1rem 0; border: 0; border-top: 1px solid #e5e7eb; }
+.ticket-champs { display: flex; flex-direction: column; gap: .95rem; padding-inline: .15rem; }
+.ticket-champ { display: flex; flex-direction: column; gap: .12rem; padding-inline: .15rem; }
+.ticket-champ dt { font-size: .8rem; color: #6b7280; }
+.ticket-champ dd { font-size: 1rem; font-weight: 700; color: #111827; overflow-wrap: anywhere; }
+.ticket-champ dd.ticket-normal { font-weight: 500; }
+.ticket-champ dd.ticket-mono { font-family: 'Courier New', ui-monospace, monospace; letter-spacing: .12em; }
+.ticket-champ dd.ticket-detail { font-size: .8rem; font-weight: 500; color: #6b7280; }
+.ticket-champ dd.ticket-total { font-size: 1.7rem; font-weight: 800; line-height: 1.15; font-variant-numeric: tabular-nums; }
+.ticket-pied { margin-top: .6rem; padding-inline: .15rem; font-size: .75rem; line-height: 1.5; color: #6b7280; }
+.ticket-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: .75rem; margin-top: 1.1rem; }
+@keyframes ticket-pop { from { opacity: 0; transform: scale(.4); } to { opacity: 1; transform: scale(1); } }
+@media (prefers-reduced-motion: reduce) { .ticket-coche { animation: none; } }

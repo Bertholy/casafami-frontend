@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { AlertTriangle, ArrowRight, Bot, Calendar, CheckCircle, Loader2 } from 'lucide-react';
+import { AlertTriangle, ArrowRight, Bot, Calendar, CheckCircle, Loader2, X } from 'lucide-react';
 import AutreDate from './AutreDate';
 import { getCategory } from '../constants/motifFlows';
 import { analyserDemande, normaliser, propositions } from '../constants/motifRecherche';
@@ -8,6 +8,7 @@ import { explainNoSlots } from '../utils/horaires';
 import { formaterJour } from '../utils/jours';
 import { formatPhoneInput, isPlausiblePhone } from '../utils/phone';
 import { cn } from '../lib/utils';
+import { CIVILITES } from '../utils/civilite';
 import { Input, Textarea } from './ui/input';
 
 /**
@@ -18,8 +19,9 @@ import { Input, Textarea } from './ui/input';
  */
 
 // Ordre des questions ; une question n'est posée que si le formulaire n'a pas déjà la réponse.
-const ORDRE = ['nom', 'age', 'telephone', 'motif', 'service', 'date', 'heure'];
+const ORDRE = ['civilite', 'nom', 'age', 'telephone', 'motif', 'service', 'date', 'heure'];
 const QUESTIONS = {
+    civilite: 'Quelle est votre civilité ?',
     nom: 'Quel est votre nom ?',
     age: 'Quel âge avez-vous ?',
     telephone: 'Votre numéro de téléphone ?',
@@ -144,7 +146,7 @@ function ChoixHeure({ creneaux, chargement, erreur, messageVide, onRafraichir, o
 }
 
 // `ouvert` faux : il ne reste que le bouton qui ramène à l'assistant (quand la personne remplit le formulaire elle-même).
-export default function AssistantRdv({ ouvert, onOuvrir, form, setForm, services, jours, aujourdhui, planning, creneaux, heureChoisie, slotsLoading, slotsError, onRafraichir, envoiEnCours, onConfirmer }) {
+export default function AssistantRdv({ ouvert, onOuvrir, form, setForm, services, jours, aujourdhui, planning, creneaux, heureChoisie, slotsLoading, slotsError, onRafraichir, envoiEnCours, onConfirmer, onAnnuler }) {
     const { t } = useLang();
     const [passes, setPasses] = useState([]);              // questions facultatives que la personne a passées
     const [conseilRefuse, setConseilRefuse] = useState(null);
@@ -161,6 +163,7 @@ export default function AssistantRdv({ ouvert, onOuvrir, form, setForm, services
     const faites = {
         nom: form.nomClient.trim().length >= 2,
         age: form.ageClient !== '' && Number(form.ageClient) >= 0 && Number(form.ageClient) <= 120,
+        civilite: form.sexe !== '' || passes.includes('civilite'),   // Mr / Mme : choisir l'une remplit aussi le sexe ; facultatif, comme dans le formulaire
         telephone: isPlausiblePhone(form.telephoneClient),
         motif: form.motif.trim() !== '' || passes.includes('motif'),
         service: form.serviceId !== '' || passes.includes('service') || services.length === 0,
@@ -225,6 +228,14 @@ export default function AssistantRdv({ ouvert, onOuvrir, form, setForm, services
                             valider={texte => (texte !== '' && Number(texte) <= 120 ? '' : t("Âge invalide"))}
                             onValider={texte => remplir({ ageClient: String(Number(texte)) })} />
                     )}
+                    {etape === 'civilite' && (
+                        <div className="space-y-2">
+                            <div className="flex flex-wrap gap-2">
+                                {CIVILITES.map(c => <button key={c.valeur} type="button" onClick={() => remplir({ sexe: c.sexe })} className={choix}>{c.valeur}</button>)}
+                            </div>
+                            <button type="button" onClick={() => passer('civilite')} className={discret}>{t("Passer")}</button>
+                        </div>
+                    )}
                     {etape === 'telephone' && (
                         <SaisieTexte libelle={libelle} type="tel" mode="tel" placeholder="034 12 345 67" autoComplete="tel" maxLength={20}
                             formater={formatPhoneInput}
@@ -263,6 +274,10 @@ export default function AssistantRdv({ ouvert, onOuvrir, form, setForm, services
                         </div>
                     )}
                 </div>
+            </div>
+            {/* annuler : on efface ce qui a été répondu et on revient au choix du parcours */}
+            <div className="mt-8 flex justify-center border-t border-slate-100 pt-5 dark:border-gray-700">
+                <button type="button" onClick={onAnnuler} className={cn(discret, 'px-6 py-2.5')}><X className="h-4 w-4" aria-hidden="true" />{t("Annuler")}</button>
             </div>
         </section>
     );

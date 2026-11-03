@@ -1,32 +1,39 @@
 import { STATUS, getRoleLabel } from '../../constants/app';
+import { cn } from '../../lib/utils';
 
 /**
  * Occupation du personnel pour une journée : une ligne par personne, une colonne par créneau.
- * Case vide = libre ; case colorée = occupée (nom du patient). La colonne `surligne` met en avant le créneau d'un rendez-vous.
- * Une ligne « À répartir » montre les rendez-vous qui n'ont pas encore de personne attribuée.
+ * Créneau libre : un petit point vert discret ; créneau occupé : un bloc rouge clair « RDV » (le nom du patient et le statut sont dans l'info-bulle).
+ * La colonne `surligne` (le créneau du rendez-vous) est teintée, son en-tête en gras avec un soulignement de la couleur primaire.
+ * La colonne des noms reste fixe quand la grille défile horizontalement. Une ligne ambre « À répartir » montre les rendez-vous sans personne attribuée.
+ * Les couleurs viennent des jetons du design system (primary, success, destructive, warning) : rien n'est codé en dur.
  */
 export default function OccupationGrid({ data, surligne, rdvId }) {
     if (!data) return null;
     const { creneaux, personnel, sansPraticien } = data;
-    if (!personnel.length) return <p className="rounded-xl bg-slate-50 p-4 text-center text-sm text-slate-500 dark:bg-gray-800">Aucun membre du personnel (médecin, sage-femme) n’est encore enregistré.</p>;
-    if (!creneaux.length) return <p className="rounded-xl bg-slate-50 p-4 text-center text-sm text-slate-500 dark:bg-gray-800">Le cabinet est fermé ce jour-là : aucun créneau.</p>;
+    if (!personnel.length) return <p className="rounded-xl bg-muted p-4 text-center text-sm text-muted-foreground">Aucun membre du personnel (médecin, sage-femme) n’est encore enregistré.</p>;
+    if (!creneaux.length) return <p className="rounded-xl bg-muted p-4 text-center text-sm text-muted-foreground">Le cabinet est fermé ce jour-là : aucun créneau.</p>;
 
-    const colonne = heure => `px-1.5 py-2 text-center ${heure === surligne ? 'bg-teal-50 dark:bg-teal-500/10' : ''}`;
+    const colonne = heure => cn('px-1.5 py-2 text-center', heure === surligne && 'bg-primary/10');
     return (
-        <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-gray-800">
+        <div className="overflow-x-auto rounded-xl border border-border">
             <table className="w-full min-w-max border-collapse text-xs">
-                <thead className="bg-slate-50 dark:bg-gray-800/60">
-                    <tr>
-                        <th scope="col" className="sticky left-0 z-10 bg-slate-50 px-3 py-2 text-left font-semibold dark:bg-gray-800">Personnel</th>
-                        {creneaux.map(h => <th key={h} scope="col" className={`${colonne(h)} font-semibold tabular-nums ${h === surligne ? 'text-teal-800 dark:text-teal-300' : 'text-slate-500 dark:text-gray-400'}`}>{h}</th>)}
+                <caption className="sr-only">Occupation du personnel, créneau par créneau. Un point vert indique un créneau libre, « RDV » un créneau occupé.</caption>
+                <thead>
+                    <tr className="bg-muted">
+                        <th scope="col" className="sticky left-0 z-10 bg-muted px-3 py-2 text-left font-semibold text-foreground">Personnel</th>
+                        {creneaux.map(h => (
+                            <th key={h} scope="col" aria-current={h === surligne ? 'true' : undefined}
+                                className={cn(colonne(h), 'border-b-2 font-medium tabular-nums', h === surligne ? 'border-primary font-bold text-foreground' : 'border-transparent text-muted-foreground')}>{h}</th>
+                        ))}
                     </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100 dark:divide-gray-800">
+                <tbody className="divide-y divide-border">
                     {personnel.map(p => (
                         <tr key={p.id}>
-                            <th scope="row" className="sticky left-0 z-10 bg-white px-3 py-2 text-left font-medium dark:bg-gray-900">
+                            <th scope="row" className="sticky left-0 z-10 bg-card px-3 py-2 text-left font-medium text-foreground">
                                 <div className="max-w-40 truncate">{p.nom}</div>
-                                <div className="text-[10px] font-normal text-slate-500 dark:text-gray-400">{getRoleLabel(p.role)} · {p.total} rendez-vous</div>
+                                <div className="text-[11px] font-normal text-muted-foreground">{getRoleLabel(p.role)} · {p.total} rendez-vous</div>
                             </th>
                             {creneaux.map(h => {
                                 const cellule = p.occupations[h];
@@ -34,20 +41,26 @@ export default function OccupationGrid({ data, surligne, rdvId }) {
                                 return (
                                     <td key={h} className={colonne(h)}>
                                         {cellule
-                                            ? <span title={`${cellule.patient} — ${st.label}`} className={`block max-w-24 truncate rounded-md px-1.5 py-1 font-medium ${st.badge} ${cellule.rdvId === rdvId ? 'ring-2 ring-teal-600' : ''}`}>{cellule.patient}</span>
-                                            : <span className="block rounded-md border border-dashed border-emerald-300 px-1.5 py-1 text-emerald-700 dark:border-emerald-500/40 dark:text-emerald-300" aria-label="libre">libre</span>}
+                                            ? <span title={`${cellule.patient} — ${st.label}`} aria-label={`Occupé : ${cellule.patient}, ${st.label}`}
+                                                className={cn('block rounded-md bg-destructive-soft px-1.5 py-1 font-semibold text-destructive-soft-foreground', cellule.rdvId === rdvId && 'ring-2 ring-primary')}>RDV</span>
+                                            : <span role="img" aria-label="Libre" className="mx-auto block size-1.5 rounded-full bg-success opacity-70" />}
                                     </td>
                                 );
                             })}
                         </tr>
                     ))}
-                    <tr className="bg-amber-50/40 dark:bg-amber-500/5">
-                        <th scope="row" className="sticky left-0 z-10 bg-amber-50 px-3 py-2 text-left font-medium text-amber-900 dark:bg-gray-900 dark:text-amber-200">À répartir<div className="text-[10px] font-normal">sans personne attribuée</div></th>
+                    <tr className="bg-warning-soft">
+                        <th scope="row" className="sticky left-0 z-10 bg-warning-soft px-3 py-2 text-left font-medium text-warning-soft-foreground">À répartir<div className="text-[11px] font-normal">sans personne attribuée</div></th>
                         {creneaux.map(h => {
                             const liste = sansPraticien[h] || [];
+                            const nom = liste.length > 1 ? `${liste.length} patients` : liste[0]?.patient;
+                            const celuiCi = liste.some(r => r.rdvId === rdvId);
                             return (
-                                <td key={h} className={colonne(h)}>
-                                    {liste.length > 0 && <span title={liste.map(r => r.patient).join(', ')} className={`block max-w-24 truncate rounded-md bg-amber-100 px-1.5 py-1 font-medium text-amber-900 dark:bg-amber-500/20 dark:text-amber-200 ${liste.some(r => r.rdvId === rdvId) ? 'ring-2 ring-teal-600' : ''}`}>{liste.length > 1 ? `${liste.length} patients` : liste[0].patient}</span>}
+                                <td key={h} className={cn(colonne(h), h === surligne && 'bg-primary/15')}>
+                                    {liste.length > 0 && (
+                                        <span title={liste.map(r => r.patient).join(', ')}
+                                            className={cn('block max-w-28 truncate rounded-md border px-1.5 py-1 font-semibold', celuiCi || h === surligne ? 'border-primary bg-card text-foreground' : 'border-transparent bg-card/70 text-warning-soft-foreground')}>{nom}</span>
+                                    )}
                                 </td>
                             );
                         })}

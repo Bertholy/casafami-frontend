@@ -20,6 +20,10 @@ export function AuthFond({ children }) {
                 <div className="relative h-44 lg:hidden">
                     <img src="/cabinet_1.jpg" alt="" aria-hidden="true" className="absolute inset-0 h-full w-full object-cover" />
                     <div aria-hidden="true" className="absolute inset-0 bg-linear-to-t from-[#0e2a38] via-[#0e2a38]/30 to-transparent" />
+                    <Link to="/" aria-label="Retour à l’accueil du site" className="absolute left-4 top-4 flex items-center gap-2.5">
+                        <img src="/logo_casafami.png" alt="" className="h-10 w-10 rounded-2xl bg-white object-contain p-1" />
+                        <span className="text-xs font-extrabold uppercase tracking-[0.16em] text-white drop-shadow">{APP_NAME}</span>
+                    </Link>
                 </div>
 
                 {/* Photo (ordinateur : moitié gauche) */}

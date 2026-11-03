@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import axiosClient, { assetUrl } from '../api/axiosClient';
 import Editable from '../components/site/Editable';
 import Movable from '../components/site/Movable';
@@ -199,6 +199,22 @@ function Services() {
                 setLoading(false);
             });
     }, []);
+
+    // Un lien venant de la recherche du site (?service=…) ouvre ce service : sa fenêtre de détail (grille) ou sa ligne dépliée (liste).
+    const [searchParams, setSearchParams] = useSearchParams();
+    const cible = searchParams.get('service');
+    useEffect(() => {
+        if (!cible || loading) return undefined;
+        const minuterie = window.setTimeout(() => {
+            const service = services.find(s => String(s.id) === cible);
+            if (service) {
+                if (vue === 'grille') { if (detailsDuService(service.nom)) setFenetre(service); }
+                else { setOuvert(service.id); window.setTimeout(() => document.getElementById('service-' + service.id)?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 150); }
+            }
+            setSearchParams({}, { replace: true });   // le lien ne rouvre pas le service à chaque retour sur la page
+        }, 0);
+        return () => window.clearTimeout(minuterie);
+    }, [cible, loading, services, vue, setSearchParams]);
 
     const choisirVue = (valeur) => {
         setVue(valeur);

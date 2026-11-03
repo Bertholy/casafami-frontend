@@ -23,6 +23,10 @@
     --sc-border: #e4e4e7;
     --sc-input: #d4d4d8;
     --sc-ring: #18181b;
+    /* états (Libre / Occupé / À répartir) : fond clair teinté + texte foncé, contraste d'au moins 4,5:1 */
+    --sc-success: #16a34a; --sc-success-soft: #dcfce7; --sc-success-soft-foreground: #14532d;
+    --sc-destructive-soft: #fee2e2; --sc-destructive-soft-foreground: #7f1d1d;
+    --sc-warning: #d97706; --sc-warning-soft: #fef3c7; --sc-warning-soft-foreground: #78350f;
 }
 
 .theme-doux {

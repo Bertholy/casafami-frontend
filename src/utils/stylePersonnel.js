@@ -6,6 +6,8 @@ import { useCallback, useEffect, useState } from 'react';
 // La clé porte un numéro : un ancien choix, enregistré automatiquement avant que le défaut change, n'écrase pas le nouveau défaut.
 const CLE = 'style-personnel-3';
 const STYLES = ['neumorphisme', 'encoche', 'console'];
+/** Les styles proposés dans les paramètres, avec leur nom affiché. */
+export const STYLES_PROPOSES = [['neumorphisme', 'Neumorphisme'], ['encoche', 'Encoche'], ['console', 'Console']];
 const AVEC_CLASSE = ['encoche', 'neumorphisme'];
 
 const lire = () => {
@@ -26,5 +28,6 @@ export function useStylePersonnel() {
     // neumorphisme → encoche → console → neumorphisme
     const suivant = STYLES[(STYLES.indexOf(style) + 1) % STYLES.length];
     const basculerStyle = useCallback(() => setStyle(s => STYLES[(STYLES.indexOf(s) + 1) % STYLES.length]), []);
-    return { style, suivant, basculerStyle };
+    const choisirStyle = useCallback(nom => { if (STYLES.includes(nom)) setStyle(nom); }, []);
+    return { style, suivant, basculerStyle, choisirStyle };
 }

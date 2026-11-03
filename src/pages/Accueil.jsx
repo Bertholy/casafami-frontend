@@ -259,6 +259,7 @@ function Accueil() {
                         <Editable id="accueil.infos.etiquette" as="span" className={etiquette}>— INFORMATIONS —</Editable>
                         <Editable id="accueil.infos.titre" as="h2" accent={-1} className="mt-titre mt-regle mb-8 text-3xl md:text-4xl">Horaires & Contact</Editable>
 
+                        <span id="horaires" aria-hidden="true" className="block scroll-mt-28" />
                         {/* Horaires : issus du planning configuré par le super administrateur */}
                         <Editable id="accueil.horaires.titre" as="h3" className="mb-5 flex items-center gap-2 text-sm font-extrabold uppercase tracking-[0.18em] text-teal-600 dark:text-teal-300">Horaires</Editable>
                         <div className="space-y-4 text-gray-700 dark:text-gray-300">
@@ -278,7 +279,7 @@ function Accueil() {
                             <Editable id="accueil.horaires.urgences" as="p" className="pt-1 text-sm font-bold uppercase tracking-wide text-gray-500 dark:text-gray-400">Urgences 24h/24</Editable>
                         </div>
 
-                        <div className="mt-10 grid gap-8 sm:grid-cols-2">
+                        <div id="contact" className="mt-10 grid scroll-mt-28 gap-8 sm:grid-cols-2">
                             <div className="flex gap-4">
                                 <span className="flex h-12 w-12 shrink-0 items-center justify-center bg-teal-600 text-white"><MapPin className="h-5 w-5" /></span>
                                 <div className="text-gray-700 dark:text-gray-300">

@@ -1,15 +1,26 @@
 import { lienSuivi, qrDataUrl } from './suivi';
+import { CABINET, COULEURS, dessinerEntete, dessinerPied } from './enteteCabinet';
+import { dessinerTicket } from './ticketImage';
+
+/** Tous les services du rendez-vous (le principal d'abord). */
+const servicesDe = rdv => (rdv.servicesNoms?.length ? rdv.servicesNoms : (rdv.serviceNom ? [rdv.serviceNom] : []));
 
 const STATUTS = { EN_ATTENTE: 'En cours', CONFIRME: 'Confirmé', ANNULE: 'Annulé', TERMINE: 'Terminé' };
+const ETATS = {
+    EN_ATTENTE: { titre: 'Rendez-vous enregistré', couleur: '#0a8fc7' },
+    CONFIRME: { titre: 'Rendez-vous confirmé', couleur: '#16a34a' },
+    TERMINE: { titre: 'Consultation terminée', couleur: '#16a34a' },
+    ANNULE: { titre: 'Rendez-vous annulé', couleur: '#dc2626' },
+};
 
-const chargerImage = src => new Promise((resolve, reject) => {
+export const chargerImage = src => new Promise((resolve, reject) => {
     const image = new Image();
     image.onload = () => resolve(image);
     image.onerror = reject;
     image.src = src;
 });
 
-function lignes(contexte, texte, largeurMax) {
+export function lignes(contexte, texte, largeurMax) {
     const resultat = [];
     for (const paragraphe of String(texte).split(/\r?\n/)) {
         let courant = '';
@@ -23,143 +34,113 @@ function lignes(contexte, texte, largeurMax) {
 }
 
 /**
- * Dessine le reçu du rendez-vous sur un canvas : c'est la même page pour l'image et pour le PDF, donc les deux documents sont identiques.
- * Présentation en « ticket » : bords dentelés en haut et en bas, logo, grand pictogramme d'état, puis les informations
- * en lignes « libellé / valeur ». Il porte la clé de suivi (pour retrouver le rendez-vous dans « Mes rendez-vous ») et un QR code.
+ * Dessine la page A4 du reçu du rendez-vous, utilisée par le PDF (l'image téléchargée ou partagée est un « ticket », voir utils/ticketImage.js).
+ * Même mise en page que la facture proforma (utils/proforma.js) : bandeau du cabinet, bloc patient et bloc rendez-vous, tableau des informations,
+ * puis la clé de suivi (pour retrouver le rendez-vous dans « Mes rendez-vous ») avec son QR code. Format A4, 794 px de large.
  * `facteur` agrandit le dessin (2 pour le PDF, afin qu'il reste net à l'impression).
  */
 async function dessinerRecu(rdv, facteur = 1) {
-    const largeur = 640, marge = 40;                     // marge = fond gris autour du ticket
-    const x0 = marge, x1 = largeur - marge;              // bords du ticket
-    const gauche = x0 + 44, droite = x1 - 44;            // colonne du texte
-    const FOND = '#e9eef2', ENCRE = '#111827', GRIS = '#6b7280', FILET = '#e5e7eb';
-    const ETATS = {
-        EN_ATTENTE: { titre: 'Rendez-vous enregistré', couleur: '#0a8fc7', signe: 'coche' },
-        CONFIRME: { titre: 'Rendez-vous confirmé', couleur: '#16a34a', signe: 'coche' },
-        TERMINE: { titre: 'Consultation terminée', couleur: '#16a34a', signe: 'coche' },
-        ANNULE: { titre: 'Rendez-vous annulé', couleur: '#dc2626', signe: 'croix' },
-    };
+    const largeur = 794, marge = 56;
+    const { ENCRE, GRIS, FILET, ACCENT, FOND_ENTETE } = COULEURS;
     const etat = ETATS[rdv.statut] || ETATS.EN_ATTENTE;
+    const annee = String(rdv.dateRdv || '').slice(0, 4) || String(new Date().getFullYear());
+    const numero = `RV-${annee}-${String(rdv.id ?? 0).padStart(5, '0')}`;
+    const emis = new Date();
 
-    // ---- mise en page : la liste des lignes à écrire, pour connaître la hauteur avant de dessiner ----
     const mesure = document.createElement('canvas').getContext('2d');
     const jour = rdv.dateRdv ? new Date(`${rdv.dateRdv}T12:00:00`) : null;
     const dateLongue = jour && !Number.isNaN(jour.getTime())
         ? jour.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).replace(/^./, c => c.toUpperCase())
         : String(rdv.dateRdv || '');
-    mesure.font = 'bold 21px Arial, sans-serif';
-    const lignesMotif = rdv.motif ? lignes(mesure, String(rdv.motif).replace(/^⚠[^\n]*\n?/, '').trim(), droite - gauche).slice(0, 6) : [];
-    const blocs = [
-        { libelle: 'Patiente', valeurs: [rdv.nomClient, rdv.telephoneClient].filter(Boolean) },
-        { libelle: 'Rendez-vous', valeurs: [dateLongue, `à ${String(rdv.heureRdv || '').slice(0, 5)}`] },
-        ...(rdv.serviceNom ? [{ libelle: 'Service', valeurs: [rdv.serviceNom] }] : []),
-        { libelle: 'Avec', valeurs: [rdv.praticienNom || 'À préciser par le cabinet'] },
-        { libelle: 'Statut', valeurs: [STATUTS[rdv.statut] || rdv.statut] },
-        ...(lignesMotif.length ? [{ libelle: 'Motif', valeurs: lignesMotif, petit: true }] : []),
-        { libelle: 'Numéro du rendez-vous', valeurs: [String(rdv.id)] },
+    const heure = String(rdv.heureRdv || '').slice(0, 5);
+    const colonneDetail = marge + 230;
+    mesure.font = '16px Arial, sans-serif';
+    const lignesMotif = rdv.motif ? lignes(mesure, String(rdv.motif).replace(/^⚠[^\n]*\n?/, '').trim(), largeur - marge - 10 - colonneDetail).slice(0, 6) : [];
+    const nomPatient = [rdv.civilite, rdv.nomClient].filter(Boolean).join(' ');
+    const infos = [
+        ...(servicesDe(rdv).length ? [{ libelle: servicesDe(rdv).length > 1 ? 'Services' : 'Service', valeurs: [servicesDe(rdv).join(', ')] }] : []),
+        { libelle: 'Date du rendez-vous', valeurs: [dateLongue] },
+        { libelle: 'Heure', valeurs: [heure] },
+        { libelle: 'Reçu par', valeurs: [rdv.praticienNom || 'À préciser par le cabinet'] },
+        { libelle: 'Statut', valeurs: [STATUTS[rdv.statut] || rdv.statut || ''], couleur: etat.couleur, gras: true },
+        ...(lignesMotif.length ? [{ libelle: 'Motif', valeurs: lignesMotif }] : []),
     ];
-    const hauteurBloc = b => 30 + b.valeurs.length * (b.petit ? 26 : 30) + 22;
-    const hauteurTicket = 70 + 64 + 30 + 100 + 30 + 42 + 30            // logo, pictogramme, titre, date d'émission, filet
-        + (rdv.cleSuivi ? 120 : 0)                                    // clé de suivi
-        + blocs.reduce((total, b) => total + hauteurBloc(b), 0)
-        + (rdv.cleSuivi ? 30 + 240 + 50 : 0)                           // filet, QR code et sa légende
-        + 60;                                                         // note de bas
-    const hauteur = hauteurTicket + marge * 2;
+    const hauteurInfo = i => i.valeurs.length * 22 + 22;
+    const hauteurTableau = infos.reduce((s, i) => s + hauteurInfo(i), 0);
+    const hauteurCle = rdv.cleSuivi ? 214 : 0;
+    const hauteur = Math.max(1123, 154 + 46 + 100 + 34 + hauteurTableau + 44 + hauteurCle + (rdv.cleSuivi ? 44 : 0) + 110 + 60);
 
     const canvas = document.createElement('canvas');
     canvas.width = largeur * facteur; canvas.height = hauteur * facteur;
     const c = canvas.getContext('2d');
     c.scale(facteur, facteur);
     c.textBaseline = 'alphabetic';
+    c.fillStyle = '#ffffff'; c.fillRect(0, 0, largeur, hauteur);
 
-    // ---- fond gris et ticket blanc à bords dentelés ----
-    c.fillStyle = FOND; c.fillRect(0, 0, largeur, hauteur);
-    const haut = marge, bas = marge + hauteurTicket;
-    c.save();
-    c.shadowColor = 'rgba(15, 23, 42, .12)'; c.shadowBlur = 18; c.shadowOffsetY = 4;
-    c.fillStyle = '#ffffff'; c.fillRect(x0, haut, x1 - x0, hauteurTicket);
-    c.restore();
-    const degrade = c.createLinearGradient(0, haut, 0, haut + 120);   // léger voile gris en haut, comme un ticket imprimé
-    degrade.addColorStop(0, '#eef1f4'); degrade.addColorStop(1, '#ffffff');
-    c.fillStyle = degrade; c.fillRect(x0, haut, x1 - x0, 120);
-    c.fillStyle = FOND;
-    const rayon = 7, pas = 22;
-    for (let x = x0 + pas / 2; x < x1; x += pas) {
-        c.beginPath(); c.arc(x, haut, rayon, 0, Math.PI * 2); c.fill();
-        c.beginPath(); c.arc(x, bas, rayon, 0, Math.PI * 2); c.fill();
-    }
+    // ---- bandeau du cabinet ----
+    await dessinerEntete(c, largeur, marge, CABINET, {
+        titre: 'REÇU DE RENDEZ-VOUS', numero,
+        lignes: [`Émis le ${emis.toLocaleDateString('fr-FR')} à ${emis.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}`, { texte: etat.titre, couleur: etat.couleur, gras: true }],
+    });
 
-    let y = haut + 40;
-    // ---- logo ----
-    try {
-        const logo = await chargerImage('/logo_casafami.png');
-        const h = 60, w = Math.round(logo.width * h / logo.height);
-        c.drawImage(logo, (largeur - w) / 2, y, w, h);
-    } catch { /* le logo est facultatif */ }
-    y += 70;
-
-    // ---- pictogramme d'état : rond plein et coche (ou croix) blanche ----
-    const cx = largeur / 2, cy = y + 32;
-    c.fillStyle = etat.couleur; c.beginPath(); c.arc(cx, cy, 32, 0, Math.PI * 2); c.fill();
-    c.strokeStyle = '#ffffff'; c.lineWidth = 6; c.lineCap = 'round'; c.lineJoin = 'round'; c.beginPath();
-    if (etat.signe === 'coche') { c.moveTo(cx - 14, cy + 1); c.lineTo(cx - 4, cy + 11); c.lineTo(cx + 15, cy - 10); }
-    else { c.moveTo(cx - 11, cy - 11); c.lineTo(cx + 11, cy + 11); c.moveTo(cx + 11, cy - 11); c.lineTo(cx - 11, cy + 11); }
-    c.stroke();
-    y += 64 + 30;
-
-    // ---- titre et date d'émission ----
+    // ---- patient et rendez-vous ----
+    let y = 200;
     c.textAlign = 'left';
-    c.fillStyle = ENCRE; c.font = 'bold 26px Arial, sans-serif'; c.fillText(etat.titre, gauche, y + 10);
-    const emis = new Date();
-    c.fillStyle = GRIS; c.font = '17px Arial, sans-serif';
-    c.fillText(`Reçu émis le ${emis.toLocaleDateString('fr-FR')} à ${emis.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}`, gauche, y + 40);
-    y += 70;
-    const filet = () => { c.fillStyle = FILET; c.fillRect(gauche - 14, y, droite - gauche + 28, 1.5); };
-    filet(); y += 30;
+    c.fillStyle = GRIS; c.font = 'bold 13px Arial, sans-serif'; c.fillText('PATIENT', marge, y);
+    c.fillStyle = ENCRE; c.font = 'bold 20px Arial, sans-serif'; c.fillText(nomPatient, marge, y + 28);
+    c.fillStyle = GRIS; c.font = '15px Arial, sans-serif';
+    let yg = y + 50;
+    for (const ligne of [rdv.telephoneClient && `Tél. ${rdv.telephoneClient}`, rdv.ageClient != null && rdv.ageClient !== '' && `${rdv.ageClient} an${Number(rdv.ageClient) > 1 ? 's' : ''}`].filter(Boolean)) { c.fillText(ligne, marge, yg); yg += 20; }
+    c.fillStyle = GRIS; c.font = 'bold 13px Arial, sans-serif'; c.fillText('RENDEZ-VOUS', largeur / 2 + 20, y);
+    c.fillStyle = ENCRE; c.font = 'bold 18px Arial, sans-serif'; c.fillText(dateLongue, largeur / 2 + 20, y + 28);
+    c.fillStyle = GRIS; c.font = '15px Arial, sans-serif'; c.fillText(`à ${heure}`, largeur / 2 + 20, y + 50);
+    y = Math.max(yg, y + 70) + 24;
 
-    // ---- clé de suivi, bien visible ----
+    // ---- tableau des informations ----
+    c.fillStyle = ACCENT; c.fillRect(marge, y, largeur - 2 * marge, 34);
+    c.fillStyle = '#ffffff'; c.font = 'bold 14px Arial, sans-serif';
+    c.fillText('Information', marge + 10, y + 22); c.fillText('Détail', colonneDetail, y + 22);
+    y += 34;
+    infos.forEach((info, i) => {
+        const h = hauteurInfo(info);
+        if (i % 2 === 1) { c.fillStyle = '#f9fafb'; c.fillRect(marge, y, largeur - 2 * marge, h); }
+        c.fillStyle = GRIS; c.font = '15px Arial, sans-serif'; c.fillText(info.libelle, marge + 10, y + 28);
+        c.fillStyle = info.couleur || ENCRE; c.font = `${info.gras ? 'bold ' : ''}16px Arial, sans-serif`;
+        info.valeurs.forEach((valeur, k) => c.fillText(String(valeur ?? ''), colonneDetail, y + 28 + k * 22));
+        c.fillStyle = FILET; c.fillRect(marge, y + h - 1, largeur - 2 * marge, 1);
+        y += h;
+    });
+    y += 44;
+
+    // ---- clé de suivi et QR code ----
     if (rdv.cleSuivi) {
-        c.fillStyle = '#ecfeff'; c.fillRect(gauche - 4, y, droite - gauche + 8, 96);
-        c.fillStyle = GRIS; c.font = '16px Arial, sans-serif'; c.fillText('Clé de suivi (à garder)', gauche + 14, y + 30);
-        c.fillStyle = '#0e7490'; c.font = 'bold 40px Consolas, "Courier New", monospace'; c.fillText(rdv.cleSuivi, gauche + 14, y + 76);
-        y += 120;
-    }
-
-    // ---- lignes « libellé / valeur » ----
-    for (const b of blocs) {
-        c.fillStyle = GRIS; c.font = '17px Arial, sans-serif'; c.fillText(b.libelle, gauche, y + 18);
-        y += 30;
-        b.valeurs.forEach((valeur, i) => {
-            c.fillStyle = ENCRE;
-            c.font = b.petit ? '19px Arial, sans-serif' : (i === 0 ? 'bold 22px Arial, sans-serif' : 'bold 19px Arial, sans-serif');
-            c.fillText(String(valeur ?? ''), gauche, y + 20);
-            y += b.petit ? 26 : 30;
-        });
-        y += 22;
-    }
-
-    // ---- QR code ----
-    if (rdv.cleSuivi) {
-        filet(); y += 30;
+        c.fillStyle = FOND_ENTETE; c.fillRect(marge, y, largeur - 2 * marge, hauteurCle);
+        c.fillStyle = ACCENT; c.fillRect(marge, y, 4, hauteurCle);
+        c.fillStyle = GRIS; c.font = 'bold 13px Arial, sans-serif'; c.fillText('CLÉ DE SUIVI (À GARDER)', marge + 26, y + 36);
+        c.fillStyle = ACCENT; c.font = 'bold 34px Consolas, "Courier New", monospace'; c.fillText(rdv.cleSuivi, marge + 26, y + 84);
+        c.fillStyle = GRIS; c.font = '14px Arial, sans-serif';
+        lignes(c, 'Saisissez cette clé dans « Mes rendez-vous » du site pour retrouver, annuler ou télécharger ce reçu.', 330).forEach((texte, k) => c.fillText(texte, marge + 26, y + 118 + k * 20));
         try {
             const qr = await chargerImage(await qrDataUrl(lienSuivi(rdv.cleSuivi), 440));
-            c.drawImage(qr, (largeur - 210) / 2, y, 210, 210);
+            c.drawImage(qr, largeur - marge - 26 - 150, y + 20, 150, 150);
+            c.textAlign = 'center'; c.fillStyle = GRIS; c.font = '12px Arial, sans-serif';
+            c.fillText('Scannez pour retrouver', largeur - marge - 26 - 75, y + 190);
+            c.textAlign = 'left';
         } catch { /* sans QR code, la clé écrite suffit */ }
-        y += 240;
-        c.textAlign = 'center'; c.fillStyle = GRIS; c.font = '16px Arial, sans-serif';
-        c.fillText('Scannez ce code pour retrouver votre rendez-vous.', largeur / 2, y);
-        y += 50;
+        y += hauteurCle + 44;
     }
 
-    // ---- note de bas ----
-    c.textAlign = 'center'; c.fillStyle = GRIS; c.font = '14px Arial, sans-serif';
-    c.fillText('Cabinet d’accouchement Sainte Famille · Andongona, Antsohihy', largeur / 2, y + 10);
-    c.fillText('Présentez ce reçu à l’accueil du cabinet si nécessaire.', largeur / 2, y + 32);
-    c.textAlign = 'left';
+    // ---- mentions ----
+    c.fillStyle = GRIS; c.font = '13px Arial, sans-serif';
+    c.fillText('Présentez ce reçu à l’accueil du cabinet si nécessaire.', marge, y);
+    c.fillText('Document administratif : il ne contient aucune information médicale.', marge, y + 20);
+    c.textAlign = 'right'; c.fillStyle = ENCRE; c.font = 'bold 15px Arial, sans-serif'; c.fillText('Le cabinet', largeur - marge, y + 4);
+    c.fillStyle = FILET; c.fillRect(largeur - marge - 180, y + 78, 180, 1);
+    dessinerPied(c, largeur, hauteur, CABINET);
     return { canvas, largeur, hauteur };
 }
 
-function telecharger(blob, nom) {
+export function telecharger(blob, nom) {
     const url = URL.createObjectURL(blob);
     const lien = document.createElement('a');
     lien.href = url; lien.download = nom;
@@ -167,11 +148,47 @@ function telecharger(blob, nom) {
     window.setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
-const versBlob = (canvas, type, qualite) => new Promise(resolve => canvas.toBlob(resolve, type, qualite));
+export const versBlob = (canvas, type, qualite) => new Promise(resolve => canvas.toBlob(resolve, type, qualite));
 
-/** Reçu du rendez-vous en image PNG, téléchargé sur demande (jamais automatiquement). */
+/**
+ * Contenu du ticket (image) du reçu : même présentation que le ticket affiché à l'écran au patient (components/TicketPapier.jsx).
+ * Le PDF reste la page A4 dessinée par dessinerRecu.
+ */
+async function ticketDuRecu(rdv) {
+    const etat = ETATS[rdv.statut] || ETATS.EN_ATTENTE;
+    const jour = rdv.dateRdv ? new Date(`${rdv.dateRdv}T12:00:00`) : null;
+    const dateLongue = jour && !Number.isNaN(jour.getTime())
+        ? jour.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).replace(/^./, c => c.toUpperCase())
+        : String(rdv.dateRdv || '');
+    const annee = String(rdv.dateRdv || '').slice(0, 4) || String(new Date().getFullYear());
+    const numero = `RV-${annee}-${String(rdv.id ?? 0).padStart(5, '0')}`;
+    const emis = new Date();
+    const services = servicesDe(rdv);
+    const motif = rdv.motif ? String(rdv.motif).replace(/^⚠[^\n]*\n?/, '').trim().slice(0, 300) : '';
+    const detailsPatient = [rdv.telephoneClient, rdv.ageClient != null && rdv.ageClient !== '' ? `${rdv.ageClient} an${Number(rdv.ageClient) > 1 ? 's' : ''}` : ''].filter(Boolean).join(' · ');
+    return {
+        titre: etat.titre,
+        reference: `Réf : ${numero} | ${emis.toLocaleDateString('fr-FR')} à ${emis.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}`,
+        signe: rdv.statut === 'ANNULE' ? 'croix' : 'coche', couleurSigne: rdv.statut === 'ANNULE' ? '#dc2626' : '#10b981',
+        lignes: [
+            { libelle: 'Patient', valeur: [rdv.civilite, rdv.nomClient].filter(Boolean).join(' '), detail: detailsPatient || undefined },
+            ...(services.length ? [{ libelle: services.length > 1 ? 'Services' : 'Service', valeur: services.join(', ') }] : []),
+            { libelle: 'Date du rendez-vous', valeur: dateLongue },
+            { libelle: 'Heure', valeur: String(rdv.heureRdv || '').slice(0, 5) },
+            { libelle: 'Reçu par', valeur: rdv.praticienNom || 'À préciser par le cabinet', gras: false },
+            { libelle: 'Statut', valeur: STATUTS[rdv.statut] || rdv.statut || '', couleur: etat.couleur },
+            ...(motif ? [{ libelle: 'Motif', valeur: motif, gras: false }] : []),
+            ...(rdv.cleSuivi ? [{ libelle: 'Votre clé de suivi', valeur: rdv.cleSuivi, mono: true }] : []),
+        ],
+        qr: rdv.cleSuivi ? { src: await qrDataUrl(lienSuivi(rdv.cleSuivi), 440), legende: 'Scannez ce code pour retrouver votre rendez-vous.' } : undefined,
+        pied: 'Présentez ce reçu à l’accueil du cabinet si nécessaire. Document administratif : il ne contient aucune information médicale.',
+        cabinet: `${CABINET.nom} · ${CABINET.sousTitre}`,
+    };
+}
+
+/** Reçu du rendez-vous en image PNG (présentée comme un ticket), téléchargé sur demande (jamais automatiquement). */
 export async function downloadReceiptImage(rdv) {
-    const { canvas } = await dessinerRecu(rdv);
+    const { canvas } = await dessinerTicket(await ticketDuRecu(rdv));
     const blob = await versBlob(canvas, 'image/png');
     if (!blob) throw new Error('Impossible de créer l’image du reçu.');
     telecharger(blob, `casafami-recu-rdv-${rdv.id}.png`);
@@ -185,7 +202,7 @@ export const partageDisponible = () => {
 
 /** Partage le reçu en image avec les applications du téléphone (même dessin que le téléchargement). */
 export async function shareReceiptImage(rdv) {
-    const { canvas } = await dessinerRecu(rdv);
+    const { canvas } = await dessinerTicket(await ticketDuRecu(rdv));
     const blob = await versBlob(canvas, 'image/png');
     if (!blob) throw new Error('Impossible de créer l’image du reçu.');
     const fichier = new File([blob], `casafami-recu-rdv-${rdv.id}.png`, { type: 'image/png' });
@@ -197,10 +214,10 @@ export async function shareReceiptImage(rdv) {
 }
 
 /**
- * Une page A4 qui ne contient que l'image du reçu : le PDF est ainsi exactement le même document que l'image téléchargée.
+ * Une page A4 qui ne contient que le dessin du document (reçu ou facture proforma).
  * Le PDF est écrit à la main (une image JPEG dans une page), sans bibliothèque supplémentaire.
  */
-function pdfAvecImage(jpeg, largeurPx, hauteurPx) {
+export function pdfAvecImage(jpeg, largeurPx, hauteurPx) {
     const PAGE_L = 595.28, PAGE_H = 841.89, MARGE = 28;   // A4 en points
     const echelle = Math.min((PAGE_L - 2 * MARGE) / largeurPx, (PAGE_H - 2 * MARGE) / hauteurPx);
     const w = largeurPx * echelle, h = hauteurPx * echelle;
@@ -234,7 +251,7 @@ function pdfAvecImage(jpeg, largeurPx, hauteurPx) {
     return new Blob([resultat], { type: 'application/pdf' });
 }
 
-/** Reçu du rendez-vous en PDF : le même dessin que l'image, sur une page A4. */
+/** Reçu du rendez-vous en PDF : la page A4 au style de la facture proforma. */
 export async function downloadReceiptPdf(rdv) {
     const { canvas } = await dessinerRecu(rdv, 2);
     const blob = await versBlob(canvas, 'image/jpeg', 0.92);

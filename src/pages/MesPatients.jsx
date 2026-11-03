@@ -3,7 +3,9 @@ import { SkeletonList } from '../components/ui/skeleton';
 import BoutonScanQr from '../components/BoutonScanQr';
 import useOuvrirParCle from '../hooks/useOuvrirParCle';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { CalendarClock, Check, CheckCheck, ClipboardCheck, FolderOpen, Loader2, Phone, Search, UserCheck } from 'lucide-react';
+import { Ban, BadgeCheck, CalendarClock, Check, CheckCheck, ClipboardCheck, FolderOpen, Loader2, Phone, Search, UserCheck } from 'lucide-react';
+import { Button } from '../components/ui/button';
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from '../components/ui/dialog';
 import axiosClient from '../api/axiosClient';
 import AdminLayout from '../components/AdminLayout';
 import Notice from '../components/Notice';
@@ -32,6 +34,7 @@ export default function MesPatients() {
     const [recherche, setRecherche] = useState('');
     const [loading, setLoading] = useState(true);
     const [enCours, setEnCours] = useState(null);
+    const [aAnnuler, setAAnnuler] = useState(null);   // rendez-vous dont on demande l'annulation (confirmation avant d'agir)
     const [error, setError] = useState('');
     const [notice, setNotice] = useState('');
     const aujourdhui = todayISO();
@@ -81,6 +84,10 @@ export default function MesPatients() {
     };
     const accepter = rdv => agir(rdv, () => axiosClient.put(`/rdv/${rdv.id}/accepter`), `Vous avez accepté le rendez-vous de ${rdv.nomClient}. Le super administrateur en est informé et va le confirmer.`);
     const terminer = rdv => agir(rdv, () => axiosClient.put(`/rdv/${rdv.id}/terminer`), `Consultation de ${rdv.nomClient} terminée.`);
+    // confirmer son propre rendez-vous : le serveur l'accepte du même coup et le patient reçoit son SMS
+    const confirmer = rdv => agir(rdv, () => axiosClient.put(`/rdv/${rdv.id}/confirmer`), `Rendez-vous de ${rdv.nomClient} confirmé : le patient va recevoir son SMS.`);
+    const annuler = async rdv => { setAAnnuler(null); await agir(rdv, () => axiosClient.put(`/rdv/${rdv.id}/annuler`), `Rendez-vous de ${rdv.nomClient} annulé : le patient est prévenu et le créneau est libéré.`); };
+    const droitConfirmer = peut('RDV_CONFIRMER'), droitAnnuler = peut('RDV_ANNULER');
 
     const mise = id => (id === rdvFocus ? 'ring-2 ring-teal-500 ring-offset-2 dark:ring-offset-gray-900' : '');
     const dossier = tel => `/patients/dossier?telephone=${encodeURIComponent(tel)}`;
@@ -116,7 +123,13 @@ export default function MesPatients() {
                                     <p className="flex flex-wrap items-center gap-x-3 text-sm text-slate-600 dark:text-gray-300"><span className="inline-flex items-center gap-1.5 font-medium"><CalendarClock size={14} />{jourLong(r.dateRdv)} à {hhmm(r.heureRdv)}</span>{r.serviceNom && <span>{r.serviceNom}</span>}</p>
                                     {motifCourt(r.motif) && <p className="mt-1 truncate text-xs text-slate-500">{motifCourt(r.motif)}</p>}
                                 </div>
-                                <button disabled={enCours === r.id} onClick={() => accepter(r)} className={btnPrimary}>{enCours === r.id ? <Loader2 size={15} className="animate-spin" /> : <Check size={16} />}Accepter</button>
+                                <div className="flex flex-wrap items-center gap-2">
+                                    {droitConfirmer
+                                        ? <button disabled={enCours === r.id} onClick={() => confirmer(r)} className={btnPrimary}>{enCours === r.id ? <Loader2 size={15} className="animate-spin" /> : <BadgeCheck size={16} />}Confirmer</button>
+                                        : null}
+                                    <button disabled={enCours === r.id} onClick={() => accepter(r)} className={droitConfirmer ? btnSecondary : btnPrimary}>{enCours === r.id && !droitConfirmer ? <Loader2 size={15} className="animate-spin" /> : <Check size={16} />}Accepter</button>
+                                    {droitAnnuler && <button disabled={enCours === r.id} onClick={() => setAAnnuler(r)} className={btnSecondary}><Ban size={15} />Annuler</button>}
+                                </div>
                             </li>
                         ))}
                     </ul>
@@ -156,7 +169,9 @@ export default function MesPatients() {
                                             <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ${st.badge}`}><span className={`h-1.5 w-1.5 rounded-full ${st.dot}`} />{r.statut === 'EN_ATTENTE' ? 'Accepté · à confirmer par le cabinet' : st.label}</span>
                                             <div className="flex gap-2">
                                                 <Link to={dossier(r.telephoneClient)} className={btnSecondary}><FolderOpen size={15} />Dossier</Link>
-                                                {r.statut === 'CONFIRME' && <button disabled={enCours === r.id} onClick={() => terminer(r)} className={btnSecondary}>{enCours === r.id ? <Loader2 size={15} className="animate-spin" /> : <CheckCheck size={15} />}Terminé</button>}
+                                                {r.statut === 'EN_ATTENTE' && droitConfirmer && <button disabled={enCours === r.id} onClick={() => confirmer(r)} className={btnPrimary}>{enCours === r.id ? <Loader2 size={15} className="animate-spin" /> : <BadgeCheck size={15} />}Confirmer</button>}
+                                {r.statut === 'CONFIRME' && <button disabled={enCours === r.id} onClick={() => terminer(r)} className={btnSecondary}>{enCours === r.id ? <Loader2 size={15} className="animate-spin" /> : <CheckCheck size={15} />}Terminé</button>}
+                                                {(r.statut === 'EN_ATTENTE' || r.statut === 'CONFIRME') && droitAnnuler && <button disabled={enCours === r.id} onClick={() => setAAnnuler(r)} className={btnSecondary}><Ban size={15} />Annuler</button>}
                                             </div>
                                         </li>
                                     );
@@ -166,6 +181,20 @@ export default function MesPatients() {
                     ))}
                 </div>
             </section>
+
+            {/* confirmation avant d'annuler : le patient est prévenu par SMS et le créneau est libéré */}
+            <Dialog open={Boolean(aAnnuler)} onOpenChange={ouvert => { if (!ouvert) setAAnnuler(null); }}>
+                <DialogContent className="top-[20vh] max-w-md p-5">
+                    <DialogTitle className="text-base font-semibold text-foreground">Annuler ce rendez-vous ?</DialogTitle>
+                    <DialogDescription className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                        {aAnnuler && <>Le rendez-vous de <strong className="text-foreground">{aAnnuler.nomClient}</strong> du {jourLong(aAnnuler.dateRdv)} à {hhmm(aAnnuler.heureRdv)} sera annulé : le patient est prévenu par SMS et le créneau est libéré.</>}
+                    </DialogDescription>
+                    <div className="mt-5 flex flex-wrap justify-end gap-2">
+                        <Button variant="outline" size="md" onClick={() => setAAnnuler(null)}>Retour</Button>
+                        <Button variant="destructive" size="md" onClick={() => annuler(aAnnuler)}><Ban />Annuler le rendez-vous</Button>
+                    </div>
+                </DialogContent>
+            </Dialog>
         </AdminLayout>
     );
 }

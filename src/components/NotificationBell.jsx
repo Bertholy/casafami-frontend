@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { BadgeCheck, Bell, BellRing, CalendarCheck, CalendarClock, CalendarOff, CalendarPlus, CalendarX, CheckCheck, KeyRound, ShieldAlert, ShieldCheck, Trash2, UserCheck, UserMinus } from 'lucide-react';
 import axiosClient from '../api/axiosClient';
+import { sonNotification } from '../utils/son';
+import { sonNotificationsActif } from '../utils/preferences';
 
 const REFRESH_MS = 30000;
 const ICONES = {
@@ -38,9 +40,16 @@ export default function NotificationBell({ onOpenRdv }) {
     const [data, setData] = useState({ nonLues: 0, notifications: [] });
     const [ouvert, setOuvert] = useState(false);
     const conteneur = useRef(null);
+    const dejaVues = useRef(null);   // identifiants des notifications non lues déjà connus (null avant le premier chargement : pas de son à l'ouverture)
 
     const charger = useCallback(() => {
-        axiosClient.get('/notifications').then(({ data: d }) => setData(d)).catch(() => {});
+        axiosClient.get('/notifications').then(({ data: d }) => {
+            const nonLues = new Set((d.notifications || []).filter(n => !n.lue).map(n => n.id));
+            // une nouvelle notification non lue vient d'arriver : petit son, sauf si la personne l'a coupé dans ses paramètres
+            if (dejaVues.current && [...nonLues].some(id => !dejaVues.current.has(id)) && sonNotificationsActif()) sonNotification();
+            dejaVues.current = nonLues;
+            setData(d);
+        }).catch(() => {});
     }, []);
 
     useEffect(() => {

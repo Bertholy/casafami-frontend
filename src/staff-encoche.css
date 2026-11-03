@@ -51,3 +51,5 @@
 .encoche .theme-staff .encoche-onglet::after { top: calc(100% - 1px); background: radial-gradient(circle at 0 100%, transparent calc(var(--encoche-rayon) - .5px), var(--encoche-fond-bas, var(--st-page)) var(--encoche-rayon)); }
 
 @media (prefers-reduced-motion: reduce) { .encoche .theme-staff .encoche-onglet { transition: none; } }
+/* l'onglet blanc fait déjà la page active : pas d'ombre de pastille en plus */
+.encoche .theme-staff aside nav a { box-shadow: none !important; }

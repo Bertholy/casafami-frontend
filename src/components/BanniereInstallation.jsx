@@ -50,7 +50,7 @@ export default function BanniereInstallation() {
     };
 
     return (
-        <div role="dialog" aria-labelledby="pwa-titre" className="fixed inset-x-4 bottom-4 z-[60] mx-auto max-w-md animate-fade-in-up rounded-2xl border border-slate-200 bg-white p-4 text-slate-800 shadow-2xl sm:inset-x-auto sm:right-6 sm:bottom-6 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100">
+        <div role="dialog" aria-labelledby="pwa-titre" className="fixed inset-x-4 bottom-40 z-[60] mx-auto max-w-md animate-fade-in-up rounded-2xl border border-slate-200 bg-white p-4 text-slate-800 shadow-2xl sm:inset-x-auto sm:right-6 sm:bottom-6 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100">
             <div className="flex items-start gap-3">
                 <img src="/pwa-192.png" alt="" className="h-12 w-12 shrink-0 rounded-xl border border-slate-200 dark:border-gray-700" />
                 <div className="min-w-0 flex-1">

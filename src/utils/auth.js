@@ -13,7 +13,7 @@ export const LOGIN_PATH = '/medecin/login';
  * un médecin, une sage-femme, une secrétaire… sans que la connexion d'un onglet remplace celle des autres.
  * (Avec localStorage, tous les onglets partageaient le même compte : le dernier connecté prenait la place des autres.)
  */
-const SESSION_KEYS = ['token', 'email', 'role', 'permissions'];
+const SESSION_KEYS = ['token', 'email', 'role', 'permissions', 'garde-message-ok'];
 // Ancien emplacement, partagé entre tous les onglets : on le vide pour qu'une ancienne session ne réapparaisse pas.
 try { SESSION_KEYS.forEach(key => localStorage.removeItem(key)); } catch { /* stockage indisponible */ }
 
@@ -27,6 +27,7 @@ export function saveSession({ token, email, role, permissions }) {
     sessionStorage.setItem('token', token);
     sessionStorage.setItem('email', email);
     sessionStorage.setItem('role', role);
+    sessionStorage.removeItem('garde-message-ok');   // nouvelle connexion : le message de garde peut s'afficher de nouveau
     savePermissions(permissions);
 }
 

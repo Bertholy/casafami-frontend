@@ -10,6 +10,7 @@ import TitrePage from './components/TitrePage';
 import ChargementPage from './components/ChargementPage';
 import NiveauDefilement from './components/NiveauDefilement';
 import BanniereInstallation from './components/BanniereInstallation';
+import CasaAI from './components/casa-ai/CasaAI';
 import BarreProgression from './components/BarreProgression';
 import { LangProvider, useLang } from './i18n/LangContext';
 import { PAGES_EDITABLES, STAFF_PREFIXES, pagePublique } from './constants/routes';
@@ -23,6 +24,11 @@ const Faq = lazy(() => import('./pages/Faq'));
 const MesRdv = lazy(() => import('./pages/MesRdv'));
 const Login = lazy(() => import('./pages/Login'));
 const Dashboard = lazy(() => import('./pages/Dashboard'));
+const PatientSansRdv = lazy(() => import('./pages/PatientSansRdv'));
+const ListePatients = lazy(() => import('./pages/ListePatients'));
+const TourDeGarde = lazy(() => import('./pages/TourDeGarde'));
+const Tarifs = lazy(() => import('./pages/Tarifs'));
+const ProformaLibre = lazy(() => import('./pages/ProformaLibre'));
 const Calendrier = lazy(() => import('./pages/Calendrier'));
 const Statistiques = lazy(() => import('./pages/Statistiques'));
 const DossierPatient = lazy(() => import('./pages/DossierPatient'));
@@ -72,6 +78,7 @@ function AppContent() {
             <div className={`min-h-screen flex flex-col bg-white dark:bg-gray-900 transition-colors ${isPublicPage ? "theme-montagne theme-treuscoat" : isLogin ? "theme-doux" : ""}`}>
                 {isPublicPage && <NiveauDefilement />}
                 {isPublicPage && <BanniereInstallation />}
+                {isPublicPage && <CasaAI />}
                 {isPublicPage && <Navbar />}
                 <main id="contenu" tabIndex={-1} className={`grow focus:outline-none ${isPublicPage ? "mt-fond-doux" : ""}`}>
                     {isPublicPage && PAGES_EDITABLES[pagePublique(location.pathname)] && <TextesAjoutes page={PAGES_EDITABLES[pagePublique(location.pathname)]} zone="haut" />}
@@ -95,6 +102,11 @@ function AppContent() {
                         <Route path="/espace/secretariat" element={<Dashboard />} />
                         <Route path="/admin/dashboard" element={<Dashboard />} />
                         <Route path="/calendrier" element={<Calendrier />} />
+                        <Route path="/patients/sans-rendez-vous" element={<PatientSansRdv />} />
+                        <Route path="/patients/liste" element={<ListePatients />} />
+                        <Route path="/garde" element={<TourDeGarde />} />
+                        <Route path="/tarifs" element={<Tarifs />} />
+                        <Route path="/proforma" element={<ProformaLibre />} />
                         <Route path="/statistiques" element={<Statistiques />} />
                         <Route path="/patients/dossier" element={<DossierPatient />} />
                         <Route path="/patients/maternite" element={<SuiviMaternite />} />

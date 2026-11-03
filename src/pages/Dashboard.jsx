@@ -3,7 +3,7 @@ import { SkeletonTable } from '../components/ui/skeleton';
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import {
     BadgeCheck, Ban, UserCheck, CalendarCheck, CalendarClock, CalendarDays, Check, CheckCheck, Clock3,
-    ChevronDown, CircleChevronLeft, CircleChevronRight, Download, Eye, FileSpreadsheet, FileText, FolderOpen, Pencil, Plus, RotateCw, Search, Trash2,
+    ChevronDown, Cloud, CloudFog, CloudLightning, CloudRain, CloudSun, Moon, Sun, CircleChevronLeft, CircleChevronRight, Download, Eye, FileSpreadsheet, FileText, FolderOpen, Pencil, RotateCw, Search, Trash2,
 } from 'lucide-react';
 import axiosClient from '../api/axiosClient';
 import BoutonTelecharger from '../components/BoutonTelecharger';
@@ -15,10 +15,12 @@ import Notice from '../components/Notice';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 import { toast } from '../lib/toast';
 import AgendaToday from '../components/dashboard/AgendaToday';
+import FrequentationClients from '../components/dashboard/FrequentationClients';
 import ApercuSemaine from '../components/dashboard/ApercuSemaine';
 import RdvFormModal from '../components/dashboard/RdvFormModal';
 import AttributionDialog from '../components/dashboard/AttributionDialog';
 import CarteDemande from '../components/dashboard/CarteDemande';
+import GardeDuJour from '../components/dashboard/GardeDuJour';
 import { STATUS, formatDateFr, hhmm, todayISO } from '../constants/app';
 import { apiErrorMessage, getRole, hasSession, homeForRole, LOGIN_PATH, peut } from '../utils/auth';
 import { formatPhone } from '../utils/phone';
@@ -66,9 +68,34 @@ function periodDates(period) {
     return [iso(today), iso(today)];
 }
 
-/** Date courte et heure, mises à jour toutes les 15 secondes (comme dans la maquette de la console). */
+/** Météo du cabinet (Antsohihy) : service gratuit Open-Meteo, sans clé. Gardée 15 minutes ; sans réseau, la température n'est simplement pas affichée. */
+const METEO_URL = 'https://api.open-meteo.com/v1/forecast?latitude=-14.879&longitude=48.273&current=temperature_2m,weather_code,is_day&timezone=Indian%2FAntananarivo';
+function IconeMeteo({ code, jour, ...props }) {
+    if (code >= 95) return <CloudLightning {...props} />;
+    if ((code >= 51 && code <= 67) || (code >= 80 && code <= 82)) return <CloudRain {...props} />;
+    if (code === 45 || code === 48) return <CloudFog {...props} />;
+    if (code >= 2) return jour ? <CloudSun {...props} /> : <Cloud {...props} />;
+    return jour ? <Sun {...props} /> : <Moon {...props} />;
+}
+function useTemperature() {
+    const [meteo, setMeteo] = useState(() => { try { const m = JSON.parse(sessionStorage.getItem('meteo') || 'null'); return m && Date.now() - m.le < 900000 ? m : null; } catch { return null; } });
+    useEffect(() => {
+        if (meteo) return undefined;
+        let actif = true;
+        fetch(METEO_URL).then(r => r.ok ? r.json() : Promise.reject()).then(({ current }) => {
+            const m = { le: Date.now(), degres: Math.round(current.temperature_2m), code: current.weather_code, jour: current.is_day === 1 };
+            sessionStorage.setItem('meteo', JSON.stringify(m));
+            if (actif) setMeteo(m);
+        }).catch(() => { /* facultatif */ });
+        return () => { actif = false; };
+    }, [meteo]);
+    return meteo;
+}
+
+/** Heure (mise à jour toutes les 15 secondes) et température du moment, sous la salutation. */
 function Horloge() {
     const [maintenant, setMaintenant] = useState(() => new Date());
+    const meteo = useTemperature();
     useEffect(() => {
         const minuteur = window.setInterval(() => setMaintenant(new Date()), 15000);
         return () => window.clearInterval(minuteur);
@@ -76,9 +103,14 @@ function Horloge() {
     const heure = maintenant.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
     const [heures, minutes] = heure.split(':');
     return (
-        <div className="hidden items-baseline gap-3 sm:flex" aria-hidden="true">
-            <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500 dark:text-gray-400">{maintenant.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}</div>
-            <div className="text-3xl font-extrabold leading-none tabular-nums">{heures}<span className="mx-0.5 animate-pulse text-(--mt-main)">:</span>{minutes}</div>
+        <div className="mt-3 flex items-center gap-4" role="timer" aria-label={`Il est ${heures} heures ${minutes}${meteo ? `, ${meteo.degres} degrés` : ''}`}>
+            <div className="text-3xl font-extrabold leading-none tabular-nums" aria-hidden="true">{heures}<span className="mx-0.5 animate-pulse text-(--mt-main)">:</span>{minutes}</div>
+            {meteo && (
+                <div className="flex items-center gap-2 border-l border-slate-200 pl-4 dark:border-gray-700" aria-hidden="true" title="Température à Antsohihy">
+                    <IconeMeteo code={meteo.code} jour={meteo.jour} size={22} className="text-(--mt-main)" />
+                    <span className="text-xl font-bold leading-none tabular-nums">{meteo.degres}°C</span>
+                </div>
+            )}
         </div>
     );
 }
@@ -96,9 +128,9 @@ function Dashboard() {
     const isSuperAdmin = role === 'SUPER_ADMIN';
     const estPraticien = ['MEDECIN', 'SAGE_FEMME', 'INFIRMIERE'].includes(role);
     const canOpenDossier = peut('DOSSIERS_LIRE');
-    const droitAttribuer = peut('RDV_ATTRIBUER'), droitConfirmer = peut('RDV_CONFIRMER'), droitAccepter = peut('RDV_ACCEPTER');
+    const droitAttribuer = peut('RDV_ATTRIBUER'), droitConfirmer = peut('RDV_CONFIRMER'), droitAccepter = peut('RDV_ACCEPTER'), droitAnnuler = peut('RDV_ANNULER');
     // Un soignant qui ne répartit pas les rendez-vous (pas d'attribution ni de confirmation) a une vue personnelle : ses patients, pas la gestion du cabinet.
-    const vuePraticien = estPraticien && !droitAttribuer && !droitConfirmer;
+    const vuePraticien = estPraticien && !droitAttribuer;   // le personnel soignant garde sa vue « Mon espace », même s'il peut confirmer et annuler ses propres rendez-vous
     const droitTerminer = peut('RDV_TERMINER'), droitModifier = peut('RDV_MODIFIER'), droitCreer = peut('RDV_CREER');
 
     const [rdvs, setRdvs] = useState([]);
@@ -201,7 +233,8 @@ function Dashboard() {
     const aucunPraticien = (options.praticiens || []).length === 0;
     const estMien = (rdv, profile) => estPraticien && rdv.praticienId === profile?.id;
     const peutAccepter = (rdv, profile) => droitAccepter && estMien(rdv, profile) && !rdv.personnelConfirme && (rdv.statut === 'EN_ATTENTE' || rdv.statut === 'CONFIRME');
-    const peutConfirmer = rdv => droitConfirmer && rdv.statut === 'EN_ATTENTE' && (rdv.praticienId ? rdv.personnelConfirme : aucunPraticien);
+    // la personne attribuée peut confirmer son propre rendez-vous sans l'accepter avant : le serveur l'accepte du même coup
+    const peutConfirmer = (rdv, profile) => droitConfirmer && rdv.statut === 'EN_ATTENTE' && (rdv.praticienId ? (rdv.personnelConfirme || estMien(rdv, profile)) : aucunPraticien);
     const peutTerminer = (rdv, profile) => rdv.statut === 'CONFIRME' && droitTerminer && (isSuperAdmin || estMien(rdv, profile));
     const accepterRdv = rdv => run(async () => { await axiosClient.put(`/rdv/${rdv.id}/accepter`); setNotice(`Vous avez accepté le rendez-vous de ${rdv.nomClient}. Le super administrateur en est informé et va le confirmer.`); }, 'L’acceptation a échoué. Réessayez.');
     const confirmRdv = rdv => run(async () => { await axiosClient.put(`/rdv/${rdv.id}/confirmer`); setNotice(`Rendez-vous de ${rdv.nomClient} confirmé : le patient va recevoir son SMS.`); }, 'La confirmation a échoué. Réessayez.');
@@ -274,19 +307,13 @@ function Dashboard() {
     }));
     const card = 'rounded-lg border border-slate-200 bg-white dark:border-gray-800 dark:bg-gray-900';
 
-    const newButton = !droitCreer ? null : (
-        <button onClick={() => setModal({ type: 'create' })} aria-label="Nouveau rendez-vous" className="inline-flex items-center gap-2 rounded-md bg-teal-700 px-3 py-2 text-sm font-semibold text-white transition hover:bg-teal-800">
-            <Plus size={16} /><span className="hidden whitespace-nowrap 2xl:inline">Nouveau rendez-vous</span>
-        </button>
-    );
-
     return (
-        <AdminLayout title={vuePraticien ? 'Mon espace' : 'Tableau de bord'} subtitle={formatDateFr(today, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })} actions={newButton}>
+        <AdminLayout title={vuePraticien ? 'Mon espace' : 'Tableau de bord'} subtitle={formatDateFr(today, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}>
             {profile => <>
                 {/* ---------- Demande à traiter (ouverte depuis une notification) ---------- */}
                 {rdvCible && cible.id === rdvCible && (
-                    <CarteDemande rdv={cible.rdv} absent={cible.absent} estSuperAdmin={isSuperAdmin || (droitAttribuer && droitConfirmer)}
-                        peutAccepter={Boolean(cible.rdv) && peutAccepter(cible.rdv, profile)} peutConfirmer={Boolean(cible.rdv) && peutConfirmer(cible.rdv)}
+                    <CarteDemande rdv={cible.rdv} absent={cible.absent} estSuperAdmin={isSuperAdmin || droitAttribuer}
+                        peutAccepter={Boolean(cible.rdv) && peutAccepter(cible.rdv, profile)} peutConfirmer={Boolean(cible.rdv) && peutConfirmer(cible.rdv, profile)}
                         onAccepter={() => accepterRdv(cible.rdv)} onConfirmer={() => confirmRdv(cible.rdv)} onAttribuer={() => setAttribution({ rdv: cible.rdv })}
                         onFermer={() => setParams({}, { replace: true })} />
                 )}
@@ -305,9 +332,9 @@ function Dashboard() {
                                     ? (droitConfirmer ? `${pendingToday} en cours de confirmation. Pensez à les valider pour prévenir les patients.` : `${pendingToday} en cours de confirmation par le cabinet.`)
                                     : todayItems.length ? 'Tout est confirmé pour aujourd’hui.' : 'Profitez-en pour préparer la semaine ou saisir un nouveau rendez-vous.'}
                         </p>
+                        <Horloge />
                     </div>
                     <div className="flex flex-col gap-2 sm:items-end sm:gap-3">
-                        <Horloge />
                         <div className="flex flex-wrap items-center gap-2 sm:gap-3">
                         {peut('EXPORT_RDV') && <details className="group/export relative">
                             <summary className="group inline-flex items-center gap-2 rounded-xl border border-(--st-line) bg-(--st-panel) py-1.5 pl-2 pr-3.5 text-sm font-semibold shadow-sm transition duration-150 hover:-translate-y-0.5 hover:border-(--mt-main) hover:shadow-md active:translate-y-0 cursor-pointer list-none [&::-webkit-details-marker]:hidden"><span className="flex h-7 w-7 items-center justify-center rounded-lg bg-(--mt-main)/15 text-(--mt-main-fort) transition group-hover:bg-(--mt-main) group-hover:text-(--mt-sur-main) dark:text-(--mt-main)"><Download size={15} /></span>Exporter<ChevronDown size={14} className="text-slate-400 transition-transform duration-200 group-open/export:rotate-180" /></summary>
@@ -322,6 +349,7 @@ function Dashboard() {
                     </div>
                 </section>
 
+                <GardeDuJour />
                 <Notice tone="success" onClose={() => setNotice('')}>{notice}</Notice>
                 <Notice tone="error" onClose={() => setError('')}>{error}</Notice>
 
@@ -349,6 +377,9 @@ function Dashboard() {
                         ))}
                     </div>
                 </section>
+
+                {/* ---------- Fréquentation : nouveaux / anciens clients, femmes / hommes / enfants (pour qui voit les statistiques) ---------- */}
+                {!vuePraticien && peut('STATS_VOIR') && <FrequentationClients debut={periodDates(period)[0]} fin={periodDates(period)[1]} libellePeriode={periodLabel} rafraichir={rdvs} />}
 
                 {/* ---------- Aperçu de la semaine : courbes, anneau par service, jauges, radar (lecture seule, mêmes données que la page) ---------- */}
                 {!loading && <ApercuSemaine week={week} weekRdvs={weekRdvs} rdvs={rdvs} stats={stats} />}
@@ -421,11 +452,13 @@ function Dashboard() {
                                             <td className="px-4 py-3">
                                                 <div className="flex items-center gap-3">
                                                     <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-teal-100 text-sm font-bold text-teal-800 dark:bg-teal-500/15 dark:text-teal-300" aria-hidden="true">{rdv.nomClient?.trim().charAt(0).toUpperCase()}</span>
-                                                    <div className="min-w-0"><div className="truncate font-medium">{rdv.nomClient}</div><div className="text-xs text-slate-500 dark:text-gray-400">{formatPhone(rdv.telephoneClient)}</div>{rdv.cleSuivi && <div title="Clé de suivi du patient (à donner s'il l'a perdue)" className="select-all font-mono text-xs text-teal-700 dark:text-teal-400">{rdv.cleSuivi}</div>}</div>
+                                                    <div className="min-w-0"><div className="truncate font-medium">{rdv.civilite && <span className="mr-1 font-normal text-slate-500 dark:text-gray-400">{rdv.civilite}</span>}{rdv.nomClient}{rdv.nouveauClient != null && (rdv.nouveauClient
+                                                        ? <span className="ml-2 rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold text-emerald-800 dark:bg-emerald-500/15 dark:text-emerald-200" title="Premier passage de ce client au cabinet">Nouveau</span>
+                                                        : <span className="ml-2 rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold text-slate-700 dark:bg-gray-700/60 dark:text-gray-200" title={`Déjà venu : ${rdv.passage}e passage, ${rdv.passagesTotal} au total`}>Ancien · {rdv.passage}<sup>e</sup> passage</span>)}{rdv.sansRendezVous && <span className="ml-2 rounded-full bg-sky-100 px-2 py-0.5 text-[10px] font-semibold text-sky-800 dark:bg-sky-500/15 dark:text-sky-200" title="Reçu au cabinet sans rendez-vous">Sans RDV</span>}{rdv.urgence && <span className="ml-1 rounded-full bg-rose-100 px-2 py-0.5 text-[10px] font-bold text-rose-800 dark:bg-rose-500/15 dark:text-rose-200" title="Reçu en urgence">URGENCE</span>}</div><div className="text-xs text-slate-500 dark:text-gray-400">{formatPhone(rdv.telephoneClient)}</div>{rdv.cleSuivi && <div title="Clé de suivi du patient (à donner s'il l'a perdue)" className="select-all font-mono text-xs text-teal-700 dark:text-teal-400">{rdv.cleSuivi}</div>}</div>
                                                 </div>
                                             </td>
                                             <td className="px-4 py-3 whitespace-nowrap"><div className="font-medium">{formatDateFr(rdv.dateRdv)}</div><div className="text-xs text-slate-500 dark:text-gray-400">{hhmm(rdv.heureRdv)}</div></td>
-                                            <td className="px-4 py-3 text-slate-600 dark:text-gray-300">{rdv.serviceNom || '—'}</td>
+                                            <td className="px-4 py-3 text-slate-600 dark:text-gray-300" title={rdv.servicesNoms?.length > 1 ? rdv.servicesNoms.join(', ') : undefined}>{rdv.serviceNom || '—'}{rdv.servicesNoms?.length > 1 && <span className="ml-1.5 rounded-full bg-teal-100 px-1.5 py-0.5 text-[10px] font-bold text-teal-800 dark:bg-teal-500/20 dark:text-teal-200">+{rdv.servicesNoms.length - 1}</span>}</td>
                                             {!vuePraticien && <td className="px-4 py-3 text-slate-600 dark:text-gray-300">{rdv.praticienNom ? <div className="flex flex-col items-start gap-1"><span className="inline-flex items-center gap-1.5 font-medium"><UserCheck size={14} className="text-teal-600" />{rdv.praticienNom}</span>{badgeAcceptation(rdv)}</div> : (droitAttribuer && rdv.statut !== 'ANNULE' && rdv.statut !== 'TERMINE' ? <button onClick={() => setAttribution({ rdv })} className="rounded-full bg-amber-100 px-2.5 py-1 text-xs font-semibold text-amber-800 transition hover:bg-amber-200 dark:bg-amber-500/15 dark:text-amber-300">À attribuer</button> : <span className="text-slate-400">Non attribué</span>)}</td>}
                                             <td className="px-4 py-3"><span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ${st.badge}`}><span className={`h-1.5 w-1.5 rounded-full ${st.dot}`} />{st.label}</span></td>
                                             <td className="px-4 py-3">
@@ -434,11 +467,11 @@ function Dashboard() {
                                                     <IconButton label="Voir le détail" onClick={() => setModal({ type: 'view', rdv })}><Eye size={16} /></IconButton>
                                                     {droitModifier && !vuePraticien && <IconButton label="Modifier" onClick={() => setModal({ type: 'edit', rdv })}><Pencil size={16} /></IconButton>}
                                                     {peutAccepter(rdv, profile) && <IconButton label="Accepter ce rendez-vous (je le prends)" tone="text-emerald-700 hover:bg-emerald-50 dark:text-emerald-300 dark:hover:bg-emerald-500/10" onClick={() => accepterRdv(rdv)}><Check size={16} /></IconButton>}
-                                                    {peutConfirmer(rdv) && <IconButton label="Confirmer le rendez-vous (le patient reçoit son SMS)" tone="text-emerald-700 hover:bg-emerald-50 dark:text-emerald-300 dark:hover:bg-emerald-500/10" onClick={() => confirmRdv(rdv)}><BadgeCheck size={16} /></IconButton>}
+                                                    {peutConfirmer(rdv, profile) && <IconButton label="Confirmer le rendez-vous (le patient reçoit son SMS)" tone="text-emerald-700 hover:bg-emerald-50 dark:text-emerald-300 dark:hover:bg-emerald-500/10" onClick={() => confirmRdv(rdv)}><BadgeCheck size={16} /></IconButton>}
                                                     {droitAttribuer && (rdv.statut === 'EN_ATTENTE' || rdv.statut === 'CONFIRME') && <IconButton label="Attribuer à une personne du personnel" tone="text-violet-700 hover:bg-violet-50 dark:text-violet-300 dark:hover:bg-violet-500/10" onClick={() => setAttribution({ rdv })}><UserCheck size={16} /></IconButton>}
                                                     {peutTerminer(rdv, profile) && <IconButton label="Marquer comme terminé" tone="text-sky-700 hover:bg-sky-50 dark:text-sky-300 dark:hover:bg-sky-500/10" onClick={() => finishRdv(rdv)}><CheckCheck size={16} /></IconButton>}
                                                     <BoutonTelecharger rdv={rdv} icone onDebut={() => setError('')} onErreur={setError} className="rounded-lg p-2 text-slate-500 hover:bg-slate-100 hover:text-teal-700 dark:text-gray-400 dark:hover:bg-gray-800" />
-                                                    {open && !vuePraticien && <IconButton label="Annuler le rendez-vous" tone="text-amber-700 hover:bg-amber-50 dark:text-amber-300 dark:hover:bg-amber-500/10" onClick={() => cancelRdv(rdv)}><Ban size={16} /></IconButton>}
+                                                    {open && droitAnnuler && <IconButton label="Annuler le rendez-vous" tone="text-amber-700 hover:bg-amber-50 dark:text-amber-300 dark:hover:bg-amber-500/10" onClick={() => cancelRdv(rdv)}><Ban size={16} /></IconButton>}
                                                     {droitModifier && !vuePraticien && <IconButton label="Mettre dans la corbeille" tone="text-rose-700 hover:bg-rose-50 dark:text-rose-300 dark:hover:bg-rose-500/10" onClick={() => trashRdv(rdv)}><Trash2 size={16} /></IconButton>}
                                                 </div>
                                             </td>

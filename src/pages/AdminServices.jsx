@@ -7,8 +7,9 @@ import AdminLayout from '../components/AdminLayout';
 import ChampPhoto from '../components/ChampPhoto';
 import { apiErrorMessage, getRole, hasSession, homeForRole, LOGIN_PATH, peut } from '../utils/auth';
 import { photoDuService } from '../constants/photosServices';
+import { formaterMontant } from '../utils/proforma';
 
-const EMPTY = { nom: '', description: '', duree: '', photo: null };
+const EMPTY = { nom: '', description: '', duree: '', prix: '', photo: null };
 const field = 'mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 font-normal outline-none transition focus:border-teal-600 focus:ring-2 focus:ring-teal-600/20 dark:border-gray-700 dark:bg-gray-950';
 const card = 'rounded-2xl border border-slate-200/80 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900';
 const fallbackImage = name => photoDuService(name).src;
@@ -31,7 +32,13 @@ export default function AdminServices() {
 
     const load = useCallback(async () => {
         setLoading(true);
-        try { const { data } = await axiosClient.get('/services'); setServices(data); }
+        try {
+            const { data } = await axiosClient.get('/services');
+            // les prix ne figurent pas dans la liste publique : on les lit dans la liste des tarifs réservée au personnel
+            const prix = {};
+            try { const tarifs = await axiosClient.get('/services/tarifs'); tarifs.data.forEach(tarif => { prix[tarif.id] = tarif.prix; }); } catch { /* sans droit de lecture des tarifs : pas de prix affichés */ }
+            setServices(data.map(service => ({ ...service, prix: prix[service.id] ?? null })));
+        }
         catch (err) { setError(apiErrorMessage(err, 'Impossible de charger les services.')); }
         finally { setLoading(false); }
     }, []);
@@ -52,6 +59,7 @@ export default function AdminServices() {
         payload.append('nom', form.nom.trim());
         payload.append('description', form.description.trim());
         if (form.duree.trim()) payload.append('duree', form.duree.trim());
+        if (form.prix.trim()) payload.append('prix', form.prix.trim());
         payload.append('photo', form.photo);
         try {
             await axiosClient.post('/services', payload, { headers: { 'Content-Type': 'multipart/form-data' } });
@@ -66,10 +74,12 @@ export default function AdminServices() {
         payload.append('nom', edition.nom.trim());
         payload.append('description', edition.description.trim());
         payload.append('duree', edition.duree.trim());
+        payload.append('prix', String(edition.prix).trim());   // vide : le tarif est effacé
         if (edition.photo) payload.append('photo', edition.photo);
         try {
             const { data } = await axiosClient.put('/services/' + edition.id, payload, { headers: { 'Content-Type': 'multipart/form-data' } });
-            setServices(items => items.map(item => item.id === data.id ? data : item));
+            const prixEnregistre = String(edition.prix).replace(/\s/g, '');
+            setServices(items => items.map(item => item.id === data.id ? { ...data, prix: prixEnregistre === '' ? null : Number(prixEnregistre) } : item));
             setEdition(null); setNotice('Service modifié.');
         } catch (err) { setEditionError(apiErrorMessage(err, 'La modification a échoué. Vérifiez les informations.')); }
         finally { setEditionSaving(false); }
@@ -94,6 +104,7 @@ export default function AdminServices() {
                 <form onSubmit={createService} className="grid gap-4 md:grid-cols-2">
                     <label className="text-sm font-medium">Nom du service *<input required maxLength={100} value={form.nom} onChange={e => setForm(c => ({ ...c, nom: e.target.value }))} placeholder="Ex. Consultation générale" className={field} /></label>
                     <label className="text-sm font-medium">Durée<input maxLength={50} value={form.duree} onChange={e => setForm(c => ({ ...c, duree: e.target.value }))} placeholder="Ex. 30 minutes" className={field} /></label>
+                    <label className="text-sm font-medium">Prix (Ar)<input inputMode="numeric" maxLength={12} value={form.prix} onChange={e => setForm(c => ({ ...c, prix: e.target.value.replace(/[^\d\s]/g, '') }))} placeholder="Ex. 25 000 (réservé au personnel)" className={field} /></label>
                     <label className="text-sm font-medium md:col-span-2">Description *<textarea required maxLength={500} rows={3} value={form.description} onChange={e => setForm(c => ({ ...c, description: e.target.value }))} placeholder="Décrivez ce service médical…" className={`${field} resize-y`} /><span className="mt-1 block text-right text-xs text-slate-400">{form.description.length}/500</span></label>
                     <div className="rounded-xl border border-dashed border-slate-300 p-4 md:col-span-2 dark:border-gray-700">
                         <div className="mb-3 flex items-center gap-3">
@@ -115,9 +126,10 @@ export default function AdminServices() {
                             <article key={service.id} className={`${card} overflow-hidden`}>
                                 <img loading="lazy" decoding="async" src={imageUrl(service)} alt={service.nom} onError={e => { e.currentTarget.onerror = null; e.currentTarget.src = '/cabinet_1.jpg'; }} className="h-44 w-full object-cover" />
                                 <div className="p-4">
-                                    <div className="flex items-start justify-between gap-3"><h3 className="font-semibold">{service.nom}</h3><div className="flex shrink-0"><button onClick={() => { setEditionError(''); setEdition({ id: service.id, nom: service.nom, description: service.description || '', duree: service.duree || '', photo: null, imageUrl: imageUrl(service) }); }} aria-label={`Modifier ${service.nom}`} className="rounded-lg p-2 text-slate-500 transition hover:bg-slate-100 dark:hover:bg-gray-800"><Pencil size={17} /></button><button onClick={() => deleteService(service)} aria-label={`Supprimer ${service.nom}`} className="rounded-lg p-2 text-rose-700 transition hover:bg-rose-50 dark:text-rose-300 dark:hover:bg-rose-500/10"><Trash2 size={17} /></button></div></div>
+                                    <div className="flex items-start justify-between gap-3"><h3 className="font-semibold">{service.nom}</h3><div className="flex shrink-0"><button onClick={() => { setEditionError(''); setEdition({ id: service.id, nom: service.nom, description: service.description || '', duree: service.duree || '', prix: service.prix ?? '', photo: null, imageUrl: imageUrl(service) }); }} aria-label={`Modifier ${service.nom}`} className="rounded-lg p-2 text-slate-500 transition hover:bg-slate-100 dark:hover:bg-gray-800"><Pencil size={17} /></button><button onClick={() => deleteService(service)} aria-label={`Supprimer ${service.nom}`} className="rounded-lg p-2 text-rose-700 transition hover:bg-rose-50 dark:text-rose-300 dark:hover:bg-rose-500/10"><Trash2 size={17} /></button></div></div>
                                     <p className="mt-2 line-clamp-3 text-sm text-slate-600 dark:text-slate-300">{service.description || 'Aucune description.'}</p>
                                     <p className="mt-3 text-xs font-medium text-teal-700 dark:text-teal-300">{service.duree ? `Durée : ${service.duree}` : 'Sur rendez-vous'}</p>
+                                    <p className="mt-1 text-xs font-semibold text-slate-600 dark:text-gray-300">{service.prix != null ? `Prix : ${formaterMontant(service.prix)} Ar` : 'Prix non défini'}</p>
                                 </div>
                             </article>
                         ))}</div>}
@@ -128,6 +140,7 @@ export default function AdminServices() {
                         <div className="flex items-center justify-between"><h2 className="font-semibold">Modifier le service</h2><button type="button" onClick={() => setEdition(null)} aria-label="Fermer"><X size={18} /></button></div>
                         <label className="block text-sm font-medium">Nom *<input required maxLength={100} value={edition.nom} onChange={e => setEdition({ ...edition, nom: e.target.value })} className={field} /></label>
                         <label className="block text-sm font-medium">Durée<input maxLength={50} value={edition.duree} onChange={e => setEdition({ ...edition, duree: e.target.value })} className={field} /></label>
+                        <label className="block text-sm font-medium">Prix (Ar)<input inputMode="numeric" maxLength={12} value={edition.prix} onChange={e => setEdition({ ...edition, prix: e.target.value.replace(/[^\d\s]/g, '') })} placeholder="Réservé au personnel ; vide = pas de tarif" className={field} /></label>
                         <label className="block text-sm font-medium">Description *<textarea required maxLength={500} rows={3} value={edition.description} onChange={e => setEdition({ ...edition, description: e.target.value })} className={field + ' resize-y'} /></label>
                         <div className="rounded-xl border border-dashed border-slate-300 p-3 text-sm dark:border-gray-700">
                             <div className="mb-3 flex items-center gap-3">

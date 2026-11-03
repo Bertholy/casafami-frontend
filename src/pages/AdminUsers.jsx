@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { SkeletonTable } from '../components/ui/skeleton';
 import { useNavigate } from 'react-router-dom';
-import { KeyRound, Loader2, Pencil, Plus, Search, Trash2, UserCog, X } from 'lucide-react';
+import { Check, Copy, KeyRound, Loader2, Pencil, Plus, Search, Trash2, UserCog, Wand2, X } from 'lucide-react';
 import axiosClient from '../api/axiosClient';
 import AdminLayout from '../components/AdminLayout';
 import { apiErrorMessage, clearSession, getEmail, getRole, hasSession, homeForRole, LOGIN_PATH, peut } from '../utils/auth';
@@ -15,6 +15,16 @@ const ROLES = [
 ];
 // Recherche sans tenir compte des majuscules ni des accents (« Secretaire » trouve « Secrétaire »).
 const normaliser = texte => String(texte ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+/** Mot de passe aléatoire de 14 caractères (sans 0/O/1/l/I qu'on confond à la lecture), avec majuscule, minuscule, chiffre et symbole. */
+function genererMotDePasse() {
+    const groupes = ['ABCDEFGHJKLMNPQRSTUVWXYZ', 'abcdefghijkmnpqrstuvwxyz', '23456789', '!@#$%&*?'];
+    const tout = groupes.join('');
+    const tirer = max => { const t = new Uint32Array(1); const limite = 0x100000000 - (0x100000000 % max); do crypto.getRandomValues(t); while (t[0] >= limite); return t[0] % max; };
+    const signes = groupes.map(g => g[tirer(g.length)]);
+    while (signes.length < 14) signes.push(tout[tirer(tout.length)]);
+    for (let i = signes.length - 1; i > 0; i--) { const j = tirer(i + 1); [signes[i], signes[j]] = [signes[j], signes[i]]; }
+    return signes.join('');
+}
 const EMPTY = { nom: '', email: '', motDePasse: '', telephone: '', role: 'SAGE_FEMME' };
 const field = 'rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-teal-600 focus:ring-2 focus:ring-teal-600/20 dark:border-gray-700 dark:bg-gray-950';
 const card = 'rounded-2xl border border-slate-200/80 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900';
@@ -25,6 +35,8 @@ export default function AdminUsers() {
     const [form, setForm] = useState(EMPTY);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
+    const [creation, setCreation] = useState(false);   // le formulaire de création n'est déplié qu'après un clic sur « Créer un compte »
+    const [copie, setCopie] = useState(false);
     const [error, setError] = useState('');
     const [notice, setNotice] = useState('');
     const myEmail = getEmail();
@@ -52,14 +64,23 @@ export default function AdminUsers() {
         return () => window.clearTimeout(timer);
     }, [load, navigate]);
 
+    const ouvrirCreation = () => { setForm(EMPTY); setCopie(false); setError(''); setNotice(''); setCreation(true); };
+    const fermerCreation = () => { setCreation(false); setForm(EMPTY); setCopie(false); };
+    const generer = () => { setForm(f => ({ ...f, motDePasse: genererMotDePasse() })); setCopie(false); };
+    const copier = async () => {
+        try { await navigator.clipboard.writeText(form.motDePasse); setCopie(true); }
+        catch { setError('Copie impossible : sélectionnez le mot de passe (œil pour l’afficher) et copiez-le à la main.'); }
+    };
+
     const createUser = async event => {
         event.preventDefault(); setSaving(true); setError(''); setNotice('');
         try {
             const { data: cree } = await axiosClient.post('/admin/users', form);
             // le nouveau compte apparaît immédiatement (sans attendre le rechargement de la liste)
             setUsers(current => [...current.filter(u => u.id !== cree.id), cree]);
-            setForm(EMPTY);
-            setNotice(`Compte créé pour ${cree.nom} (${cree.email}). La personne peut se connecter avec son e-mail et son mot de passe.`);
+            // le mot de passe n'est plus consultable après la création : on le rappelle une dernière fois pour le transmettre
+            setNotice(`Compte créé pour ${cree.nom} (${cree.email}). Mot de passe à lui communiquer : ${form.motDePasse}`);
+            fermerCreation();
             load(true);
         } catch (err) { setError(apiErrorMessage(err, 'La création du compte a échoué. Vérifiez les informations.')); }
         finally { setSaving(false); }
@@ -110,17 +131,36 @@ export default function AdminUsers() {
             {notice && <div role="status" className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-200">{notice}</div>}
             {error && <div role="alert" className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-200">{error}</div>}
 
-            <section className={`${card} p-5`}>
-                <div className="mb-4 flex items-center gap-2"><Plus size={19} className="text-teal-700" /><h2 className="font-semibold">Créer un compte du personnel</h2></div>
-                <form onSubmit={createUser} className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                    <input required maxLength={100} aria-label="Nom complet" placeholder="Nom complet" value={form.nom} onChange={e => setForm({ ...form, nom: e.target.value })} className={field} />
-                    <input required type="email" aria-label="Adresse e-mail" placeholder="Adresse e-mail" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} className={field} />
-                    <ChampMotDePasse required minLength={10} maxLength={72} autoComplete="new-password" aria-label="Mot de passe" placeholder="Mot de passe (10 caractères min.)" value={form.motDePasse} onChange={e => setForm({ ...form, motDePasse: e.target.value })} className={field} />
-                    <input type="tel" maxLength={20} aria-label="Téléphone" placeholder="Téléphone (facultatif)" value={form.telephone} onChange={e => setForm({ ...form, telephone: e.target.value })} className={field} />
-                    <select aria-label="Rôle" value={form.role} onChange={e => setForm({ ...form, role: e.target.value })} className={field}>{ROLES.map(([key, label]) => <option key={key} value={key}>{label}</option>)}</select>
-                    <button disabled={saving} className="inline-flex items-center justify-center gap-2 rounded-xl bg-teal-700 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-teal-800 disabled:opacity-60">{saving ? <Loader2 size={16} className="animate-spin" /> : <Plus size={16} />}Créer le compte</button>
-                </form>
-            </section>
+            {!creation ? (
+                <div>
+                    <button type="button" onClick={ouvrirCreation} aria-expanded="false" className="inline-flex items-center gap-2 rounded-xl bg-teal-700 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-teal-800"><Plus size={16} />Créer un compte</button>
+                </div>
+            ) : (
+                <section className={`${card} p-5`}>
+                    <div className="mb-4 flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2"><Plus size={19} className="text-teal-700" /><h2 className="font-semibold">Créer un compte du personnel</h2></div>
+                        <button type="button" onClick={fermerCreation} aria-label="Fermer le formulaire" title="Fermer le formulaire" className="rounded-lg p-1.5 text-slate-500 transition hover:bg-slate-100 dark:hover:bg-gray-800"><X size={18} /></button>
+                    </div>
+                    <form onSubmit={createUser} className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                        <input required autoFocus maxLength={100} aria-label="Nom complet" placeholder="Nom complet" value={form.nom} onChange={e => setForm({ ...form, nom: e.target.value })} className={field} />
+                        <input required type="email" aria-label="Adresse e-mail" placeholder="Adresse e-mail" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} className={field} />
+                        <input type="tel" maxLength={20} aria-label="Téléphone" placeholder="Téléphone (facultatif)" value={form.telephone} onChange={e => setForm({ ...form, telephone: e.target.value })} className={field} />
+                        <select aria-label="Rôle" value={form.role} onChange={e => setForm({ ...form, role: e.target.value })} className={field}>{ROLES.map(([key, label]) => <option key={key} value={key}>{label}</option>)}</select>
+                        <div className="sm:col-span-2">
+                            <div className="flex gap-2">
+                                <div className="min-w-0 flex-1"><ChampMotDePasse required minLength={10} maxLength={72} autoComplete="new-password" aria-label="Mot de passe" placeholder="Mot de passe (10 caractères min.)" value={form.motDePasse} onChange={e => { setForm({ ...form, motDePasse: e.target.value }); setCopie(false); }} className={field} /></div>
+                                <button type="button" onClick={generer} className="inline-flex shrink-0 items-center gap-2 rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-medium transition hover:bg-slate-50 dark:border-gray-700 dark:hover:bg-gray-800"><Wand2 size={16} aria-hidden="true" />Générer</button>
+                                <button type="button" onClick={copier} disabled={!form.motDePasse} aria-label="Copier le mot de passe" title="Copier le mot de passe" className="inline-flex shrink-0 items-center gap-2 rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-medium transition hover:bg-slate-50 disabled:opacity-40 dark:border-gray-700 dark:hover:bg-gray-800">{copie ? <Check size={16} aria-hidden="true" /> : <Copy size={16} aria-hidden="true" />}{copie ? 'Copié' : 'Copier'}</button>
+                            </div>
+                            <p className="mt-1.5 text-xs text-slate-500 dark:text-gray-400">Cliquez sur « Générer » pour un mot de passe sûr, puis communiquez-le à la personne de vive voix : elle pourra le changer ensuite.</p>
+                        </div>
+                        <div className="flex items-start gap-2">
+                            <button disabled={saving} className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-teal-700 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-teal-800 disabled:opacity-60">{saving ? <Loader2 size={16} className="animate-spin" /> : <Plus size={16} />}Créer le compte</button>
+                            <button type="button" onClick={fermerCreation} className="rounded-xl border border-slate-200 px-4 py-2.5 text-sm transition hover:bg-slate-50 dark:border-gray-700 dark:hover:bg-gray-800">Annuler</button>
+                        </div>
+                    </form>
+                </section>
+            )}
 
             <section className={`${card} overflow-hidden`}>
                 <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4 dark:border-gray-800">
