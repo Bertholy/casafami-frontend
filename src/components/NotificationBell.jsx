@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { BadgeCheck, Bell, BellRing, CalendarCheck, CalendarClock, CalendarOff, CalendarPlus, CalendarX, CheckCheck, KeyRound, ShieldAlert, ShieldCheck, Trash2, UserCheck, UserMinus } from 'lucide-react';
+import { BadgeCheck, Bell, BellRing, CalendarCheck, CalendarClock, CalendarOff, CalendarPlus, CalendarX, CheckCheck, KeyRound, ShieldAlert, ShieldCheck, Trash2, UserCheck, UserMinus, UserX } from 'lucide-react';
 import axiosClient from '../api/axiosClient';
 import { sonNotification } from '../utils/son';
 import { sonNotificationsActif } from '../utils/preferences';
@@ -12,6 +12,7 @@ const ICONES = {
     RDV_MODIFIE: { Icone: CalendarClock, classe: 'bg-sky-100 text-sky-700 dark:bg-sky-500/15 dark:text-sky-300' },
     RDV_CORBEILLE: { Icone: Trash2, classe: 'bg-rose-100 text-rose-700 dark:bg-rose-500/15 dark:text-rose-300' },
     RDV_ACCEPTE: { Icone: UserCheck, classe: 'bg-teal-100 text-teal-700 dark:bg-teal-500/15 dark:text-teal-300' },
+    RDV_DECLINE: { Icone: UserX, classe: 'bg-rose-100 text-rose-700 dark:bg-rose-500/15 dark:text-rose-300' },
     RDV_CONFIRME: { Icone: BadgeCheck, classe: 'bg-sky-100 text-sky-700 dark:bg-sky-500/15 dark:text-sky-300' },
     MOT_DE_PASSE: { Icone: KeyRound, classe: 'bg-sky-100 text-sky-700 dark:bg-sky-500/15 dark:text-sky-300' },
     ROLE_ATTRIBUE: { Icone: ShieldCheck, classe: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300' },

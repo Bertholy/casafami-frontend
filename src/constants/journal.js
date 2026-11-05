@@ -11,7 +11,7 @@ export const ACTIONS = {
     MALADIE_CREEE: 'Maladie ajoutée', MALADIE_MODIFIEE: 'Maladie modifiée', MALADIE_SUPPRIMEE: 'Maladie supprimée',
     TRAITEMENT_AJOUTE: 'Traitement ajouté', TRAITEMENT_MODIFIE: 'Traitement modifié', TRAITEMENT_SUPPRIME: 'Traitement supprimé',
     EXPORT: 'Export', ENCODAGE_REPARE: 'Textes cassés réparés', RAPPELS_ENVOYES: 'Rappels envoyés', RAPPELS_MANUELS: 'Rappels envoyés (manuel)',
-    RDV_ATTRIBUE: 'Rendez-vous attribué', RDV_ATTRIBUTION_RETIREE: 'Attribution retirée', RDV_ACCEPTE_PAR_PERSONNEL: 'Rendez-vous accepté',
+    RDV_ATTRIBUE: 'Rendez-vous attribué', RDV_ATTRIBUTION_RETIREE: 'Attribution retirée', RDV_ACCEPTE_PAR_PERSONNEL: 'Rendez-vous accepté', RDV_DECLINE_PAR_PERSONNEL: 'Rendez-vous décliné',
     GROSSESSE_CREEE: 'Grossesse ouverte', GROSSESSE_MODIFIEE: 'Grossesse modifiée', GROSSESSE_TERMINEE: 'Grossesse clôturée', GROSSESSE_SUPPRIMEE: 'Grossesse supprimée',
     CPN_AJOUTEE: 'Consultation prénatale ajoutée', CPN_SUPPRIMEE: 'Consultation prénatale supprimée', ENFANT_AJOUTE: 'Enfant ajouté', ENFANT_SUPPRIME: 'Enfant supprimé',
     VACCIN_ENREGISTRE: 'Vaccin enregistré', VACCIN_ANNULE: 'Vaccin annulé', SERVICE_MODIFIE: 'Service modifié', SAUVEGARDE: 'Sauvegarde',

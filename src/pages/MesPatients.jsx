@@ -3,7 +3,7 @@ import { SkeletonList } from '../components/ui/skeleton';
 import BoutonScanQr from '../components/BoutonScanQr';
 import useOuvrirParCle from '../hooks/useOuvrirParCle';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { Ban, BadgeCheck, CalendarClock, Check, CheckCheck, ClipboardCheck, FolderOpen, Loader2, Phone, Search, UserCheck } from 'lucide-react';
+import { Ban, BadgeCheck, UserX, CalendarClock, Check, CheckCheck, ClipboardCheck, FolderOpen, Loader2, Phone, Search, UserCheck } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '../components/ui/dialog';
 import axiosClient from '../api/axiosClient';
@@ -13,6 +13,8 @@ import { STATUS, formatDateFr, hhmm, todayISO } from '../constants/app';
 import { btnPrimary, btnSecondary, card, inputClass } from '../constants/ui';
 import { apiErrorMessage, getRole, hasSession, homeForRole, LOGIN_PATH, peut } from '../utils/auth';
 import { formatPhone } from '../utils/phone';
+import EtatClient from '../components/EtatClient';
+import DialogDecliner from '../components/dashboard/DialogDecliner';
 
 const ROLES_PRATICIENS = ['MEDECIN', 'SAGE_FEMME', 'INFIRMIERE'];
 const FILTRES = [['avenir', 'À venir'], ['passes', 'Passés'], ['tous', 'Tous']];
@@ -34,6 +36,7 @@ export default function MesPatients() {
     const [recherche, setRecherche] = useState('');
     const [loading, setLoading] = useState(true);
     const [enCours, setEnCours] = useState(null);
+    const [aDecliner, setADecliner] = useState(null);   // rendez-vous que la personne veut décliner (fenêtre avec la raison)
     const [aAnnuler, setAAnnuler] = useState(null);   // rendez-vous dont on demande l'annulation (confirmation avant d'agir)
     const [error, setError] = useState('');
     const [notice, setNotice] = useState('');
@@ -82,12 +85,14 @@ export default function MesPatients() {
         catch (err) { setError(apiErrorMessage(err, 'Action impossible. Réessayez.')); }
         finally { setEnCours(null); }
     };
-    const accepter = rdv => agir(rdv, () => axiosClient.put(`/rdv/${rdv.id}/accepter`), `Vous avez accepté le rendez-vous de ${rdv.nomClient}. Le super administrateur en est informé et va le confirmer.`);
+    const accepter = rdv => agir(rdv, () => axiosClient.put(`/rdv/${rdv.id}/accepter`), `Vous avez accepté le rendez-vous de ${rdv.nomClient}. La secrétaire est prévenue et va le confirmer au patient.`);
     const terminer = rdv => agir(rdv, () => axiosClient.put(`/rdv/${rdv.id}/terminer`), `Consultation de ${rdv.nomClient} terminée.`);
     // confirmer son propre rendez-vous : le serveur l'accepte du même coup et le patient reçoit son SMS
     const confirmer = rdv => agir(rdv, () => axiosClient.put(`/rdv/${rdv.id}/confirmer`), `Rendez-vous de ${rdv.nomClient} confirmé : le patient va recevoir son SMS.`);
     const annuler = async rdv => { setAAnnuler(null); await agir(rdv, () => axiosClient.put(`/rdv/${rdv.id}/annuler`), `Rendez-vous de ${rdv.nomClient} annulé : le patient est prévenu et le créneau est libéré.`); };
-    const droitConfirmer = peut('RDV_CONFIRMER'), droitAnnuler = peut('RDV_ANNULER');
+    // décliner : le rendez-vous n'est plus attribué à personne, la secrétaire est prévenue pour le confier à quelqu'un d'autre
+    const decliner = async (rdv, motif) => { setADecliner(null); await agir(rdv, () => axiosClient.put(`/rdv/${rdv.id}/decliner`, { motif }), `Vous avez décliné le rendez-vous de ${rdv.nomClient} : la secrétaire est prévenue et va le confier à quelqu’un d’autre.`); };
+    const droitConfirmer = peut('RDV_CONFIRMER'), droitAnnuler = peut('RDV_ANNULER'), droitAccepter = peut('RDV_ACCEPTER');
 
     const mise = id => (id === rdvFocus ? 'ring-2 ring-teal-500 ring-offset-2 dark:ring-offset-gray-900' : '');
     const dossier = tel => `/patients/dossier?telephone=${encodeURIComponent(tel)}`;
@@ -119,7 +124,7 @@ export default function MesPatients() {
                         {aAccepter.map(r => (
                             <li key={r.id} id={`rdv-${r.id}`} className={`flex flex-wrap items-center gap-3 rounded-xl border border-amber-200 bg-white p-3 dark:border-amber-500/20 dark:bg-gray-900 ${mise(r.id)}`}>
                                 <div className="min-w-0 flex-1">
-                                    <p className="font-semibold">{r.nomClient} <span className="ml-1 text-xs font-normal text-slate-500">{formatPhone(r.telephoneClient)}</span></p>
+                                    <p className="flex flex-wrap items-center gap-x-2 gap-y-1 font-semibold">{r.nomClient} <span className="text-xs font-normal text-slate-500">{formatPhone(r.telephoneClient)}</span><EtatClient rdv={r} /></p>
                                     <p className="flex flex-wrap items-center gap-x-3 text-sm text-slate-600 dark:text-gray-300"><span className="inline-flex items-center gap-1.5 font-medium"><CalendarClock size={14} />{jourLong(r.dateRdv)} à {hhmm(r.heureRdv)}</span>{r.serviceNom && <span>{r.serviceNom}</span>}</p>
                                     {motifCourt(r.motif) && <p className="mt-1 truncate text-xs text-slate-500">{motifCourt(r.motif)}</p>}
                                 </div>
@@ -128,6 +133,7 @@ export default function MesPatients() {
                                         ? <button disabled={enCours === r.id} onClick={() => confirmer(r)} className={btnPrimary}>{enCours === r.id ? <Loader2 size={15} className="animate-spin" /> : <BadgeCheck size={16} />}Confirmer</button>
                                         : null}
                                     <button disabled={enCours === r.id} onClick={() => accepter(r)} className={droitConfirmer ? btnSecondary : btnPrimary}>{enCours === r.id && !droitConfirmer ? <Loader2 size={15} className="animate-spin" /> : <Check size={16} />}Accepter</button>
+                                    {droitAccepter && <button disabled={enCours === r.id} onClick={() => setADecliner(r)} className={btnSecondary}><UserX size={15} />Décliner</button>}
                                     {droitAnnuler && <button disabled={enCours === r.id} onClick={() => setAAnnuler(r)} className={btnSecondary}><Ban size={15} />Annuler</button>}
                                 </div>
                             </li>
@@ -162,7 +168,7 @@ export default function MesPatients() {
                                         <li key={r.id} id={`rdv-${r.id}`} className={`flex flex-wrap items-center gap-3 px-4 py-3 ${mise(r.id)}`}>
                                             <span className="w-14 text-lg font-bold tabular-nums text-teal-800 dark:text-teal-300">{hhmm(r.heureRdv)}</span>
                                             <div className="min-w-0 flex-1">
-                                                <p className="font-semibold">{r.nomClient}</p>
+                                                <p className="flex flex-wrap items-center gap-x-2 gap-y-1 font-semibold">{r.nomClient}<EtatClient rdv={r} /></p>
                                                 <p className="flex flex-wrap items-center gap-x-3 text-xs text-slate-500 dark:text-gray-400"><span className="inline-flex items-center gap-1"><Phone size={12} />{formatPhone(r.telephoneClient)}</span>{r.serviceNom && <span>{r.serviceNom}</span>}</p>
                                                 {motifCourt(r.motif) && <p className="mt-0.5 truncate text-xs text-slate-500">{motifCourt(r.motif)}</p>}
                                             </div>
@@ -171,6 +177,7 @@ export default function MesPatients() {
                                                 <Link to={dossier(r.telephoneClient)} className={btnSecondary}><FolderOpen size={15} />Dossier</Link>
                                                 {r.statut === 'EN_ATTENTE' && droitConfirmer && <button disabled={enCours === r.id} onClick={() => confirmer(r)} className={btnPrimary}>{enCours === r.id ? <Loader2 size={15} className="animate-spin" /> : <BadgeCheck size={15} />}Confirmer</button>}
                                 {r.statut === 'CONFIRME' && <button disabled={enCours === r.id} onClick={() => terminer(r)} className={btnSecondary}>{enCours === r.id ? <Loader2 size={15} className="animate-spin" /> : <CheckCheck size={15} />}Terminé</button>}
+                                                {r.statut === 'EN_ATTENTE' && droitAccepter && <button disabled={enCours === r.id} onClick={() => setADecliner(r)} className={btnSecondary}><UserX size={15} />Décliner</button>}
                                                 {(r.statut === 'EN_ATTENTE' || r.statut === 'CONFIRME') && droitAnnuler && <button disabled={enCours === r.id} onClick={() => setAAnnuler(r)} className={btnSecondary}><Ban size={15} />Annuler</button>}
                                             </div>
                                         </li>
@@ -182,6 +189,7 @@ export default function MesPatients() {
                 </div>
             </section>
 
+            <DialogDecliner rdv={aDecliner} enCours={Boolean(enCours)} onConfirmer={motif => decliner(aDecliner, motif)} onClose={() => setADecliner(null)} />
             {/* confirmation avant d'annuler : le patient est prévenu par SMS et le créneau est libéré */}
             <Dialog open={Boolean(aAnnuler)} onOpenChange={ouvert => { if (!ouvert) setAAnnuler(null); }}>
                 <DialogContent className="top-[20vh] max-w-md p-5">

@@ -1,6 +1,7 @@
-import { AlertTriangle, BadgeCheck, CalendarClock, Check, UserCheck, X } from 'lucide-react';
+import { AlertTriangle, BadgeCheck, CalendarClock, Check, UserCheck, UserX, X } from 'lucide-react';
 import { STATUS, formatDateFr, hhmm } from '../../constants/app';
 import { formatPhone } from '../../utils/phone';
+import EtatClient from '../EtatClient';
 
 const premiereMajuscule = texte => texte.charAt(0).toUpperCase() + texte.slice(1);
 
@@ -8,7 +9,7 @@ const premiereMajuscule = texte => texte.charAt(0).toUpperCase() + texte.slice(1
  * « Demande à traiter » : ouverte par un clic sur une notification (?rdv=…). Elle met le rendez-vous concerné
  * en haut du tableau de bord, avec le bouton qui correspond à ce que la personne doit faire.
  */
-export default function CarteDemande({ rdv, absent, estSuperAdmin, peutAccepter, peutConfirmer, onAccepter, onConfirmer, onAttribuer, onFermer }) {
+export default function CarteDemande({ rdv, absent, estSuperAdmin, peutAccepter, peutConfirmer, peutDecliner = false, onAccepter, onConfirmer, onDecliner, onAttribuer, onFermer }) {
     if (absent) {
         return (
             <div role="status" className="flex items-center justify-between gap-3 rounded-2xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-200">
@@ -23,7 +24,11 @@ export default function CarteDemande({ rdv, absent, estSuperAdmin, peutAccepter,
     const enAttente = rdv.statut === 'EN_ATTENTE';
     let message; let action = null;
     if (estSuperAdmin) {
-        if (enAttente && !rdv.praticienId) {
+        if (enAttente && !rdv.praticienId && rdv.declinePar) {
+            // la personne attribuée a décliné : la réception le confie à quelqu'un d'autre
+            message = `${rdv.declinePar} a décliné ce rendez-vous${rdv.declineMotif ? ` : « ${rdv.declineMotif} »` : ''}. Il faut le confier à une autre personne.`;
+            action = <button onClick={onAttribuer} className="inline-flex items-center gap-2 rounded-xl bg-violet-700 px-4 py-2 text-sm font-semibold text-white hover:bg-violet-800"><UserCheck size={16} />Changer de personne</button>;
+        } else if (enAttente && !rdv.praticienId) {
             message = 'Aucune personne n’est encore attribuée à ce rendez-vous.';
             action = <button onClick={onAttribuer} className="inline-flex items-center gap-2 rounded-xl bg-violet-700 px-4 py-2 text-sm font-semibold text-white hover:bg-violet-800"><UserCheck size={16} />Attribuer à une personne du personnel</button>;
         } else if (enAttente && !rdv.personnelConfirme) {
@@ -36,7 +41,12 @@ export default function CarteDemande({ rdv, absent, estSuperAdmin, peutAccepter,
         else message = `Ce rendez-vous est ${statut.label.toLowerCase()}.`;
     } else if (peutAccepter) {
         message = 'Ce rendez-vous vous est confié. Acceptez-le pour que le cabinet puisse le confirmer au patient.';
-        action = <button onClick={onAccepter} className="inline-flex items-center gap-2 rounded-xl bg-emerald-700 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-800"><Check size={16} />Accepter ce rendez-vous</button>;
+        action = (
+            <span className="flex flex-wrap items-center gap-2">
+                <button onClick={onAccepter} className="inline-flex items-center gap-2 rounded-xl bg-emerald-700 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-800"><Check size={16} />Accepter ce rendez-vous</button>
+                {peutDecliner && <button onClick={onDecliner} className="inline-flex items-center gap-2 rounded-xl border border-slate-300 px-4 py-2 text-sm font-medium hover:bg-slate-50 dark:border-gray-600 dark:hover:bg-gray-800"><UserX size={16} />Décliner</button>}
+            </span>
+        );
     } else if (rdv.personnelConfirme) {
         message = enAttente ? 'Vous avez accepté ce rendez-vous : le cabinet va le confirmer.' : `Rendez-vous ${statut.label.toLowerCase()}.`;
     } else {
@@ -48,7 +58,10 @@ export default function CarteDemande({ rdv, absent, estSuperAdmin, peutAccepter,
             <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                     <p className="text-xs font-semibold uppercase tracking-wide text-teal-700 dark:text-teal-300">Demande à traiter</p>
-                    <h2 className="mt-1 truncate text-lg font-bold">{rdv.nomClient}</h2>
+                    <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1">
+                        <h2 className="truncate text-lg font-bold">{rdv.nomClient}</h2>
+                        <EtatClient rdv={rdv} />
+                    </div>
                     <p className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-slate-600 dark:text-gray-300">
                         <span className="inline-flex items-center gap-1.5 font-medium"><CalendarClock size={15} />{premiereMajuscule(formatDateFr(rdv.dateRdv, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }))} à {hhmm(rdv.heureRdv)}</span>
                         <span>{formatPhone(rdv.telephoneClient)}</span>

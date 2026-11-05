@@ -6,6 +6,7 @@ import { formatPhone, formatPhoneInput, isPlausiblePhone } from '../../utils/pho
 import axiosClient from '../../api/axiosClient';
 import AutreDate from '../AutreDate';
 import VoyantPatient from '../VoyantPatient';
+import EtatClient from '../EtatClient';
 import { Button } from '../ui/button';
 import { Input, Label, Textarea, champClasses } from '../ui/input';
 import { ajouterJours, formaterJour } from '../../utils/jours';
@@ -80,7 +81,7 @@ export default function RdvFormModal({ modal, options, canAssign = false, onClos
         const rdv = modal.rdv;
         const status = STATUS[rdv.statut];
         const rows = [
-            ['Patient', rdv.nomClient], ['Civilité', civiliteDetaillee(rdv.ageClient, rdv.sexe) || 'Non précisée'], ['Téléphone', formatPhone(rdv.telephoneClient)], ['Âge', `${rdv.ageClient} an${rdv.ageClient > 1 ? 's' : ''}`],
+            ['Patient', <span key="patient" className="inline-flex flex-wrap items-center gap-2">{rdv.nomClient}<EtatClient rdv={rdv} /></span>], ['Civilité', civiliteDetaillee(rdv.ageClient, rdv.sexe) || 'Non précisée'], ['Téléphone', formatPhone(rdv.telephoneClient)], ['Âge', `${rdv.ageClient} an${rdv.ageClient > 1 ? 's' : ''}`],
             ['Date', rdv.dateRdv], ['Heure', hhmm(rdv.heureRdv)], ['Statut', status?.label || rdv.statut],
             [rdv.servicesNoms?.length > 1 ? 'Services' : 'Service', rdv.servicesNoms?.length ? rdv.servicesNoms.join(', ') : (rdv.serviceNom || 'Non précisé')], ['Praticien', rdv.praticienNom || 'Non attribué'],
             ...(rdv.urgence ? [['Urgence', 'Oui']] : []),

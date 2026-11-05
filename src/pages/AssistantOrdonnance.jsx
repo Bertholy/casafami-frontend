@@ -5,6 +5,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { AlertOctagon, AlertTriangle, ClipboardCheck, Copy, Info, Loader2, Plus, Printer, Save, Sparkles, Trash2, UserRound } from 'lucide-react';
 import axiosClient from '../api/axiosClient';
 import AdminLayout from '../components/AdminLayout';
+import PrisesDuJour from '../components/PrisesDuJour';
 import Notice from '../components/Notice';
 import PatientSearch from '../components/PatientSearch';
 import { formatDateFr, hhmm } from '../constants/app';
@@ -186,6 +187,7 @@ export default function AssistantOrdonnance() {
                                                 <input value={l.medicament} onChange={e => setLigne(l.id, { medicament: e.target.value })} placeholder="Médicament" aria-label="Médicament" maxLength={150} className={`${inputClass} sm:col-span-6 font-medium`} />
                                                 <input value={l.posologie} onChange={e => setLigne(l.id, { posologie: e.target.value })} placeholder="Posologie (ex. 1 cp matin et soir)" aria-label="Posologie" maxLength={200} className={`${inputClass} sm:col-span-4`} />
                                                 <input value={l.duree} onChange={e => setLigne(l.id, { duree: e.target.value })} placeholder="Durée (ex. 5 jours)" aria-label="Durée" maxLength={100} className={`${inputClass} sm:col-span-2`} />
+                                                <PrisesDuJour posologie={l.posologie} onChange={posologie => setLigne(l.id, { posologie })} className="sm:col-span-6" />
                                                 <input value={l.remarques} onChange={e => setLigne(l.id, { remarques: e.target.value })} placeholder="Remarques (ex. à prendre pendant le repas)" aria-label="Remarques" maxLength={500} className={`${inputClass} sm:col-span-6`} />
                                             </div>
                                             <button onClick={() => setLignes(current => current.filter(x => x.id !== l.id))} aria-label="Supprimer cette ligne" className="mt-1.5 rounded-lg p-2 text-rose-700 hover:bg-rose-50 dark:text-rose-300 dark:hover:bg-rose-500/10"><Trash2 size={16} /></button>
@@ -218,7 +220,7 @@ export default function AssistantOrdonnance() {
                             {diagnostic && <p className="mt-3 text-slate-600 dark:text-gray-300"><strong>Motif :</strong> {diagnostic}</p>}
                             {actives.filter(l => l.medicament.trim()).length === 0 ? <p className="mt-4 text-slate-400">Aucun médicament.</p> : (
                                 <ol className="mt-3 list-decimal space-y-2 pl-5">
-                                    {actives.filter(l => l.medicament.trim()).map(l => <li key={l.id}><strong>{l.medicament}</strong>{l.posologie && <div>{l.posologie}{l.duree ? ` — pendant ${l.duree}` : ''}</div>}{l.remarques && <div className="text-xs text-slate-500">{l.remarques}</div>}</li>)}
+                                    {actives.filter(l => l.medicament.trim()).map(l => <li key={l.id}><strong>{l.medicament}</strong>{l.posologie && <div><PrisesDuJour compact posologie={l.posologie} className="mb-0.5" />{l.posologie}{l.duree ? ` — pendant ${l.duree}` : ''}</div>}{l.remarques && <div className="text-xs text-slate-500">{l.remarques}</div>}</li>)}
                                 </ol>
                             )}
                             <p className="mt-6 border-t border-dashed border-slate-300 pt-2 text-right text-xs text-slate-400 dark:border-gray-700">{prescripteur ? `${prescripteur} — ` : ''}signature</p>
