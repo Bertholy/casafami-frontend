@@ -1,9 +1,8 @@
 import { AlertTriangle, BadgeCheck, CalendarClock, Check, UserCheck, UserX, X } from 'lucide-react';
 import { STATUS, formatDateFr, hhmm } from '../../constants/app';
 import { formatPhone } from '../../utils/phone';
+import { premiereMajuscule } from '../../utils/texte';
 import EtatClient from '../EtatClient';
-
-const premiereMajuscule = texte => texte.charAt(0).toUpperCase() + texte.slice(1);
 
 /**
  * « Demande à traiter » : ouverte par un clic sur une notification (?rdv=…). Elle met le rendez-vous concerné

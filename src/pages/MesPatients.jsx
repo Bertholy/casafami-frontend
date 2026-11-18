@@ -13,12 +13,12 @@ import { STATUS, formatDateFr, hhmm, todayISO } from '../constants/app';
 import { btnPrimary, btnSecondary, card, inputClass } from '../constants/ui';
 import { apiErrorMessage, getRole, hasSession, homeForRole, LOGIN_PATH, peut } from '../utils/auth';
 import { formatPhone } from '../utils/phone';
+import { premiereMajuscule } from '../utils/texte';
 import EtatClient from '../components/EtatClient';
 import DialogDecliner from '../components/dashboard/DialogDecliner';
 
 const ROLES_PRATICIENS = ['MEDECIN', 'SAGE_FEMME', 'INFIRMIERE'];
 const FILTRES = [['avenir', 'À venir'], ['passes', 'Passés'], ['tous', 'Tous']];
-const premiereMajuscule = texte => texte.charAt(0).toUpperCase() + texte.slice(1);
 const jourLong = iso => premiereMajuscule(formatDateFr(iso, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }));
 const motifCourt = motif => (motif || '').split('\n').find(l => l.trim() && !l.startsWith('⚠')) || '';
 
