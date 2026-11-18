@@ -1,5 +1,8 @@
+import { UserRound } from 'lucide-react';
+import { assetUrl } from '../../api/axiosClient';
 import { STATUS, getRoleLabel } from '../../constants/app';
 import { cn } from '../../lib/utils';
+import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 
 /**
  * Occupation du personnel pour une journée : une ligne par personne, une colonne par créneau.
@@ -32,8 +35,17 @@ export default function OccupationGrid({ data, surligne, rdvId }) {
                     {personnel.map(p => (
                         <tr key={p.id}>
                             <th scope="row" className="sticky left-0 z-10 bg-card px-3 py-2 text-left font-medium text-foreground">
-                                <div className="max-w-40 truncate">{p.nom}</div>
-                                <div className="text-[11px] font-normal text-muted-foreground">{getRoleLabel(p.role)} · {p.total} rendez-vous</div>
+                                <div className="flex items-center gap-2.5">
+                                    {/* Icône de la personne : sa photo si elle en a une, sinon l'icône « personne » (décorative : le nom est écrit à côté) */}
+                                    <Avatar className="size-8">
+                                        <AvatarImage src={p.photoUrl ? assetUrl(p.photoUrl) : undefined} alt="" />
+                                        <AvatarFallback><UserRound size={16} aria-hidden="true" /></AvatarFallback>
+                                    </Avatar>
+                                    <div className="min-w-0">
+                                        <div className="max-w-40 truncate">{p.nom}</div>
+                                        <div className="text-[11px] font-normal text-muted-foreground">{getRoleLabel(p.role)} · {p.total} rendez-vous</div>
+                                    </div>
+                                </div>
                             </th>
                             {creneaux.map(h => {
                                 const cellule = p.occupations[h];
